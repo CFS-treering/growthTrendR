@@ -2,15 +2,15 @@
 % Please edit documentation in R/graphing.R
 \name{plot_qa}
 \alias{plot_qa}
-\title{plotting quality assessment}
+\title{plotting quality assessment per radius}
 \usage{
 plot_qa(qa.trt, qa.out_series = "all")
 }
 \arguments{
-\item{qa.trt}{object "cfs_qa" from CFS_qa() function}
+\item{qa.trt}{object "cfs_qa" from CFS_qa() function.}
 
-\item{qa.out_series}{SampleID list to be plotted, default -999 for output all samples}
+\item{qa.out_series}{series_id list to be plotted, default "all" for plotting the graphs for all.}
 }
 \description{
-plotting ccf results for each tree
+Plotting the time series and cross-correlation to contrast each radius with the chronologies, using both raw ring-width measurements and treated series.
 }

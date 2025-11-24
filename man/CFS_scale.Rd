@@ -2,7 +2,7 @@
 % Please edit documentation in R/quality_assessment.R
 \name{CFS_scale}
 \alias{CFS_scale}
-\title{compare the median of tree ring measurement of a specific site to those of nearby sites}
+\title{Quality assessment: ring-width measurement at plot level}
 \usage{
 CFS_scale(
   target_site,

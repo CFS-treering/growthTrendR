@@ -1,20 +1,24 @@
-#' a general gam model
-
+#' generalized additive model
+#'
 #' @description
-#' gam model benefiting the model selection procedure using ML method
-#'
-#'
+#' generalized additive model that captures non-linear relationships between a response variable and predictors using smooth functions, while allowing inclusion of random effects or complex structures.
+
 #' @param data data containing all necessary columns to run the model
-#' @param resp_scale the scale of response variable. default is original scale with family = Gamma("log"); "log" for predicting log-scale with family = gaussian("identity") ; "hybrid" for predicting original scale with family = gaussian("identity")
-#' @param m.candidates the list of formulas.
+#' @param resp_scale Character. Specifies how the response variable is treated in the model.
+#'   \itemize{
+#'     \item \strong{"resp_gaussian"}: Uses the response on its original scale, assuming a Gaussian distribution with an identity link (no transformation applied).
+#'     \item \strong{"resp_log"}: Log-transforms the response before modelling. The transformed response is then assumed to follow a Gaussian distribution with an identity link.
+#'     \item \strong{"resp_gamma"}: Keeps the response on its original scale, fitted under a Gamma distribution with a log link. Suitable for strictly positive and right-skewed data.
+#'   }
+#' @param m.candidates the list of candidate equations.
 #'
 #'
 #' @return list including model, fitting statistics, ptable, stable and prediction table
 #' @details
-#' This function models a gam model without considering random effects or autocorrelation.
-
+#' This function models the generalized additive model using mcgv::gam.
+#'
 #' If users specify multiple candidate models through the m.candidates argument, the function will fit each candidate model using the maximum likelihood (ML) method.
-#' The Akaike Information Criterion (AIC) will then be compared to determine the best-fitting model. Once the optimal model is identified,
+#' The corrected Akaike Information Criterion (AICc) will then be compared to determine the best-fitting model. Once the optimal model is identified,
 #' it will be refitted using the restricted maximum likelihood (REML) method and output the results.
 #'
 #' If users specify only 1 candidate model through the m.candidates argument, the model is fitted with "REML" method.
@@ -23,7 +27,7 @@
 
 gam_mod <- function(data, resp_scale = "", m.candidates){
 
-  gamm_main(data , resp_scale , m.option = 0, m.candidates)
+  main_model(data , resp_scale , m.option = 0, m.candidates)
 
 }
 
@@ -36,8 +40,13 @@ gam_mod <- function(data, resp_scale = "", m.candidates){
 #'
 #'
 #' @param data data containing all necessary columns to run the model
-#' @param resp_scale the scale of response variable. default is "log" for log-scale, otherwise modeling the response variable as it is
-#' @param m.candidates the list of formulas.
+#' @param resp_scale Character. Specifies how the response variable is treated in the model.
+#'   \itemize{
+#'     \item \strong{"resp_gaussian"}: Uses the response on its original scale, assuming a Gaussian distribution with an identity link (no transformation applied).
+#'     \item \strong{"resp_log"}: Log-transforms the response before modelling. The transformed response is then assumed to follow a Gaussian distribution with an identity link.
+#'     \item \strong{"resp_gamma"}: Keeps the response on its original scale, fitted under a Gamma distribution with a log link. Suitable for strictly positive and right-skewed data.
+#'   }
+#' @param m.candidates the list of candidate equations.
 #'
 #'
 #'
@@ -49,7 +58,7 @@ gam_mod <- function(data, resp_scale = "", m.candidates){
 #' 'Normalized' residuals are valuable for further analyses, such as investigating relationships with climatic variables.
 
 #' If users specify multiple candidate models through the m.candidates argument, the function will fit each candidate model using the maximum likelihood (ML) method.
-#' The Akaike Information Criterion (AIC) will then be compared to determine the best-fitting model. Once the optimal model is identified,
+#' The corrected Akaike Information Criterion (AICc) will then be compared to determine the best-fitting model. Once the optimal model is identified,
 #' it will be refitted using the restricted maximum likelihood (REML) method and output the results.
 #'
 #' If users specify only 1 candidate model through the m.candidates argument, the model is fitted with "REML" method.
@@ -58,7 +67,7 @@ gam_mod <- function(data, resp_scale = "", m.candidates){
 
 gamm_radius <- function(data, resp_scale = "resp_gamma", m.candidates){
 
-  gamm_main(data , resp_scale , m.option = 1, m.candidates)
+  main_model(data , resp_scale , m.option = 1, m.candidates)
 
 }
 
@@ -67,12 +76,16 @@ gamm_radius <- function(data, resp_scale = "resp_gamma", m.candidates){
 
 #' growth model at site-level
 #' @description
-#' models the growth trend or climate-growth relationship at site-level
+#' models the growth trend or climate-growth relationship per site.
 #'
 #' @param data data containing all necessary columns to run the model
-#' @param resp_scale the scale of response variable. default is "log" for log-scale, otherwise modeling the response variable as it is
-#' @param m.candidates the list of formulas.
-#'
+#' @param resp_scale Character. Specifies how the response variable is treated in the model.
+#'   \itemize{
+#'     \item \strong{"resp_gaussian"}: Uses the response on its original scale, assuming a Gaussian distribution with an identity link (no transformation applied).
+#'     \item \strong{"resp_log"}: Log-transforms the response before modelling. The transformed response is then assumed to follow a Gaussian distribution with an identity link.
+#'     \item \strong{"resp_gamma"}: Keeps the response on its original scale, fitted under a Gamma distribution with a log link. Suitable for strictly positive and right-skewed data.
+#'   }
+#' @param m.candidates the list of candidate equations.
 #'
 #'
 #'
@@ -80,10 +93,10 @@ gamm_radius <- function(data, resp_scale = "resp_gamma", m.candidates){
 #' @return list including model, fitting statistics, ptable, stable and prediction table
 #' @details
 #' This function accounts for within-site variability and temporal autocorrelation by including series identity as random effects
-#' and a first-order autoregressive (AR1) correlation structures, respectively. “Normalized” residuals are also provided for future analysis.
+#' and a first-order autoregressive (AR1) correlation structures, respectively. using mgcv::gamm()
 #'
 #' If users specify multiple candidate models through the m.candidates argument, the function will fit each candidate model using the maximum likelihood (ML) method.
-#' The Akaike Information Criterion (AIC) will then be compared to determine the best-fitting model.
+#' The corrected Akaike Information Criterion (AICc) will then be compared to determine the best-fitting model.
 #' Once the optimal model is identified, it will be refitted using the restricted maximum likelihood (REML) method and output the results.
 #'
 #' If users specify only 1 candidate model through the m.candidates argument, the model is fitted with "REML" method.
@@ -95,7 +108,7 @@ gamm_radius <- function(data, resp_scale = "resp_gamma", m.candidates){
 gamm_site <- function(data, resp_scale = "resp_gamma", m.candidates){
 
   data$uid_radius.fac <- as.factor(as.character(data$uid_radius))
-  gamm_main(data , resp_scale , m.option = 2, m.candidates )
+  main_model(data , resp_scale , m.option = 2, m.candidates )
 }
 
 
@@ -105,11 +118,13 @@ gamm_site <- function(data, resp_scale = "resp_gamma", m.candidates){
 #' models the growth trend or climate-growth relationship at regional-level with multiple sites
 #'
 #' @param data data containing all necessary columns to run the model
-#' @param resp_scale the scale of response variable. default is "log" for log-scale, otherwise modeling the response variable as it is
-#' @param m.candidates the list of formulas.
-
-#'
-#'
+#' @param resp_scale Character. Specifies how the response variable is treated in the model.
+#'   \itemize{
+#'     \item \strong{"resp_gaussian"}: Uses the response on its original scale, assuming a Gaussian distribution with an identity link (no transformation applied).
+#'     \item \strong{"resp_log"}: Log-transforms the response before modelling. The transformed response is then assumed to follow a Gaussian distribution with an identity link.
+#'     \item \strong{"resp_gamma"}: Keeps the response on its original scale, fitted under a Gamma distribution with a log link. Suitable for strictly positive and right-skewed data.
+#'   }
+#' @param m.candidates the list of candidate equations.
 #'
 #'
 #'
@@ -121,7 +136,7 @@ gamm_site <- function(data, resp_scale = "resp_gamma", m.candidates){
 #' “Normalized” residuals are provided for future analysis.
 #'
 #' If users specify multiple candidate models through the m.candidates argument, the function will fit each candidate model using the maximum likelihood (ML) method.
-#' The Akaike Information Criterion (AIC) will then be compared to determine the best-fitting model.
+#' The corrected Akaike Information Criterion (AICc) will then be compared to determine the best-fitting model.
 #' Once the optimal model is identified, it will be refitted using the restricted maximum likelihood (REML) method and output the results.
 #'
 #' If users specify only 1 candidate model through the m.candidates argument, the model is fitted with "REML" method.
@@ -132,7 +147,7 @@ gamm_spatial <- function(data, resp_scale = "resp_gamma", m.candidates){
   data$uid_radius.fac <- as.factor(as.character(data$uid_radius))
   data$uid_site.fac <- as.factor(as.character(data$uid_site))
   m.candidates <- paste0(m.candidates, " + s(uid_site.fac, bs = 're')")
-  gamm_main(data , resp_scale , m.option = 3, m.candidates)
+  main_model(data , resp_scale , m.option = 3, m.candidates)
 
 }
 
@@ -144,10 +159,13 @@ gamm_spatial <- function(data, resp_scale = "resp_gamma", m.candidates){
 #'
 
 #' @param data data containing all necessary columns to run the model
-#' @param resp_scale the scale of response variable. default is "log" for log-scale, otherwise modeling the response variable as it is
-#' @param m.candidates the list of formulas.
-#'
-#'
+#' @param resp_scale Character. Specifies how the response variable is treated in the model.
+#'   \itemize{
+#'     \item \strong{"resp_gaussian"}: Uses the response on its original scale, assuming a Gaussian distribution with an identity link (no transformation applied).
+#'     \item \strong{"resp_log"}: Log-transforms the response before modelling. The transformed response is then assumed to follow a Gaussian distribution with an identity link.
+#'     \item \strong{"resp_gamma"}: Keeps the response on its original scale, fitted under a Gamma distribution with a log link. Suitable for strictly positive and right-skewed data.
+#'   }
+#' @param m.candidates the list of candidate equations.
 #'
 # #' @import furrr
 
@@ -166,7 +184,7 @@ gamm_spatial <- function(data, resp_scale = "resp_gamma", m.candidates){
 #' This function supports parallel computation for the large-scale, geographically distributed datasets.
 #'
 #' If users specify multiple candidate models through the m.candidates argument, the function will fit each candidate model using the maximum likelihood (ML) method.
-#' The Akaike Information Criterion (AIC) will then be compared to determine the best-fitting model.
+#' The corrected Akaike Information Criterion (AICc) will then be compared to determine the best-fitting model.
 #' Once the optimal model is identified, it will be refitted using the restricted maximum likelihood (REML) method and output the results.
 #'
 #' If users specify only 1 candidate model through the m.candidates argument, the model is fitted with "REML" method.
@@ -177,34 +195,27 @@ bam_spatial <- function(data, resp_scale = "resp_gamma", m.candidates){
   data$uid_radius.fac <- as.factor(as.character(data$uid_radius))
   data$uid_site.fac <- as.factor(as.character(data$uid_site))
   m.candidates <- paste0(m.candidates, " + s(uid_site.fac, bs = 're')")
-  gamm_main(data , resp_scale , m.option = 4, m.candidates)
+  main_model(data , resp_scale , m.option = 4, m.candidates)
 
 }
 
 
-
+#' @keywords internal
+#' @noRd
 # main function
-gamm_main <- function(data, resp_scale = "resp_gamma", m.option, m.candidates){
+main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidates){
 
   check_optional_deps()
 
   if (length(m.candidates) == 0) stop("must assign the equation(s) to m.candidates")
   if ( !(resp_scale %in% c("resp_log", "resp_gamma", "resp_gaussian"))) stop(paste0( "please check resp_scale, it allows 3 options: resp_log, on log-scale of resp; resp_gaussian, on response scale assuming gaussian distribution; resp_gamma, on response scale with family Gamma(log)"))
-#   if (resp_scale == "resp_log") {
-# # if in log-scale, use gaussian distribution
-#     famil = gaussian("identity")
-#   }else {
-#     # in orginal scale, use Gamma with log link function
-#     famil = Gamma("log")
-#     if (resp_scale == "resp_gaussian") {
-#
-#       famil = gaussian("identity")
-#     }
-#   }
+
 
   if (resp_scale == "resp_log") famil = gaussian("identity")
   if (resp_scale == "resp_gaussian") famil = gaussian("identity")
   if (resp_scale == "resp_gamma") famil = Gamma("log")
+
+  setorder(data, uid_site, uid_radius, ageC)
 
   # for comparing and selecting model on AIC
   if (length(m.candidates) > 1){
@@ -235,9 +246,6 @@ gamm_main <- function(data, resp_scale = "resp_gamma", m.option, m.candidates){
       }
       if (m.option == 1){
 
-        # m.tmp <- gamm(formul,
-        #               correlation = corCAR1(value = 0.5),
-        #               method = "ML",family = famil, data = data)
 
         m.tmp <- tryCatch({
 
@@ -302,8 +310,6 @@ gamm_main <- function(data, resp_scale = "resp_gamma", m.option, m.candidates){
           bam(formul,
 
               method = "ML",data = data)
-          setorder(data, uid_site, uid_radius, ageC)
-          data[, start.event := c(TRUE, rep(FALSE, .N - 1)), by = .(uid_site, uid_radius)]
 
         }, warning = function(w) {
           # warning_message.c <<- conditionMessage(w)  # Store the warning message
@@ -318,7 +324,8 @@ gamm_main <- function(data, resp_scale = "resp_gamma", m.option, m.candidates){
         # r1 <- start_value_rho(m0, plot=TRUE)
         # print (paste0(Sys.time(), "          ar1"))
         # m.tmp <- bam(formul, data=data, rho=start_value_rho(m0.tmp, plot=FALSE), AR.start=data$start.event, method = "ML")
-
+        setorder(data, uid_site, uid_radius, ageC)
+        data[, start.event := c(TRUE, rep(FALSE, .N - 1)), by = .(uid_site, uid_radius)]
         m.tmp <- tryCatch({
 
           bam(formul, data=data, rho=start_value_rho(m0.tmp, plot=FALSE), AR.start=data$start.event, method = "ML")
@@ -339,50 +346,34 @@ gamm_main <- function(data, resp_scale = "resp_gamma", m.option, m.candidates){
         future::plan(future::sequential)
 
       }
-      # if (m.option < 4){
 
-      # aic.tmp <- data.table(form = gsub("\\\\", "", paste(deparse(formul), collapse = " ")), R2 = summary(m.tmp)$r.sq, methd = "ML")
-      # if (m.option == 0) {
-      #   aic.tmp$aic <-  AIC(m.tmp)
-      #   aic.tmp$aicc <-  AICc(m.tmp)
-      #   aic.tmp$bic <-  BIC(m.tmp)}else {
-      #     aic.tmp$aic <-  AIC(m.tmp$lme)
-      #     aic.tmp$aicc <-  AICc(m.tmp$lme)
-      #     aic.tmp$bic <-  BIC(m.tmp$lme)
-      #
-      #   }
-      # }else{
       if (is.null(m.tmp)) {
         next
       }
         aic.tmp <- data.table(i = i, form = gsub("\\\\", "", paste(deparse(formul), collapse = " ")), aic =  AIC(m.tmp), aicc = MuMIn::AICc(m.tmp), bic =  BIC(m.tmp), methd = "ML")
-        if (m.option %in% c(1,2,3)) aic.tmp <- data.table(aic.tmp, R2 = summary(m.tmp$gam)$r.sq, methd = "ML") else aic.tmp <- data.table(aic.tmp, R2 = summary(m.tmp)$r.sq, methd = "ML")
+        if (m.option %in% c(1,2,3)) aic.tmp <- data.table(aic.tmp, R2 = summary(m.tmp$gam)$r.sq) else aic.tmp <- data.table(aic.tmp, R2 = summary(m.tmp)$r.sq)
 
     # }
 
       if (i == 1) {
-        aic.mn <- aic.tmp$aic
-        m.sel <- m.tmp
-        i.sel <- i
+        # aicc.mn <- aic.tmp$aicc
+        # m.sel <- m.tmp
+        # i.sel <- i
         aic.all <- aic.tmp
       } else{
         aic.all <- rbind(aic.all, aic.tmp)
-        if (aic.mn > aic.tmp$aic){
-          aic.mn <- aic.tmp$aic
-          m.sel <- m.tmp
-          i.sel <- i
-        }
+        # if (aicc.mn > aic.tmp$aicc){
+        #   aic.mn <- aic.tmp$aicc
+        #   m.sel <- m.tmp
+        #   i.sel <- i
+        # }
       }
       rm(aic.tmp, m.tmp)
     }
     aic.all[aicc == min(aicc), selected := "*"]
-    form.sel <- as.formula(aic.all[aicc == min(aicc)]$form)
-    rm(m.sel)
-    # if (!is.null(out.csv)){
-    #
-    #   if (!(dir.exists(out.csv))) dir.create(out.csv, recursive = TRUE)
-    #   utils::write.csv(aic.all, file =  file.path(out.csv, paste0("fitting ML.csv")), row.names = FALSE, na = "")
-    # }
+    form.sel <- as.formula(aic.all[selected == "*"]$form)
+    # rm(m.sel)
+
 
 
   }else{
@@ -390,6 +381,7 @@ gamm_main <- function(data, resp_scale = "resp_gamma", m.option, m.candidates){
     form.sel <- as.formula(m.candidates)
     if (resp_scale == "resp_log") form.sel <- update(form.sel, log(.) ~ .)
   }
+
   # fitting REML for prediction
 
   if (m.option == 0) {
@@ -570,14 +562,14 @@ gamm_main <- function(data, resp_scale = "resp_gamma", m.option, m.candidates){
       rm(nb, knea, moran.I.o, moran.I.r)
       if (moranI$p.value.obs < 0.1 & moranI$p.value.res < 0.1 ) {
       if (m.option == 3)  {
-        form.sel <- update(m.sel$gam$formula, . ~ . + s(latitude, longitude, bs = "sos"))
+        form.sel <- update(m.sel$gam$formula, . ~ . + s(latitude, longitude, bs = "tp"))
         m.sel <- gamm(form.sel,  data = data,
                       random = list(uid_radius.fac= ~1),correlation =  corCAR1(value = 0.5),
                       family = famil)
         data[, res.normalized.LL:=residuals(m.sel$lme, type = "normalized")]
       }
         if (m.option == 4)  {
-          form.sel <- update(m.sel$formula, . ~ . + s(latitude, longitude, bs = "tp", k = 5))
+          form.sel <- update(m.sel$formula, . ~ . + s(latitude, longitude, bs = "tp"))
           # Detect available cores for parallel processing
           available_cores <- parallel::detectCores(logical = FALSE) - 1  # Adjusted cores based on system
 
@@ -644,17 +636,7 @@ gamm_main <- function(data, resp_scale = "resp_gamma", m.option, m.candidates){
   ptable <- data.table(Parameter = row.names(summary(msel.gam)$p.table), summary(msel.gam)$p.table )
   stable <- data.table(Parameter = row.names(summary(msel.gam)$s.table), summary(msel.gam)$s.table)
   aic.reml <- data.table(form = gsub("\\\\", "", paste(deparse(form.sel), collapse = " ")), aic =  AIC(m.sel), aicc = MuMIn::AICc(m.sel), bic =  BIC(m.sel), R2 = summary(msel.gam)$r.sq,  methd = "REML")
-  # if (m.option == 0) {
-  #   aic.reml$aic <-  AIC(msel.gam)
-  #   aic.reml$aicc <- AICc(msel.gam)
-  #   aic.reml$bic <-  BIC(msel.gam)
-  #
-  #   }else {
-  #     aic.reml$aic <-  AIC(m.sel$lme)
-  #     aic.reml$aicc <- AICc(m.sel$lme)
-  #     aic.reml$bic <-  BIC(m.sel$lme)
-  #
-  # }
+
 
   }else{
     pred.terms  <-as.data.frame( predict(m.sel, type="terms",se.fit=TRUE))
@@ -863,7 +845,7 @@ sterm_imp <- function(gam_model, method = c("ssq", "var", "meanabs")) {
 
 #' @export
 ci_resp <- function(model, newdata, nboot = 100,
-                    method = c("delta_link", "delta_resp", "bootstrap_link", "bootstrap_resp", "posterior"),
+                    method = c("posterior", "delta_link", "delta_resp", "bootstrap_link", "bootstrap_resp"),
                     level = 0.95) {
 
   check_optional_deps()

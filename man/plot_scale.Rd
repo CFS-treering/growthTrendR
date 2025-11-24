@@ -2,13 +2,13 @@
 % Please edit documentation in R/graphing.R
 \name{plot_scale}
 \alias{plot_scale}
-\title{plot rw_median of the site and its neighbours on temperoral and spatial space}
+\title{plot median of ring width of the target site and its neighbours}
 \usage{
 plot_scale(dt.scale)
 }
 \arguments{
-\item{dt.scale}{a table resulting from function CFS_scale()}
+\item{dt.scale}{a table with class "cfs_scale", resulting from function CFS_scale()}
 }
 \description{
-This function plots rw_median of the site and its neighbours on temperoral and spatial space
+This function plots the time series and the geographical distribution of the median ring-width measurements to contrast the target site with its neighbouring sites.
 }

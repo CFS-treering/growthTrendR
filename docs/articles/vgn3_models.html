@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Additive Models • CFSTRenD</title>
+<title>Additive Models • growthTrendR</title>
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
@@ -31,7 +31,7 @@
         <span class="icon-bar"></span>
       </button>
       <span class="navbar-brand">
-        <a class="navbar-link" href="../index.html">CFSTRenD</a>
+        <a class="navbar-link" href="../index.html">growthTrendR</a>
         <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.0</span>
       </span>
     </div>
@@ -78,7 +78,7 @@
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Additive Models</h1>
             
-            <h4 data-toc-skip class="date">2025-10-28</h4>
+            <h4 data-toc-skip class="date">2025-11-21</h4>
       
 
       <div class="hidden name"><code>vgn3_models.Rmd</code></div>
@@ -88,39 +88,44 @@
     
     
 <div class="section level2">
-<h2 id="detrending-and-modeling">4. Detrending and Modeling<a class="anchor" aria-label="anchor" href="#detrending-and-modeling"></a>
+<h2 id="additive-models">Additive models<a class="anchor" aria-label="anchor" href="#additive-models"></a>
 </h2>
-<p>GAMMs handle nonlinear responses and can include random effects
-(e.g., site or tree identity) to account for hierarchical structures and
-temporal or spatial dependencies, making them well-suited for modeling
-complex dendrochronological data. in CFSTRenD package, a suite of GAM
-and GAMM models has been implemented to accommodate different types of
-datasets. Here, we use one model, gamm_spatial, to demonstrate how to
-generate a fitting and diagnostic model report.</p>
+<p>GAMs/GAMMs handle nonlinear relationships and can include random
+effects (e.g., site or tree identity) to account for hierarchical
+structures and temporal or spatial dependencies, making them well-suited
+for modeling complex dendrochronological data. in growthTrendR package,
+a suite of GAM/GAMM models has been implemented to accommodate different
+types of datasets. Here, we use a single model, gamm_spatial, to
+demonstrate how to generate a fitting and diagnostic model report from
+raw data.</p>
 <div class="section level4">
-<h4 id="predata-and-fitting">
-<strong>predata and fitting:</strong><a class="anchor" aria-label="anchor" href="#predata-and-fitting"></a>
+<h4 id="prepare-data-for-model">
+<strong>prepare data for model:</strong><a class="anchor" aria-label="anchor" href="#prepare-data-for-model"></a>
 </h4>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span></span>
 <span><span class="co"># loading processed ring measurement</span></span>
-<span><span class="va">samples69.trt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"samples69.trt.rds"</span>, package <span class="op">=</span> <span class="st">"CFSTRenD"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">samples69.trt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"samples69.trt.rds"</span>, package <span class="op">=</span> <span class="st">"growthTrendR"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># if no processed data, run function CFS_format() from raw dataset</span></span>
+<span><span class="co"># # ring measurement</span></span>
+<span><span class="co"># samples69.o &lt;- fread(system.file("extdata", "samples69.csv", package = "growthTrendR"))</span></span>
+<span><span class="co"># </span></span>
+<span><span class="co"># # formatting the users' data conformed to CFS-TRenD structure</span></span>
+<span><span class="co"># samples69.trt &lt;- CFS_format(data = list(samples69.o, 39:111), usage = 1, out.csv = NULL)</span></span>
 <span></span>
 <span><span class="co"># climate</span></span>
-<span><span class="va">clim69</span> <span class="op">&lt;-</span> <span class="fu">fread</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"clim69.csv"</span>, package <span class="op">=</span> <span class="st">"CFSTRenD"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">clim69</span> <span class="op">&lt;-</span> <span class="fu">fread</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"clim69.csv"</span>, package <span class="op">=</span> <span class="st">"growthTrendR"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># merge data</span></span>
 <span><span class="va">samples69_clim</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">samples69.trt</span><span class="op">$</span><span class="va">tr_all_wide</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"uid_site"</span>, <span class="st">"site_id"</span>,<span class="st">"latitude"</span>, <span class="st">"longitude"</span>,  <span class="st">"species"</span>, <span class="st">"uid_tree"</span>, <span class="st">"uid_radius"</span><span class="op">)</span><span class="op">]</span>, <span class="va">samples69.trt</span><span class="op">$</span><span class="va">tr_all_long</span><span class="op">$</span><span class="va">tr_7_ring_widths</span>, by <span class="op">=</span> <span class="st">"uid_radius"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># # Calculate BAI</span></span>
 <span><span class="va">samples69_clim</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_bai.html">calc_bai</a></span><span class="op">(</span><span class="va">samples69_clim</span>, <span class="st">"uid_radius"</span>, <span class="st">"rw_mm"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">samples69_clim</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">samples69_clim</span>, <span class="va">clim69</span>, by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"site_id"</span>, <span class="st">"year"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="fitting-model">
-<strong>fitting model</strong><a class="anchor" aria-label="anchor" href="#fitting-model"></a>
-</h4>
+<p><br> ### <strong>fitting model</strong></p>
 <p>This example uses gamm_spatial, but users may choose other functions
 (gamm_radius, gamm_site, bam_spatial, gam_mod) that follows the same
 arguments, according to their purpose and data.</p>
@@ -137,19 +142,25 @@ arguments, according to their purpose and data.</p>
 <h4 id="arguments-of-gamm_spatial">
 <strong>arguments of gamm_spatial:</strong><a class="anchor" aria-label="anchor" href="#arguments-of-gamm_spatial"></a>
 </h4>
-<p><strong>resp_scale</strong></p>
+<p><strong>resp_scale</strong> The function provides three options for
+specifying the response variable, and the user must choose the one that
+best suits their modelling purpose:</p>
+<p>“resp_gaussian”: the response variable is used on its original scale
+and is modelled under a Gaussian distribution with an identity link (no
+transformation applied).</p>
+<p>“resp_log”: the response variable is log-transformed prior to
+modelling. The transformed response is then assumed to follow a Gaussian
+distribution and is fitted using an identity link.</p>
+<p>“resp_gamma”: the response variable is kept on its original scale,
+and the model is fitted under a Gamma distribution with a log link,
+appropriate for strictly positive and right-skewed data.</p>
 <p><strong>m.candidates</strong></p>
+<p>The list of all candidate equations. Note that the response variable
+is kept on its original scale in all cases, even when using the option
+“resp_log”.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
-<span><span class="fu"><a href="../reference/generate_report.html">generate_report</a></span><span class="op">(</span>robj <span class="op">=</span> <span class="va">m.sp</span>, output_file <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
-<div class="section level5">
-<h5 id="arguments-of-the-generate_report-function">
-<strong>arguments of the generate_report() function:</strong><a class="anchor" aria-label="anchor" href="#arguments-of-the-generate_report-function"></a>
-</h5>
-<p><strong>robj </strong></p>
-<p>The input for the model report is the output of the modelling
-functions, which assigns the class “cfs_model” to the resulting
-object.</p>
+<span><span class="fu"><a href="../reference/generate_report.html">generate_report</a></span><span class="op">(</span>robj <span class="op">=</span> <span class="va">m.sp</span><span class="op">)</span></span></code></pre></div>
 <div style="margin: 20px 0; padding: 10px; 
             box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
             border-radius: 8px;">
@@ -163,7 +174,7 @@ object.</p>
 <meta charset="utf-8">
 <meta name="generator" content="pandoc">
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE">
-<meta name="date" content="2025-10-28">
+<meta name="date" content="2025-11-21">
 <title>Generalized Additive Model Analysis Report</title>
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -466,7 +477,7 @@ display: none;
 
 <h2 class="title toc-ignore">Generalized Additive Model Analysis
 Report</h2>
-<h5 class="date">2025-10-28</h5>
+<h5 class="date">2025-11-21</h5>
 
 </div>
 
@@ -613,7 +624,6 @@ $(document).ready(function () {
     document.getElementsByTagName("head")[0].appendChild(script);
   })();
 </script><hr>
-</div>
 </div>
 </div>
 <div class="section level2">

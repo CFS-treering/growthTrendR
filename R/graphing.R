@@ -1,9 +1,9 @@
-#' plotting quality assessment
+#' plotting quality assessment per radius
 #' @description
-#' plotting ccf results for each tree
+#' Plotting the time series and cross-correlation to contrast each radius with the chronologies, using both raw ring-width measurements and treated series.
 #'
-#' @param qa.trt object "cfs_qa" from CFS_qa() function
-#' @param qa.out_series SampleID list to be plotted, default -999 for output all samples
+#' @param qa.trt object "cfs_qa" from CFS_qa() function.
+#' @param qa.out_series series_id list to be plotted, default "all" for plotting the graphs for all.
 
 
 
@@ -138,10 +138,10 @@ create_barplot <- function(icol, data) {
 
 #' plot frequency distribution by geo-location per species
 #' @description
-#' This function plots the frequency distribution by geo-location per species
+#' This function plots the frequency distribution by geo-location for each species
 #'
-#' @param dt.freq a table resulting from function CFS_freq()
-#' @param out.species species list, default is 'all' to output all species
+#' @param dt.freq a table with class "cfs_freq", resulting from function CFS_freq()
+#' @param out.species species list, default is 'all' to output the frequency distribution for all species
 
 
 #' @export plot_freq
@@ -213,15 +213,10 @@ return(plt.lst)
 
 
 
-#' plot rw_median of the site and its neighbours on temperoral and spatial space
+#' plot median of ring width of the target site and its neighbours
 #' @description
-#' This function plots rw_median of the site and its neighbours on temperoral and spatial space
-#'
-#' @param dt.scale a table resulting from function CFS_scale()
-
-
-
-
+#' This function plots the time series and the geographical distribution of the median ring-width measurements to contrast the target site with its neighbouring sites.
+#' @param dt.scale a table with class "cfs_scale", resulting from function CFS_scale()
 
 #' @export plot_scale
 
@@ -245,28 +240,6 @@ plot_scale <- function(dt.scale){
 
     )
 
-
-  # g2 <- ggplot(dt.scale$dt.plots[[2]], aes(x = longitude, y = latitude, size = rw.median)) +
-  #   geom_point(aes(color = ifelse(ord == 0, "red", "darkblue")), alpha = 1) +
-  #   scale_color_identity() +
-  #   scale_size_continuous(
-  #     name = "rw median (mm)"
-  #   ) +
-  #   guides(size = guide_legend(override.aes = list(color = "darkblue"))) +
-  #   scale_x_continuous(breaks = scales::pretty_breaks(n = 3), expand = expansion(mult = 0.3)) +
-  #   scale_y_continuous(breaks = scales::pretty_breaks(n = 5), expand = expansion(mult = 0.2)) +
-  #   theme_minimal() +
-  #   theme(
-  #     strip.text = element_text(size = 16),
-  #     panel.grid.minor = element_blank(),
-  #     plot.title = element_text(size = 18),
-  #     legend.text = element_text(color = "darkblue"),
-  #     legend.title = element_text(color = "darkblue")
-  #   ) +
-  #   labs(
-  #     x = "Longitude",
-  #     y = "Latitude"
-  #   )
 
   dt <- dt.scale$dt.plots[["med.site"]]
 
@@ -498,57 +471,16 @@ plot_facet <- function(data, varcols, xylabels, nrow, ncol) {
 #' @param robj An R object containing analysis results from functions in this package.
 #'   The object's class determines which report template is used. Supported
 #'   classes depend on available templates in the package.
-#' @param data_report.reports_sel Numeric vector. Specifies which report sections of data report
-#'   to include in the output. Default is c(1,2,3,4) to include all sections.
-#'   1-project level; 2- species level; 3- site level; and 4- radius level.
+#' @param data_report.reports_sel Numeric vector.
+#'   Specifies which sections of the data report to include in the output:
+#'   1 = project level; 2 = species level; 3 = site level; 4 = radius level.
+#'   The default is `c(1, 2, 3, 4)`, which includes all sections.
 #' @param output_file Character string. Optional path and filename for the output
 #'   HTML file. If NULL (default), the report is generated with an automatic
 #'   filename and opened in RStudio viewer.
 #' @param ... Additional parameters passed to the R Markdown template. Available
 #'   parameters vary by template type and are filtered to only include those
 #'   recognized by the selected template.
-#'
-#' @return Character string. The file path of the generated HTML report.
-#'   As a side effect, if output_file is NULL, opens the report in RStudio viewer.
-#'
-#' @details
-#' The function works through the following process:
-#' \itemize{
-#'   \item Determines the object class and selects corresponding template
-#'   \item Validates that a template exists for the given object type
-#'   \item Merges user-provided parameters with base parameters
-#'   \item Filters parameters to only those accepted by the template
-#'   \item Renders the R Markdown template with the specified parameters
-#'   \item Opens the result in RStudio viewer (if no output file specified)
-#' }
-#'
-#' @section Template System:
-#' The function uses a template system where:
-#' \itemize{
-#'   \item Templates are stored in \code{inst/rmd/} directory
-#'   \item Template selection is based on \code{get_template_and_params()}
-#'   \item Each template has defined parameters it accepts
-#'   \item Template files follow naming convention: \code{template_[type].Rmd}
-#' }
-#'
-#' @section Report Sections:
-#' The \code{data_report.reports_sel} parameter controls which sections appear
-#' in the final report. Section numbers and their meanings are template-specific.
-#' Common patterns include:
-#' \itemize{
-#'   \item 1: Summary statistics and data overview
-#'   \item 2: Main analysis results and visualizations
-#'   \item 3: Detailed breakdowns or secondary analyses
-#'   \item 4: Appendices or supplementary information
-#' }
-#'
-#'
-#'
-#' @note
-#' This function requires that appropriate R Markdown templates exist in the
-#' package's \code{inst/rmd/} directory. Templates must be named following
-#' the convention \code{template_[type].Rmd} where [type] corresponds to the
-#' object class or template identifier returned by \code{get_template_and_params()}.
 #'
 
 #' @export
@@ -635,7 +567,7 @@ get_template_and_params <- function(robj_class) {
   list(template = template_name, params = allowed_params)
 }
 
-#' Plot GAM smooth terms with confidence intervals
+#' Plot smooth terms prediction with confidence intervals
 #'
 #' This function generates ggplot objects for each smooth term in a GAM model.
 #' Predictions vary one smooth term at a time, keeping all other terms fixed at reference values.
@@ -660,7 +592,7 @@ get_template_and_params <- function(robj_class) {
 #' @export
 plot_resp <- function(robj, ...) {
   check_optional_deps()
-  if (is.list(robj$model) && all(c("gam", "lme") %in% names(robj$model))) model <- robj$model$gam else model <- robj$model
+  if (is.list(robj$model) && ("gamm" %in% class(robj$model))) model <- robj$model$gam else model <- robj$model
 
   model_data <- model$model  # original data
 
@@ -689,7 +621,7 @@ model$resp_scale <- resp_scale
   setDT(model_data)
   # Response variable
   response_var <- all.vars(formula(model))[1]
-  if (is_log_model == TRUE) {
+  if (resp_scale == "resp_log") {
     response_var <- gsub("^log\\(|\\)$", "", response_var)
 
     model_data$y.resp <- exp(model_data[[names(model_data)[1]]])} else{

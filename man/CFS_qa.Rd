@@ -2,7 +2,7 @@
 % Please edit documentation in R/quality_assessment.R
 \name{CFS_qa}
 \alias{CFS_qa}
-\title{Crossdating Field Season Quality Assurance Analysis}
+\title{Quality assessment: radius alignment}
 \usage{
 CFS_qa(
   dt.input,

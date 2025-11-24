@@ -2,27 +2,33 @@
 % Please edit documentation in R/models.R
 \name{gam_mod}
 \alias{gam_mod}
-\title{a general gam model}
+\title{generalized additive model}
 \usage{
 gam_mod(data, resp_scale = "", m.candidates)
 }
 \arguments{
 \item{data}{data containing all necessary columns to run the model}
 
-\item{resp_scale}{the scale of response variable. default is original scale with family = Gamma("log"); "log" for predicting log-scale with family = gaussian("identity") ; "hybrid" for predicting original scale with family = gaussian("identity")}
+\item{resp_scale}{Character. Specifies how the response variable is treated in the model.
+\itemize{
+  \item \strong{"resp_gaussian"}: Uses the response on its original scale, assuming a Gaussian distribution with an identity link (no transformation applied).
+  \item \strong{"resp_log"}: Log-transforms the response before modelling. The transformed response is then assumed to follow a Gaussian distribution with an identity link.
+  \item \strong{"resp_gamma"}: Keeps the response on its original scale, fitted under a Gamma distribution with a log link. Suitable for strictly positive and right-skewed data.
+}}
 
-\item{m.candidates}{the list of formulas.}
+\item{m.candidates}{the list of candidate equations.}
 }
 \value{
 list including model, fitting statistics, ptable, stable and prediction table
 }
 \description{
-gam model benefiting the model selection procedure using ML method
+generalized additive model that captures non-linear relationships between a response variable and predictors using smooth functions, while allowing inclusion of random effects or complex structures.
 }
 \details{
-This function models a gam model without considering random effects or autocorrelation.
+This function models the generalized additive model using mcgv::gam.
+
 If users specify multiple candidate models through the m.candidates argument, the function will fit each candidate model using the maximum likelihood (ML) method.
-The Akaike Information Criterion (AIC) will then be compared to determine the best-fitting model. Once the optimal model is identified,
+The corrected Akaike Information Criterion (AICc) will then be compared to determine the best-fitting model. Once the optimal model is identified,
 it will be refitted using the restricted maximum likelihood (REML) method and output the results.
 
 If users specify only 1 candidate model through the m.candidates argument, the model is fitted with "REML" method.

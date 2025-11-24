@@ -2,7 +2,7 @@
 % Please edit documentation in R/graphing.R
 \name{plot_resp}
 \alias{plot_resp}
-\title{Plot GAM smooth terms with confidence intervals}
+\title{Plot smooth terms prediction with confidence intervals}
 \usage{
 plot_resp(robj, ...)
 }

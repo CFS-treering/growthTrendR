@@ -7,10 +7,10 @@
 plot_freq(dt.freq, out.species = "all")
 }
 \arguments{
-\item{dt.freq}{a table resulting from function CFS_freq()}
+\item{dt.freq}{a table with class "cfs_freq", resulting from function CFS_freq()}
 
-\item{out.species}{species list, default is 'all' to output all species}
+\item{out.species}{species list, default is 'all' to output the frequency distribution for all species}
 }
 \description{
-This function plots the frequency distribution by geo-location per species
+This function plots the frequency distribution by geo-location for each species
 }

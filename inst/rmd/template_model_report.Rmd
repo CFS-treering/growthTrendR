@@ -49,11 +49,13 @@ and overall model fit statistics.
 ```{r}
 if (is.list(robj$model) && all(c("gam", "lme") %in% names(robj$model))) gam_model <- robj$model$gam else gam_model <- robj$model
 summary(gam_model)
+
+if (nrow(robj$stable) > 0){
 term_important <- sterm_imp( gam_model)
 
 method <- unique(term_important$method)
-tab <- term_important[, c(1,2)]
-colnames(tab) <- c("Term", "Score (%)")
+}else method <- ""
+
 ```
 
 <br>
@@ -65,10 +67,19 @@ based on <b><u>`r method `</b></u> method.
 This indicates how much each variable contributes to explaining variation in the response.
 
 
-```{r}
-
+```{r, echo=FALSE, results='asis', warning=FALSE, message=FALSE, fig.width=12, fig.height=8, fig.align='left'}
+if (nrow(robj$stable) > 0){
+# term_important <- sterm_imp( gam_model)
+# 
+# method <- unique(term_important$method)
+tab <- term_important[, c(1,2)]
+colnames(tab) <- c("Term", "Score (%)")
 knitr::kable(tab, caption = "Relative importance of smooth terms based on deviance partitioning.",
       align = c("l", "r"))
+}else{
+  cat("\n**no smooth term in the model...**\n")
+  cat("<br>")
+}
 ```
 
 
@@ -83,7 +94,13 @@ while holding other predictors constant.
 These visualizations help identify nonlinear trends and assess whether effects are monotonic, threshold-like, or more complex.
 <br>
 
-```{r, echo=FALSE,   warning=FALSE, message=FALSE, fig.width=12, fig.height=8, fig.align='left'}
+```{r, echo=FALSE, results='asis', warning=FALSE, message=FALSE, fig.width=12, fig.height=8, fig.align='left'}
+if (nrow(robj$stable) > 0){
+if ("bam" %in% class(robj$model)) {
+  cat("\n**Predicting smooth terms on the response scale is not yet supported for bam models. The plots shown here are based on mgcv::plot.gam()**\n")
+  cat("<br>")
+  plot.gam(robj$model, pages = 1)
+}else{
 plot_list <- plot_resp(robj = robj)
 
 combined <- plot_grid(
@@ -93,7 +110,11 @@ combined <- plot_grid(
 )
 
 print(combined)
-
+}
+}else{
+  cat("\n**no smooth term in the model...**\n")
+  cat("<br>")
+}
 ```
 <br>
 

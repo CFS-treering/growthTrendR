@@ -9,8 +9,6 @@
 <url><loc>/index.html</loc></url>
 <url><loc>/reference/bam_spatial.html</loc></url>
 <url><loc>/reference/calc_bai.html</loc></url>
-<url><loc>/reference/ccf_avg.html</loc></url>
-<url><loc>/reference/ccf_pairs.html</loc></url>
 <url><loc>/reference/CFS_format.html</loc></url>
 <url><loc>/reference/CFS_freq.html</loc></url>
 <url><loc>/reference/CFS_mapping.html</loc></url>
@@ -26,7 +24,7 @@
 <url><loc>/reference/generate_report.html</loc></url>
 <url><loc>/reference/index.html</loc></url>
 <url><loc>/reference/plot_freq.html</loc></url>
-<url><loc>/reference/plot_mapping3.html</loc></url>
+<url><loc>/reference/plot_mapping.html</loc></url>
 <url><loc>/reference/plot_qa.html</loc></url>
 <url><loc>/reference/plot_resp.html</loc></url>
 <url><loc>/reference/plot_scale.html</loc></url>

@@ -1,17 +1,5 @@
 
 
-# functions
-
-
-# step 1: pair-wise ccf on all the samples. find all pairs that satisfies the condition that max_ccf @lag0
-#   the results of this step serves as the initial sample list of chronologies for step 2
-# step 2: run ccf between each sample and the mean of initial chronologies
-#   this step is to check ccf between each sample and the the mean chronologies,
-#   the results is the final chronologies satisfying the condition that max_ccf @lag0 with each sample that form the chronologies
-#   the out table contains the correlation with chronologies at lag0 and its rank(from 1 to 21, 1 represents the maximum one, 21 represents minimum),
-#   qa_code(Pass, borderline, highpeak, pm1) for each sample
-
-
 #' tree-ring data measurement assessment
 #' @description
 #' Assess tree-ring measurement accuracy using a treated series based on the differences between two consecutive tree-ring measurements.
@@ -28,7 +16,7 @@
 #'
 #'
 #'
-#' @return A list of 3 elements:
+#' @return A list of 5 elements:
 #' 1) dt.ccf:	A data table containing the CCF results for all samples, including the quality assessment code (qa_code).
 #' 2) dt.chron:	The final chronologies, including both raw chronologies, the mean of ring measurement of the series with pass,
 #' and the treated  chronologies, calculated as the difference of two consecutive raw chronologies.
@@ -285,7 +273,9 @@ CFS_qa_old <- function(dt.input, qa.label_data = "", qa.label_trt = "",
 #' @param lag.max maximum lag for ccf
 
 
-#' @export ccf_pairs
+# #' @export ccf_pairs
+#' @keywords internal
+#' @noRd
 ccf_pairs <- function(ts1, ts2, lag.max = 10) {
   ccf.chk <- ccf(ts1, ts2, lag.max = lag.max, na.action = na.pass,  plot = FALSE)
   max_ccf <- max(ccf.chk$acf)
@@ -304,7 +294,9 @@ ccf_pairs <- function(ts1, ts2, lag.max = 10) {
 #' @param qa_code quality classification code (NULL, no code)
 
 
-#' @export ccf_avg
+# #' @export ccf_avg
+#' @keywords internal
+#' @noRd
 ccf_avg <- function(icol, data, blcrit = 0.1, lag.max = 10, qa_code="fail"){
 
   dt.pairs <- ccf(data[,2],data[,icol, with = FALSE],lag.max=lag.max,plot=FALSE, na.action = na.pass)
@@ -383,7 +375,7 @@ cor_avg <- function(data){
 }
 
 
-#' compare the median of tree ring measurement of a specific site to those of nearby sites
+#' Quality assessment: ring-width measurement at plot level
 #' @description
 #' Apply a k-nearest neighbors (k-NN) method based on geographic location for the same species.
 #' It compares the median tree-ring measurements of a specific site to those of nearby sites
@@ -402,66 +394,6 @@ cor_avg <- function(data){
 #'
 
 #'
-
-# CFS_scale <- function(target_site, ref_sites, scale.label_data_ref = "", scale.max_dist_km = 20, scale.N_nbs = 10){
-#   # scale
-#   if (nrow(target_site) > 1) stop("we can only process 1 species in 1 site each time ...")
-#   check_optional_deps()
-#   # check key columns
-#   if (length(setdiff(c("species", "uid_site", "site_id", "latitude","longitude"), names(target_site))) > 0) stop("at least one of the mandatory columns (species, uid_site, latitude, longitude) doesn't exist, please check...")
-#   if (length(setdiff(c("species", "uid_site", "latitude","longitude", "uid_radius","year", "rw_mm"), names(ref_sites))) > 0) stop("at least one of the mandatory columns (species, uid_site, latitude, longitude, uid_radius, year, rw_mm) doesn't exist, please check...")
-#
-#
-#   site.all.spc <- ref_sites[species == target_site$species, .N, by = .(uid_site, species, latitude, longitude)]
-#
-#   dist.mat <- geosphere::distm(target_site[, c("longitude", "latitude")],
-#                                site.all.spc[, c("longitude", "latitude")],
-#                                fun = geosphere::distGeo)
-#
-#   site.all.spc$dist_to_chk_m <- as.vector(t(dist.mat))
-#
-#   site.all.spc$dist_to_chk_km <- round(site.all.spc$dist_to_chk_m / 1000, 1)
-#   setorder(site.all.spc, dist_to_chk_m)
-#   site.all.spc$ord <- 0: (nrow(site.all.spc) - 1)
-#   site.closest <- site.all.spc[ dist_to_chk_km <= scale.max_dist_km & ord <= scale.N_nbs]
-#
-#   rw.closest <- merge(ref_sites, site.closest[ , c("ord", "uid_site")], by = c("uid_site"))
-#
-#
-#
-#   med.site <- rw.closest[, .(N = .N, rw.median = median(rw_mm), yr.mn = min(year), yr.max = max(year)), by = .(ord, species, uid_site, longitude, latitude, uid_radius)][,
-#                                                                                                                                                                          .(Ncores = .N, rw.median = round(median(rw.median), 2), yr.mn = min(yr.mn), yr.max = max(yr.max)), by = .(ord, species, uid_site, longitude, latitude)]
-#
-#   med.site.yr <- rw.closest[, .(N = .N, rw.median = median(rw_mm) ), by = .(ord, species, uid_site, uid_radius, year)][,
-#                                                                                                                        .(Ncores = .N, rw.median = median(rw.median)), by = .(ord, species, uid_site, year)]
-#
-#   setorder(med.site.yr, ord, uid_site, year)
-#   # ratio defines as target_site/neighbor , when it's smaller means the target_site's magnitude is smaller,
-#   med.site$rw.ratio <- round(med.site[ord == 0]$rw.median/med.site$rw.median,2)
-#
-#   med.site$size_class <- cut(
-#     med.site$rw.ratio,
-#     breaks = c(-Inf, 0.1, 0.2, 0.5, 2, 5, 10, Inf), # Define the breaks
-#     labels = c("< 0.1", "0.1 - 0.2", "0.2 - 0.5", "0.5 - 2", "2 - 5", "5 - 10", "> 10"), # Define labels
-#     include.lowest = TRUE
-#   )
-#   if (any(is.na(med.site$size_class))) {
-#     warning("Some values in rw.ratio are outside the defined breaks and will be excluded.")
-#   }
-#
-#
-#
-#
-#   rw.median <- data.table(med.site[ord == 0][,c( "uid_site","species", "rw.median")],
-#                           med.site[ord > 0][, .(scale.N_nbs = .N, rw.min.nbs = min(rw.median), rw.max.nbs = max(rw.median), rw.median.nbs = median(rw.median))])[,ratio_median := round(rw.median/rw.median.nbs,2)]
-#
-#
-#   result <- list(dt.plots = list(med.site.yr = med.site.yr, med.site = med.site), ratio.median = rw.median,
-#                  scale.parms = c(scale.label_data_site = target_site$site_id, scale.label_data_ref = scale.label_data_ref, scale.max_dist_km = scale.max_dist_km, scale.N_nbs = scale.N_nbs))
-#   class(result) <- "cfs_scale"
-#   return(result)
-# }
-
 
 CFS_scale <- function(target_site, ref_sites,
                       scale.label_data_ref = "",
@@ -714,7 +646,7 @@ run_safe_ccf <- function(dt.trt_wide, qa.max_lag = 10, mem_target = 0.6) {
   dt.ccf.pairs
 }
 
-#' Crossdating Field Season Quality Assurance Analysis
+#' Quality assessment: radius alignment
 #'
 #' Performs comprehensive quality assurance analysis for tree-ring crossdating
 #' using pairwise cross-correlation functions and iterative chronologies

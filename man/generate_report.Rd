@@ -16,9 +16,10 @@ generate_report(
 The object's class determines which report template is used. Supported
 classes depend on available templates in the package.}
 
-\item{data_report.reports_sel}{Numeric vector. Specifies which report sections of data report
-to include in the output. Default is c(1,2,3,4) to include all sections.
-1-project level; 2- species level; 3- site level; and 4- radius level.}
+\item{data_report.reports_sel}{Numeric vector.
+Specifies which sections of the data report to include in the output:
+1 = project level; 2 = species level; 3 = site level; 4 = radius level.
+The default is `c(1, 2, 3, 4)`, which includes all sections.}
 
 \item{output_file}{Character string. Optional path and filename for the output
 HTML file. If NULL (default), the report is generated with an automatic
@@ -28,54 +29,9 @@ filename and opened in RStudio viewer.}
 parameters vary by template type and are filtered to only include those
 recognized by the selected template.}
 }
-\value{
-Character string. The file path of the generated HTML report.
-  As a side effect, if output_file is NULL, opens the report in RStudio viewer.
-}
 \description{
 Creates HTML reports from various analysis objects using predefined
 R Markdown templates. The function automatically selects the appropriate template
 based on the input object's class and renders a comprehensive report with
 visualizations and analysis results.
 }
-\details{
-The function works through the following process:
-\itemize{
-  \item Determines the object class and selects corresponding template
-  \item Validates that a template exists for the given object type
-  \item Merges user-provided parameters with base parameters
-  \item Filters parameters to only those accepted by the template
-  \item Renders the R Markdown template with the specified parameters
-  \item Opens the result in RStudio viewer (if no output file specified)
-}
-}
-\note{
-This function requires that appropriate R Markdown templates exist in the
-package's \code{inst/rmd/} directory. Templates must be named following
-the convention \code{template_[type].Rmd} where [type] corresponds to the
-object class or template identifier returned by \code{get_template_and_params()}.
-}
-\section{Template System}{
-
-The function uses a template system where:
-\itemize{
-  \item Templates are stored in \code{inst/rmd/} directory
-  \item Template selection is based on \code{get_template_and_params()}
-  \item Each template has defined parameters it accepts
-  \item Template files follow naming convention: \code{template_[type].Rmd}
-}
-}
-
-\section{Report Sections}{
-
-The \code{data_report.reports_sel} parameter controls which sections appear
-in the final report. Section numbers and their meanings are template-specific.
-Common patterns include:
-\itemize{
-  \item 1: Summary statistics and data overview
-  \item 2: Main analysis results and visualizations
-  \item 3: Detailed breakdowns or secondary analyses
-  \item 4: Appendices or supplementary information
-}
-}
-
