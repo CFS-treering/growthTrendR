@@ -14,3 +14,16 @@ plot_freq(dt.freq, out.species = "all")
 \description{
 This function plots the frequency distribution by geo-location for each species
 }
+\examples{
+
+# loading processed data
+dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+dt.freq <- CFS_freq(
+dt.samples_trt$tr_all_wide,
+freq.label_data = "demo-samples",
+freq.uid_level = "uid_radius")
+
+plots.lst <- plot_freq(dt.freq)
+
+
+}

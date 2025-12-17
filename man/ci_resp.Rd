@@ -2,13 +2,13 @@
 % Please edit documentation in R/models.R
 \name{ci_resp}
 \alias{ci_resp}
-\title{Compute confidence intervals for GAM predictions}
+\title{Compute prediction and confidence intervals of smooth terms on response scale}
 \usage{
 ci_resp(
   model,
   newdata,
   nboot = 100,
-  method = c("delta_link", "delta_resp", "bootstrap_link", "bootstrap_resp", "posterior"),
+  method = c("posterior", "delta_link", "delta_resp", "bootstrap_link", "bootstrap_resp"),
   level = 0.95
 )
 }
@@ -41,4 +41,20 @@ References:
 - Wood, S.N. (2017) *Generalized Additive Models: An Introduction with R, 2nd Edition*. CRC Press.
 - Efron, B., & Tibshirani, R. (1993) *An Introduction to the Bootstrap*. Chapman & Hall.
 - Gelman, A., et al. (2013) *Bayesian Data Analysis, 3rd Edition*. CRC Press.
+}
+\examples{
+# loading processed data
+dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+# climate
+dt.clim <- data.table::fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
+# pre-data for model
+dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+dt.m <- dt.samples_clim[ageC >1]
+# using gamm_spatial model as an example
+m.sp <-gamm_spatial(data = dt.m, resp_scale = "resp_log",
+       m.candidates = "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + s(FFD)")
+
+dt.m[, uid_site.fac:= as.factor(as.character(uid_site))]
+dt.ci <- ci_resp(m.sp$model$gam, newdata = dt.m)
+
 }

@@ -35,3 +35,17 @@ it will be refitted using the restricted maximum likelihood (REML) method and ou
 
 If users specify only 1 candidate model through the m.candidates argument, the model is fitted with "REML" method.
 }
+\examples{
+
+# loading processed data
+dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+# pre-data for model
+dt.samples_long <- growthTrendR:::prepare_samples_clim(dt.samples_trt)
+
+dt.m <- dt.samples_long[uid_site == 1][ageC >1]
+
+# gamm_radius model
+m.radius <-gamm_radius(data = dt.m, resp_scale = "resp_log",
+                                       m.candidates = c( "rw_mm ~ s(year)",
+                                                         "rw_mm ~ s(year)"))
+}

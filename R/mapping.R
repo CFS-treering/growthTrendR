@@ -30,14 +30,8 @@
 #'   and year values in columns prefixed with \code{"X"}. Includes all metadata columns (except "year") and the
 #'   selected variable across years. the second is a string for var.name
 #'
-#' @examples
-#' \dontrun{
-#' files <- list.files("data/input", full.names = TRUE, pattern = "\\.csv$")
-#' dt <- read_series(files)
-#' }
-
-
-#' @export read_series
+#' @keywords internal
+#' @noRd
 read_series <- function(fn.lst, year.span = c(1801, 2017),
                         var.name = "ratio.Bai.bv.o_p", val.lim = c(-100, 100),
                         cols.meta = c("uid_tree", "uid_site", "longitude", "latitude", "species", "year")) {
@@ -86,7 +80,7 @@ read_series <- function(fn.lst, year.span = c(1801, 2017),
 #' or by individual species. It generates yearly interpolated raster maps
 #' over a user-defined extent or the extent of the input data.
 #'
-#' @param data A \code{cfs_mapping} object produced by \code{read_series()}.
+#' @param data input in wide format.
 #' @param year.span Numeric vector of length 2 giving the range of years to include.
 #' @param extent.lim Optional numeric vector defining the spatial extent
 #'   (\code{c(xmin, xmax, ymin, ymax)}). If \code{NULL}, the extent is
@@ -98,13 +92,18 @@ read_series <- function(fn.lst, year.span = c(1801, 2017),
 #' @return An object of class \code{cfs_gif}, a list of interpolated raster layers
 #'   by species and year.
 #'
-#' @examples
-#' \dontrun{
-#' data <- read_series("path/to/file.rwl")
-#' maps <- CFS_mapping(data, year.span = c(1900, 2000), grid.step = 0.5)
-#' }
-
 #' @export
+#' @examples
+#'
+#' \dontrun{
+#' # loading processed data
+#' dt.samples_trt <- get_test_samples_trt()
+#' cols.meta = c("uid_tree", "uid_site", "longitude", "latitude", "species")
+
+#' dt.mapping <- dt.samples_trt$tr_all_wide[
+#'   , c(..cols.meta, as.character(1991:1995)), with = FALSE]
+#' results_mapping <- CFS_mapping(dt.mapping, year.span = c(1991:1993))
+#' }
 #'
 
 
@@ -115,13 +114,11 @@ CFS_mapping <- function(data, year.span = c(1801, 2017),
   #----------------------------
   # Input checks
   #----------------------------
-  if (!inherits(data, "cfs_mapping")) {
-    stop("Input data must be the result of read_series() and of class 'cfs_mapping'")
-  }
+
 
   check_optional_deps()
 
-  data <- data$dt.w
+  if (inherits(data, "cfs_mapping")) data <- data$dt.w
 
   # Add species column if needed
   if (by.spc) {
@@ -133,11 +130,26 @@ CFS_mapping <- function(data, year.span = c(1801, 2017),
   #----------------------------
   # Identify year and non-year columns
   #----------------------------
-  year_cols <- grep("^\\d+$", str_sub(names(data), 2, -1), value = TRUE)
-  non_year_cols <- setdiff(names(data), paste0("X", year_cols))
 
-  val.years <- intersect(year_cols, as.character(year.span[1]:year.span[2]))
-  data.yr <- data[, c(non_year_cols, paste0("X", val.years)), with = FALSE]
+  # 1. find year columns (either bare years or prefixed with "X")
+  year_idx <- grep("^\\d+$", names(data))
+  if (length(year_idx) == 0) {
+    # try stripping leading "X"
+    year_idx <- grep("^\\d+$", str_sub(names(data), 2))
+  }
+
+  # 2. select only years within year.span
+  yr_vals <- intersect(as.integer(str_remove(names(data)[year_idx], "^X")), year.span[1]:year.span[2])
+  year_idx_select <- year_idx[names(data)[year_idx] %in% paste0("X", yr_vals) | names(data)[year_idx] %in% as.character(yr_vals)]
+
+  # 3. non-year columns
+  non_year_idx <- setdiff(seq_along(data), year_idx)
+
+  # 4. subset
+  # data.yr <- data[, sort(c(non_year_idx, year_idx)), with = FALSE]
+  data.yr <- data[, c(non_year_idx, year_idx_select), with = FALSE]
+  year_idx.new <- (length(non_year_idx) + 1):ncol(data.yr)
+  if (length(grep("^\\d+$", names(data))) > 0) names(data.yr)[year_idx.new] <- paste0("X", names(data.yr)[year_idx.new])
 
   #----------------------------
   # Create grid (Canada extent or user-defined)
@@ -171,13 +183,10 @@ CFS_mapping <- function(data, year.span = c(1801, 2017),
     setDF(dt.spc.i)
     dt.spc.i <- dt.spc.i[, colSums(!is.na(dt.spc.i)) > 0, drop = FALSE]
     setDT(dt.spc.i)
-
-    # Identify year columns left
-    cols <- setdiff(names(dt.spc.i), non_year_cols)
-    names(cols) <- str_sub(cols, 2)  # strip "X" to keep year
+    cols.select <- names(data.yr)[year_idx.new]
 
     # Run over years using map
-    results_list.ispc <- purrr::map(cols, function(col) {
+      results_list.ispc <- purrr::map(cols.select, function(col) {
       yr <- as.numeric(str_sub(col, 2))
 
       current_data <- dt.spc.i[!is.na(dt.spc.i[[col]]),
@@ -195,14 +204,36 @@ CFS_mapping <- function(data, year.span = c(1801, 2017),
         nmax = 100
       )
 
-      # res <- raster::raster(idw_model)
-      # names(res) <- yr
-      # return(res)
-      raster::raster(idw_model)
-    })
+      # df.idw <- cbind( year = yr, as.data.table(idw_model)[, -"var1.var"])
+      # df.idw <- data.table(
+      #   year = yr,
+      #   longitude = idw_model@coords[, 1],
+      #   latitude = idw_model@coords[, 2],
+      #   value = idw_model$var1.pred
+      # )
 
-    names(results_list.ispc) <- names(cols)
-    results_list.ispc
+      df.idw <- data.table(
+        year = yr,
+        longitude = idw_model@coords[, 1],
+        latitude = idw_model@coords[, 2],
+        value = idw_model$var1.pred
+      )
+      df.idw
+      }
+      )
+
+    # names(results_list.ispc) <- yr_vals
+    # results_list.ispc
+
+      dfs <- data.table::rbindlist(results_list.ispc, fill = TRUE)
+
+      # Assuming your long data has: longitude, latitude, year, value
+      dfs_wide <- data.table::dcast(
+        dfs,
+        longitude + latitude ~ year,  # id vars ~ variable to spread
+        value.var = "value"            # column containing the values
+      )
+
   })
 
   names(results_list.spc) <- spc.lst
@@ -212,354 +243,8 @@ CFS_mapping <- function(data, year.span = c(1801, 2017),
 
 
 
-#' Generate mapped spatial-temporal plots
-#'
-#' This function interpolates and visualizes tree ring data (e.g., BAI growth change) across space and time
-#' using inverse distance weighting (IDW). Outputs can include maps in PNG and GIF formats, interpolated raster
-#' files in GeoTIFF format, and gridded values in CSV format.
-#'
-#' @param data A data.table object of class \code{cfs_mapping}, typically generated by \code{\link{read_series}}.
-#' @param year.span A numeric vector of length two specifying the start and end years for analysis. Default is \code{c(1801, 2017)}.
-#' @param extent.lim Optional. A numeric vector specifying map extent in the form \code{c(xmin, xmax, ymin, ymax)}. If \code{NULL}, extent is computed from the data.
-#' @param grid.step A numeric value specifying the resolution (in degrees) of the interpolation grid. Default is \code{0.1}.
-#' @param animation_fps Frames per second for the animated GIF output. Default is \code{1.0}.
 
-#' @param by.spc Logical. If \code{TRUE}, runs separately for each species. Default is \code{FALSE}.
-#' @param parms.out Character vector specifying the types of outputs to generate. Valid values are:
-#'   \code{"csv"}, \code{"tif"}, \code{"png"}, and \code{"gif"}.
-#' @param dir.out A character string specifying the directory where outputs will be saved. Required if \code{parms.out} is not empty.
-#' @param data.crs Character string specifying the CRS (coordinate reference system) for spatial outputs. Default is WGS84.
-#' @param ... Additional parameters passed to the function.
-#'
-#' @return This function does not return a value but saves outputs to disk depending on the options selected in \code{parms.out}.
-#'   Output includes:
-#'   \itemize{
-#'     \item PNG maps of interpolated tree growth
-#'     \item Animated GIFs showing change over time
-#'     \item Raster GeoTIFFs of interpolated values
-#'     \item CSV files of gridded predicted values
-#'   }
-#'
-#' @details
-#' The function performs spatial interpolation using IDW and masks outputs to Canada and boreal zones using shapefiles.
-#' The elevation layer and mask files are internal to the \code{growthTrendR} package and used for contextual mapping.
-#'
-#' PNG and GIF outputs are generated using \code{magick}, raster outputs via \code{terra}, and interpolation via \code{gstat}.
-#'
-#' @section File Outputs:
-#' When parms.out is specified, the following directory structure is created:
-#' \itemize{
-#'   \item \strong{png/}: Individual PNG files for each species and year
-#'   \item \strong{gif/}: Animated GIF files for each species
-#'   \item \strong{csv/}: CSV files with annual data for each species
-#'   \item \strong{tif/}: GeoTIFF files for each species and year
-#' }
-#'
-#' @seealso
-#' \code{\link{CFS_mapping}} for preparing input data
-#'
-#' @examples
-#' \dontrun{
-#' # Basic usage - return animated GIFs
-#' gif_results <- plot_mapping(cfs_data)
-#'
-#' # Generate all output formats
-#' plot_mapping(cfs_data,
-#'               animation_fps = 2.0,
-#'               parms.out = c("png", "gif", "csv"),
-#'               dir.out = "output_folder")
-#'
-#'
-#' # Custom animation speed and plot parameters
-#' plot_mapping(cfs_data,
-#'               animation_fps = 0.5,
-#'               parms.out = "gif",
-#'               dir.out = "slow_gifs")
-#' }
-#'
 
-#' @export
-
-
-plot_mapping <- function(data, year.span = c(1801,2017),
-                     # cols.meta = c("uid_tree", "uid_site", "longitude", "latitude", "species", "year"),
-                       extent.lim = NULL, grid.step = 0.1 , animation_fps = 1.0,
-                     # png.text = list(text1= "BAI Annual Growth Change -", text_bott = "Created by Martin P. Girardin, Canadian Forest Service (2025)" , text_side = "Growth Change (%)"),
-                     by.spc = FALSE, parms.out = c("", "csv","tif","png", "gif"), dir.out= NULL,
-                     data.crs = "+proj=longlat +datum=WGS84 +no_defs", ...
-                     ){
-
-  check_optional_deps()
-
-  if (!inherits(data, "cfs_mapping")) stop("please check the input of data, make sure it's the result of read_series() function")
-  if (length(setdiff(parms.out, c("csv","tif","png", "gif"))) > 0) stop('please check parms.out, only "csv","tif","png", "gif" are supported' )
-  if (is.null(dir.out) & !is.null(parms.out)) stop("please specify the output directory (dir.out) ")
-  if (by.spc == TRUE) dir.out <- file.path(dir.out, "by_spc")
-  if (!dir.exists(dir.out)) dir.create(dir.out, recursive = TRUE)
-  data <- data$dt.w
-
-  if (by.spc == TRUE)  data[, species.inuse:= species] else
-    data$species.inuse <- "all.spp"
-  year_cols <- grep("^\\d+$", str_sub(names(data), 2, -1), value = TRUE)
-
-  # Get non-year columns
-  non_year_cols <- setdiff(names(data), paste0("X", year_cols))
-  val.years <- intersect(year_cols, as.character(year.span[1]:year.span[2]))
-  data.yr <- data[ ,c(non_year_cols, paste0("X", val.years)), with = FALSE]
-
-
-  if (is.null(extent.lim)){
-  # Create a grid covering Canada
-  canada_ext <- extent(min(data$longitude), max(data$longitude),
-                       min(data$latitude), max(data$latitude))}else
-   canada_ext <- extent(extent.lim)
-
-
-  grid <- expand.grid(
-    longitude = seq(from = canada_ext@xmin, to = canada_ext@xmax, by = grid.step),
-    latitude = seq(from = canada_ext@ymin, to = canada_ext@ymax, by = grid.step)
-  )
-
-  grid$grid_cell <- 1:nrow(grid)
-  sp::coordinates(grid) <- ~longitude+latitude
-  sp::gridded(grid) <- TRUE
-  final_df <- as.data.frame(grid)
-
-  ncells_total <- nrow(final_df)
-
-  elevation_file <- system.file("extdata/Mapping/Canada120s.tif", package = "growthTrendR")
-
-  # Read elevation and shapefiles
-  elevation <- rast(elevation_file)
-
-
-  # using the figshare that martin provided to avoid big extdata
-  # the reference is here https://doi.org/10.6084/m9.figshare.30005473.v1 (Martin 2025-10-01) then redirect to
-  # https://figshare.com/articles/dataset/Spatially_detailed_tree-ring_analysis_throughout_Canada/30005473
-  # the true url is by right clicking download button to copy link address for the file
-  # url <- "https://figshare.com/ndownloader/files/57487996"
-
-
-  boreal_mask <- get_boreal_mask("https://figshare.com/ndownloader/files/57487996")
-  canada_mask <- sf::st_read(system.file("extdata/Mapping/province.shp", package = "growthTrendR"))
-
-  spc.lst <- sort(unique(data$species.inuse))
-    # run over all species
-  results_list.spc <- lapply(spc.lst, function(spc.i){
-    dt.spc.i <- data.yr[species.inuse == spc.i]
-    # remove the columns with NA only
-    setDF(dt.spc.i)
-    dt.spc.i <- dt.spc.i[, colSums(!is.na(dt.spc.i)) > 0]
-    setDT(dt.spc.i)
-    # run over year
-    lst <- list()
-    cols <-setdiff(names(dt.spc.i), non_year_cols)
-    names(cols) <- str_sub(cols, 2)
-
-    results_list.ispc <- lapply(cols, function(col) {
-      yr <- as.numeric(str_sub(col,2))
-
-      current_data <- dt.spc.i[!is.na(dt.spc.i[[col]]), c("longitude", "latitude", col), with = FALSE]
-
-      # Ensure spatial coordinates
-      sp::coordinates(current_data) <- ~longitude + latitude
-      # sp::coordinates(grid) <- ~longitude + latitude
-
-      idw_model <- gstat::idw(as.formula(paste(col, "~1")),
-                       locations = current_data,
-                       newdata = grid,
-                       idp = 2,
-                       nmax = 100)
-
-      df.idw <- cbind( year = yr, as.data.table(idw_model)[, -"var1.var"])
-       r <- raster(idw_model)
-
-       # # mask
-       # r_crop <- crop(r, canada_mask_proj)
-       # r_mask <- mask(r_crop, canada_mask_proj)
-       if (any(str_detect(parms.out, "tif")) == TRUE) {
-
-         dir.out1<- file.path(dir.out, "tif")
-         if (!dir.exists(dir.out1)) dir.create(dir.out1)
-         writeRaster(r,
-                     filename = file.path(dir.out1,
-                                          paste0(spc.i, " ","tree_rings_", yr, ".tif")),
-                     format = "GTiff",
-                     overwrite = TRUE)
-       }
-       crs(r) <- data.crs
-       boreal_mask_proj <- sf::st_transform(boreal_mask, data.crs)
-       canada_mask_proj <- sf::st_transform(canada_mask, data.crs)
-       r_boreal <- mask(rast(r), vect(boreal_mask_proj))
-       r_masked <- mask(r_boreal, vect(canada_mask_proj))  # Second masking step with Canada
-
-
-
-       # Prepare output path if PNG is requested
-       output_png <- NULL
-       if (any(str_detect(parms.out, "png"))) {
-         dir.png <- file.path(dir.out, "png")
-         dir.create(dir.png, showWarnings = FALSE, recursive = TRUE)
-         output_png <- file.path(dir.png, paste0(spc.i, " tree_rings_", yr, ".png"))
-       }
-
-       # Call the function once, with or without output path
-       p <- plot_tree_ring_map(r_masked, elevation, yr, out.png = output_png, ...)
-
-       # Save output if GIF is requested
-       if (any(str_detect(parms.out, "gif"))) {
-         lst$png <- p
-       }
-
-
-
-      # Return result with year attached in csv per species with all year
-      if (any(str_detect(parms.out, "csv"))) {
-        cat("Adding data for year:", col, "\n")
-        values_vector <- terra::values(r_masked)
-        ncells_total <- ncell(r_masked)
-        coords <- xyFromCell(r_masked, 1:ncells_total)
-        final_df <- data.frame(grid_cell = 1:ncells_total, X = coords[, "x"], Y = coords[, "y"])
-        if (length(values_vector) == ncells_total) {
-          final_df.ispc <- data.frame(final_df, year = yr, var1.pred = values_vector)
-        } else {
-          temp_vec <- rep(NA, ncells_total)
-          non_na_indices <- which(!is.na(values_vector))
-          if (length(non_na_indices) > 0) {
-            valid_indices <- non_na_indices[non_na_indices <= ncells_total]
-            temp_vec[valid_indices] <- values_vector[valid_indices]
-          }
-         final_df.ispc <- data.frame(final_df, year = yr, var1.pred = temp_vec)
-        }
-       final_df.clean <- final_df.ispc[!is.na(final_df.ispc[,"var1.pred"]),]
-
-
-       lst$df.idw <- final_df.clean
-
-      }
-
-     if (length(lst) > 0) return(lst)
-    }
-    ) # year loop end
-
-
-
-    if (any(str_detect(parms.out, "csv")) == TRUE) {
-      # Return result with year attached in csv per species with all year
-      df.idw.ispc <- rbindlist(lapply(results_list.ispc, `[[`, "df.idw"), fill = TRUE)
-      df.test <- rbindlist(lapply(results_list.ispc, `[[`, "df.idw.comp"), fill = TRUE)
-
-      df.idw.ispc.all <- rbindlist(lapply(results_list.ispc, `[[`, "df.idw.all"), fill = TRUE)
-      # Optional: reshape to wide format
-      df.idw.ispc.wide <- dcast(df.idw.ispc, grid_cell ~ year, value.var = "var1.pred")
-      df.idw.ispc.wide<- merge(final_df, df.idw.ispc.wide, by = "grid_cell", all.y = TRUE)
-      dir.csv<- file.path(dir.out, "csv")
-      if (!dir.exists(dir.csv)) dir.create(dir.csv)
-      utils::write.csv(df.idw.ispc.wide, file = file.path(dir.csv, paste0(spc.i, " ", " by degree-", grid.step," y",  year.span[1], "-", year.span[2], ".csv")), row.names = FALSE, na = "")
-      # utils::write.csv(df.idw.ispc.all, file = file.path(dir.csv, paste0(spc.i, " ", " by degree-", grid.step," y",  "idw.model", ".csv")), row.names = FALSE, na = "")
-
-    }
-      years <- names(results_list.ispc)  # or however you store years
-     img_list <- unlist(lapply(results_list.ispc[order(as.numeric(years))], `[[`, "png"))
-
-     gif_imgs <- magick::image_read(img_list)
-     gif_animated <- magick::image_animate(gif_imgs, fps = animation_fps)
-
-       if (any(str_detect(parms.out, "gif")) == TRUE) {
-
-         dir.out1<- file.path(dir.out, "gif")
-         if (!dir.exists(dir.out1)) dir.create(dir.out1)
-         # img_list <- unlist(lapply(results_list.ispc, `[[`, "png"))
-         # img_list <- sort(img_list)
-
-
-         gif_animated %>%
-           magick::image_write(file.path(dir.out1, paste0(spc.i, " ","tree_rings_animation y", year.span[1],"-", year.span[2], ".gif")))
-       }
-     return(gif_animated)
-
-})# species lapply end
-  names(results_list.spc) <- spc.lst
-return(results_list.spc)
-  } # function end
-
-
-
-#' Plot Tree-Ring Growth Map with Elevation
-#'
-#' Creates a static PNG map overlaying tree-ring growth changes on top of a grayscale elevation raster,
-#' including a customized color legend and annotation.
-#'
-#' @param tree_ring_raster A raster object containing the tree-ring growth change values (e.g., BAI ratio).
-#' @param elevation_raster A raster object representing elevation data for background shading.
-#' @param year Integer. The year to display in the map title.
-#' @param out.png Optional. File path for saving the PNG map. If `NULL`, a temporary file is created and returned.
-#' @param png.text A named list of character strings used to annotate PNG maps. Elements include:
-#'   \itemize{
-#'     \item \code{text_top}: Main top title (e.g., "BAI Annual Growth Change -")
-#'     \item \code{text_bott}: Bottom caption (e.g., author or data source)
-#'     \item \code{text_side}: Legend or axis label (e.g., "Growth Change (%)")
-#'   }
-#'
-#' @return The file path of the created PNG image if `out.png` is not provided.
-#' @keywords internal
-#' @noRd
-
-plot_tree_ring_map <- function(tree_ring_raster, elevation_raster, year, out.png = NULL,
-                               png.text = list(text_top= "BAI Annual Growth Change -", text_bott = "Created by Martin P. Girardin, Canadian Forest Service (2025)" , text_side = "Growth Change (%)")) {
-
-  png.text <- utils::modifyList(list(text_top= "BAI Annual Growth Change -", text_bott = "Created by Martin P. Girardin, Canadian Forest Service (2025)" , text_side = "Growth Change (%)"), png.text)
-  # Determine output file
-  if (!is.null(out.png)) {
-    output_file <- out.png
-  } else {
-    output_file <- tempfile(fileext = ".png")
-  }
-
-  png(output_file, width = 2500, height = 1300, res = 300)
-  par(mfrow = c(1, 1))
-  layout(matrix(c(1, 2), ncol = 2), widths = c(4, 1))
-  par(mar = c(4, 4, 1, 3))
-
-  if (!identical(crs(elevation_raster), crs(tree_ring_raster))) {
-    elevation_raster <- terra::project(elevation_raster, tree_ring_raster)
-  }
-  elevation_raster <- raster::crop(elevation_raster, tree_ring_raster)
-  elevation_raster[elevation_raster < 1] <- NA
-
-  terra::plot(elevation_raster, col = gray.colors(100, start = 0.8, end = 0.3), legend = FALSE,
-       main = paste(png.text[["text_top"]], year), axes = TRUE)
-
-  r_clipped <- raster::clamp(tree_ring_raster, lower = 0.5, upper = 1.5, values = TRUE)
-  terra::plot(r_clipped,
-       col = colorRampPalette(c("red", "yellow", "green", "blue"))(100),
-       alpha = 0.6,
-       add = TRUE,
-       legend = FALSE)
-  grid()
-  mtext(png.text[["text_bott"]],
-        side = 1, line = 3, adj = 0, cex = 0.8)
-
-  par(mar = c(5, 0, 3, 3))
-  raster::plot(c(0, 1), c(0.3, 1.7), type = "n", axes = FALSE, xlab = "", ylab = "")
-
-  cols <- colorRampPalette(c("darkred", "red", "yellow", "green", "blue"))(100)
-  breaks <- seq(0.5, 1.5, length.out = length(cols) + 1)
-
-  for(i in 1:length(cols)) {
-    rect(0.1, breaks[i], 0.4, breaks[i + 1], col = cols[i], border = NA)
-  }
-
-  tick_positions <- seq(0.5, 1.5, by = 0.1)
-  tick_labels <- paste0((tick_positions - 1) * 100)
-  axis(4, at = tick_positions, labels = tick_labels, las = 1, cex.axis = 0.8, pos = 0.5)
-  mtext(png.text[["text_side"]], side = 4, line = 1.5, cex = 1.2)
-
-  dev.off()
-
-  # Return the output file path
-  if (is.null(out.png)) return(output_file)
-}
 
 
 #' Download and Read Boreal Mask Shapefile
@@ -572,49 +257,521 @@ plot_tree_ring_map <- function(tree_ring_raster, elevation_raster, year, out.png
 #' @return An sf object containing the boreal mask polygon(s)
 #' @noRd
 #' @keywords internal
+# get_boreal_mask <- function(url) {
+#
+#   # Download zip file
+#   temp_zip <- tempfile(fileext = ".zip")
+#   temp_dir <- tempfile()
+#
+#   res <- httr::GET(
+#     url,
+#     httr::write_disk(temp_zip, overwrite = TRUE),
+#     httr::config(followlocation = TRUE),
+#     httr::add_headers("User-Agent" = "Mozilla/5.0"),
+#     httr::timeout(300)
+#   )
+#
+#   if (res$status_code != 200) {
+#     stop("Download failed with status code: ", res$status_code)
+#   }
+#
+#   # Extract and read shapefile
+#   utils::unzip(temp_zip, exdir = temp_dir)
+#   shp_file <- list.files(temp_dir, pattern = "\\.shp$",
+#                          recursive = TRUE, full.names = TRUE)[1]
+#
+#   if (is.na(shp_file)) {
+#     stop("No shapefile found in downloaded archive")
+#   }
+#
+#   boreal_mask <- sf::st_read(shp_file, quiet = TRUE)
+#
+#   # Cleanup
+#   unlink(temp_zip)
+#   unlink(temp_dir, recursive = TRUE)
+#
+#   return(boreal_mask)
+# }
+
 get_boreal_mask <- function(url) {
 
-  # Download zip file
   temp_zip <- tempfile(fileext = ".zip")
   temp_dir <- tempfile()
 
-  res <- httr::GET(
-    url,
-    httr::write_disk(temp_zip, overwrite = TRUE),
-    httr::config(followlocation = TRUE),
-    httr::add_headers("User-Agent" = "Mozilla/5.0"),
-    httr::timeout(300)
+  on.exit({
+    if (file.exists(temp_zip)) unlink(temp_zip)
+    if (dir.exists(temp_dir)) unlink(temp_dir, recursive = TRUE)
+  }, add = TRUE)
+
+  res <- tryCatch(
+    httr::GET(
+      url,
+      httr::write_disk(temp_zip, overwrite = TRUE),
+      httr::config(followlocation = TRUE),
+      httr::add_headers("User-Agent" = "Mozilla/5.0"),
+      httr::timeout(300)
+    ),
+    error = function(e) {
+      message("Failed to download boreal mask: ", e$message)
+      return(NULL)
+    }
   )
 
-  if (res$status_code != 200) {
-    stop("Download failed with status code: ", res$status_code)
+  if (is.null(res)) return(NULL)
+
+  if (httr::status_code(res) != 200) {
+    message("Download failed (HTTP ", httr::status_code(res), ")")
+    return(NULL)
   }
 
-  # Extract and read shapefile
-  utils::unzip(temp_zip, exdir = temp_dir)
-  shp_file <- list.files(temp_dir, pattern = "\\.shp$",
-                         recursive = TRUE, full.names = TRUE)[1]
+  # unzip safely
+  unzip_ok <- tryCatch(
+    {
+      utils::unzip(temp_zip, exdir = temp_dir)
+      TRUE
+    },
+    error = function(e) {
+      message("Failed to unzip boreal mask: ", e$message)
+      FALSE
+    }
+  )
+
+  if (!unzip_ok) return(NULL)
+
+  shp_file <- list.files(
+    temp_dir,
+    pattern = "\\.shp$",
+    recursive = TRUE,
+    full.names = TRUE
+  )[1]
 
   if (is.na(shp_file)) {
-    stop("No shapefile found in downloaded archive")
+    message("No shapefile found in downloaded archive")
+    return(NULL)
   }
 
-  boreal_mask <- sf::st_read(shp_file, quiet = TRUE)
-
-  # Cleanup
-  unlink(temp_zip)
-  unlink(temp_dir, recursive = TRUE)
-
-  return(boreal_mask)
+  boreal_mask <- tryCatch(
+    sf::st_read(shp_file, quiet = TRUE),
+    error = function(e) {
+      message("Failed to read shapefile: ", e$message)
+      NULL
+    }
+  )
+    # Cleanup
+    unlink(temp_zip)
+    unlink(temp_dir, recursive = TRUE)
+  boreal_mask
 }
 
 
+#' Plot spatially interpolated tree-ring growth maps
+#'
+#' Visualizes spatial interpolation results produced by
+#' \code{\link{CFS_mapping}} and optionally exports raster files,
+#' static maps, and animations.
+#'
+#' @param mapping_results
+#' A list returned by \code{\link{CFS_mapping}} containing
+#' spatially interpolated rasters by species and year.
+#' @param crs.src Coordinate Reference System of the input data,
+#'   specified as a string in the format 'EPSG:<ID>' (for example, 'EPSG:4326').
+#'   The function will stop with an error if `crs.src` is not provided in this format.
+#' @param parms.out
+#' Character vector indicating output formats to generate.
+#' Supported values are \code{"csv"}, \code{"tif"},
+#' \code{"png"}, and \code{"gif"}.
+#'
+#' @param dir.out
+#' Output directory used to save generated files.
+#' Required when \code{parms.out} is not empty.
+#'
+#' @param animation_fps
+#' Frames per second used when creating GIF animations.
+#'
+#' @param ...
+#' Additional arguments passed to
+#' \code{plot_tree_ring_map}, such as \code{png.text}.
+#'
+#' @details
+#' This function assumes that spatial interpolation has already
+#' been performed using \code{\link{CFS_mapping}}. The input
+#' object is iterated by species and year to generate maps and
+#' optional exports.
+#'
+#' When \code{"gif"} is requested in \code{parms.out}, yearly
+#' PNG images are combined into animated GIFs.
+#'
+#' @return
+#' A named list containing png of each year
+#'
+#' @seealso
+#' \code{\link{CFS_mapping}}
+#'
+#' @examples
+#' \dontrun{
+#' # Load processed demo data
+#' dt.samples_trt <- readRDS(
+#'   system.file("extdata", "dt.samples_trt.rds",
+#'               package = "growthTrendR")
+#' )
+#' # prepare data for IDW model
+#' cols.meta = c("uid_tree", "uid_site", "longitude", "latitude", "species")
+#' dt.mapping <- dt.samples_trt$tr_all_wide[
+#'   , c(..cols.meta, as.character(1991:1995)), with = FALSE]
+#'
+#' # Run spatial interpolation
+#' mapping_results <- CFS_mapping(
+#'   dt.mapping,
+#'   year.span = c(1991, 1993)
+#' )
+#'
+#' # generate plots and export png and gif to the specified folder
+#' png_list <- plot_mapping(
+#' mapping_results = mapping_results,
+#' parms.out = c("png", "gif"),
+#' dir.out = "mapping_test",
+#' png.text = list(
+#'   text_top  = "Ring width measurement - ",
+#'   text_bott = "Source: demo-samples",
+#'   text_side = "ring width (mm)"
+#' )
+#' )
+#'
+#'}
+#' @export
+plot_mapping <- function(mapping_results, crs.src = "EPSG:4326",
+                         parms.out = c("csv", "tif", "png", "gif"),
+                         dir.out = NULL,
+                         animation_fps = 1.0,
+                         ...) {
+
+  check_optional_deps()
+  if (!is.character(crs.src) ||
+      length(crs.src) != 1L ||
+      !grepl("^EPSG:\\d+$", crs.src)) {
+    stop(
+      "crs.src must be a character string in the form 'EPSG:<ID>' (e.g. 'EPSG:4326')",
+      call. = FALSE
+    )
+  }
+  # --- Input validation ---
+  if (!is.list(mapping_results)) stop("mapping_results must be a list from CFS_mapping()")
+  allowed_out <- c("csv","tif","png","gif")
+  if (length(setdiff(parms.out, allowed_out)) > 0)
+    stop("parms.out only supports: ", paste(allowed_out, collapse = ", "))
+  if (!is.null(parms.out) && is.null(dir.out))
+    stop("Please specify an output directory (dir.out)")
+
+  if (!dir.exists(dir.out)) dir.create(dir.out, recursive = TRUE)
+
+  # --- Load reference layers once ---
+  elevation_file <- system.file("extdata/Mapping/Canada120s.tif", package = "growthTrendR")
+  elevation <- terra::rast(elevation_file)
+
+  # using the figshare that martin provided to avoid big extdata
+  # the reference is here https://doi.org/10.6084/m9.figshare.30005473.v1 (Martin 2025-10-01) then redirect to
+  # https://figshare.com/articles/dataset/Spatially_detailed_tree-ring_analysis_throughout_Canada/30005473
+  # the true url is by right clicking download button to copy link address for the file
+  # url <- "https://figshare.com/ndownloader/files/57487996"
+
+  boreal_mask <- get_boreal_mask("https://figshare.com/ndownloader/files/57487996")
+  canada_mask <- sf::st_read(system.file("extdata/Mapping/province.shp", package = "growthTrendR"))
+  # Transform boreal and Canada masks to raster CRS
+  boreal_mask_proj <- terra::vect(sf::st_transform(boreal_mask, crs.src))
+  canada_mask_proj <- terra::vect(sf::st_transform(canada_mask, crs.src))
+  # --- Loop over species & years ---
+  spc_lst <- names(mapping_results)
+  out_list <- lapply(spc_lst, function(spc.i) {
+     spc_data <- mapping_results[[spc.i]]
+
+    rasters <- terra::rast(
+      spc_data,
+      type = "xyz",
+      crs = crs.src
+    )
+    df.value.lim <- terra::global(
+      rasters,
+      fun = range,
+      na.rm = TRUE
+    )
+
+    value.lim <- c(floor(min(df.value.lim[,1]) * 10) / 10, ceiling(max(df.value.lim[,2]) * 10) / 10)
 
 
+    # --- Mask rasters using terra ---
+    r_boreal <- terra::mask(rasters, boreal_mask_proj)
+    rasters_masked <- terra::mask(r_boreal, canada_mask_proj)
+    # Prepare directories once per species
+    dir_csv <- if ("csv" %in% parms.out) file.path(dir.out, "csv") else NULL
+    dir_tif <- if ("tif" %in% parms.out) file.path(dir.out, "tif") else NULL
+    dir_png <- if ("png" %in% parms.out) file.path(dir.out, "png") else NULL
+    dir_gif <- if ("gif" %in% parms.out) file.path(dir.out, "gif") else NULL
+    for (d in c(dir_csv, dir_tif, dir_png, dir_gif)) if (!is.null(d) && !dir.exists(d)) dir.create(d, recursive = TRUE)
+
+    png_list <- list()
 
 
+    for (yr in names(rasters)) {
+      r_masked <- rasters_masked[[yr]]
 
 
+      # Apply masks sequentially (replaced by mask for whole rasters)
+      # r_boreal <- terra::mask(r, boreal_mask_proj)
+      # r_masked <- terra::mask(r_boreal, canada_mask_proj)
+
+
+           # Save TIF
+      if (!is.null(dir_tif)) {
+        terra::writeRaster(
+          r_masked,
+          filename = file.path(dir_tif, paste0(spc.i, "_tree_rings_", yr, ".tif")),
+          overwrite = TRUE
+        )
+      }
+
+
+      # Save PNG
+
+        # Prepare output path if PNG is requested
+        png_file <- if (!is.null(dir_png)) file.path(dir_png, paste0(spc.i, "_tree_rings_", yr, ".png")) else NULL
+
+        # Call plot_tree_ring_map once
+        p <- plot_tree_ring_map(
+          r_masked,
+          elevation,
+          yr,
+          out.png = png_file,
+          value.lim = value.lim,
+          ...
+        )
+
+        # Store in list
+          png_list[[yr]] <- p
+      # }
+    }
+
+    # Save CSV
+    if (!is.null(dir_csv)) {
+
+      write.csv(spc_data, file = file.path(dir_csv, paste0(spc.i, "_tree_rings.csv")), row.names = FALSE, na = "" )
+    }
+    # Save GIF
+    if (!is.null(dir_gif) && length(png_list) > 0) {
+      # gif_imgs <- magick::image_read(unlist(lapply(png_list, function(x) x$filename)))
+      gif_imgs <-magick::image_read(unlist(png_list))
+      gif_anim <- magick::image_animate(gif_imgs, fps = animation_fps)
+      magick::image_write(gif_anim, file.path(dir_gif, paste0(spc.i, "_tree_rings_animation.gif")))
+    }
+
+    return(png_list)
+  })
+#
+  names(out_list) <- spc_lst
+  return(out_list)
+}
+
+#' Plot tree-ring spatial map for a given year
+#'
+#' Generates a spatial map of interpolated tree-ring growth values for a single
+#' year, optionally overlaying elevation data. The function is primarily used
+#' internally by \code{plot_mapping()} to produce PNG maps and animations.
+#'
+#' @param tree_ring_raster A \code{SpatRaster} or \code{RasterLayer} containing
+#'   interpolated tree-ring values for one year.
+#' @param elevation_raster A \code{SpatRaster} or \code{RasterLayer} representing
+#'   elevation data used as a grayscale background.
+#' @param year Numeric year associated with the tree-ring raster.
+#' @param out.png Optional character string specifying the output PNG file path.
+#'   If \code{NULL}, a temporary file is created.
+#' @param png.text Optional named list with text labels for the plot. Supported
+#'   elements are \code{text_top}, \code{text_bott}, and \code{text_side}.
+#' @param value.lim Numeric vector of length 2 giving the minimum and maximum
+#'   values for the color scale.
+#' @param tick_positions Numeric vector giving tick locations for the legend.
+#' @param tick_labels Character or numeric vector of labels corresponding to
+#'   \code{tick_positions}.
+#' @param nbreaks number of breaks for the legend
+#' @param ... Additional graphical parameters passed from
+#'   \code{plot_mapping()}.
+#'
+#' @details
+#' The color scale limits are typically rounded using an internal helper
+#' (e.g. \code{round_limits()}) to ensure clean legend breaks. Elevation data
+#' are reprojected and cropped to match the tree-ring raster before plotting.
+#'
+#' @return
+#' Invisibly returns the file path to the generated PNG if \code{out.png} is
+#' \code{NULL}; otherwise returns \code{NULL}.
+#'
+#' @keywords internal
+#' @noRd
+
+plot_tree_ring_map <- function(
+    tree_ring_raster,
+    elevation_raster,
+    year,
+    out.png = NULL,
+    png.text = NULL,
+    value.lim = NULL,
+    tick_positions = NULL,
+    tick_labels = NULL,
+    nbreaks = 10
+) {
+
+  ## ----------------------------
+  ## Defaults
+  ## ----------------------------
+  default_text <- list(
+    text_top  = "my title",
+    text_bott = "author/source",
+    text_side = "value description"
+  )
+
+  png.text <- if (is.list(png.text)) {
+    utils::modifyList(default_text, png.text)
+  } else {
+    default_text
+  }
+
+  ## ----------------------------
+  ## Ensure SpatRaster
+  ## ----------------------------
+  # tree_ring_raster <- terra::rast(tree_ring_raster)
+  # elevation_raster <- terra::rast(elevation_raster)
+
+  if (!terra::hasValues(tree_ring_raster)) {
+    warning("Tree-ring raster has no values for year ", year)
+    return(invisible(NULL))
+  }
+
+  ## ----------------------------
+  ## CRS handling
+  ## ----------------------------
+  if (!terra::same.crs(elevation_raster, tree_ring_raster)) {
+    elevation_raster <- terra::project(elevation_raster, tree_ring_raster)
+  }
+
+  elevation_raster <- terra::crop(elevation_raster, tree_ring_raster)
+
+  ## ----------------------------
+  ## Determine value limits
+  ## ----------------------------
+  if (is.null(value.lim)) {
+    value.lim <- terra::minmax(tree_ring_raster)
+    value.lim <- as.numeric(value.lim)
+    value.lim[1] <- floor(value.lim[1] * 10) / 10
+    value.lim[2] <- ceiling(value.lim[2] * 10) / 10
+  }
+
+  ## Clamp raster if limits provided
+  r_plot <- terra::clamp(
+    tree_ring_raster,
+    lower = value.lim[1],
+    upper = value.lim[2],
+    values = TRUE
+  )
+  terra::hasValues(r_plot)
+  ## ----------------------------
+  ## Legend breaks & ticks
+  ## ----------------------------
+  breaks <- seq(value.lim[1], value.lim[2], length.out = nbreaks + 1)
+
+  if (is.null(tick_positions)) {
+    tick_positions <- pretty(value.lim, n = 5)
+  }
+
+  if (is.null(tick_labels)) {
+    tick_labels <- tick_positions
+  }
+
+  cols <- colorRampPalette(c("darkred", "red", "yellow", "green", "blue"))(nbreaks)
+
+  ## ----------------------------
+  ## Output file
+  ## ----------------------------
+  output_file <- if (is.null(out.png)) {
+    tempfile(fileext = ".png")
+  } else {
+    out.png
+  }
+
+  ## ----------------------------
+  ## Plot
+  ## ----------------------------
+  png(output_file, width = 2500, height = 1300, res = 300)
+
+  layout(matrix(c(1, 2), ncol = 2), widths = c(4, 1))
+  par(mar = c(4, 4, 1, 3))
+
+  ## Elevation background
+  if (terra::hasValues(elevation_raster)) {
+    elevation_raster <- terra::ifel(elevation_raster < 1, NA, elevation_raster)
+    terra::plot(
+      elevation_raster,
+      col = gray.colors(100, start = 0.8, end = 0.3),
+      legend = FALSE,
+      main = paste(png.text$text_top, year),
+      axes = TRUE
+    )
+  } else {
+    ## Create empty spatial plot using tree-ring raster
+    terra::plot(
+      r_plot,
+      col = NA,          # no values drawn
+      legend = FALSE,
+      main = paste(png.text$text_top, year),
+      axes = TRUE
+    )
+  }
+
+  ## Tree-ring overlay
+  terra::plot(
+    r_plot,
+    col = cols,
+    breaks = breaks,
+    add = TRUE,
+    alpha = 0.6,
+    legend = FALSE
+  )
+
+  grid()
+
+  mtext(png.text$text_bott, side = 1, line = 3, adj = 0, cex = 0.8)
+
+  ## ----------------------------
+  ## Custom legend
+  ## ----------------------------
+  par(mar = c(5, 0, 3, 3))
+  plot(c(0, 1), range(breaks), type = "n", axes = FALSE, xlab = "", ylab = "")
+
+  for (i in seq_len(nbreaks)) {
+    rect(0.1, breaks[i], 0.4, breaks[i + 1],
+         col = cols[i], border = NA)
+  }
+
+  axis(4, at = tick_positions, labels = tick_labels,
+       las = 1, cex.axis = 0.8, pos = 0.5)
+
+  mtext(png.text$text_side, side = 4, line = 1.5, cex = 1.2)
+
+  dev.off()
+
+  if (is.null(out.png)) return(output_file)
+}
+
+
+# Save GIF
+#'
+#' @keywords internal
+#' @noRd
+
+plot_gif <- function(png_list, dir_gif = NULL, animation_fps = 1.0)  {
+  # gif_imgs <- magick::image_read(unlist(lapply(png_list, function(x) x$filename)))
+  gif_imgs <-magick::image_read(unlist(png_list))
+  gif_anim <- magick::image_animate(gif_imgs, fps = animation_fps)
+  if (!is.null(dir_gif)) magick::image_write(gif_anim, file.path(dir_gif, paste0(names(png_list), "_tree_rings_animation.gif")
+                                                                )) else return(gif_anim)
+}
 
 
 

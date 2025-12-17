@@ -27,3 +27,19 @@ its contribution to the fitted values using the linear predictor matrix
 variance, and mean absolute value across all observations.
 #'
 }
+\examples{
+# loading processed data
+dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+# climate
+dt.clim <- data.table::fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
+# pre-data for model
+dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+dt.m <- dt.samples_clim[ageC >1]
+# using gamm_spatial model as an example
+m.sp <-gamm_spatial(data = dt.m, resp_scale = "resp_log",
+       m.candidates = "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + s(FFD)")
+
+dt.m[, uid_site.fac:= as.factor(as.character(uid_site))]
+dt.imp <- sterm_imp(m.sp$model$gam)
+
+}

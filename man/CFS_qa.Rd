@@ -43,11 +43,11 @@ CFS_qa(
 \value{
 An object of class \code{cfs_qa} containing:
   \describe{
-    \item{dt.ccf}{data.table with CCF results and QA codes for each sample}
+    \item{dt.ccf}{data.table with CCF results and QA codes (\code{qa_code}) for each series}
     \item{dt.chron}{data.table with chronologies statistics}
     \item{dt.stats}{data.table with summary statistics per radius}
     \item{dt.plots}{List of data.tables formatted for plotting (raw and treated series, CCF plots)}
-    \item{qa.parms}{List of QA parameters used in the analysis}
+    \item{qa.parms}{List of parameters used in the analysis}
   }
 }
 \description{
@@ -62,14 +62,14 @@ The function performs a two-step quality assurance process:
 \itemize{
   \item Computes CCF for all pairs of treated series
   \item Uses auto-batching to manage memory efficiently
-  \item Identifies initial candidate samples with max CCF at lag 0
+  \item Identifies initial qualified samples with max CCF at lag 0
 }
 
 \strong{Step 2: Iterative chronologies Refinement}
 \itemize{
-  \item Computes chronologies from candidate samples
-  \item Evaluates each sample against the chronologies
-  \item Iteratively refines sample list until convergence
+  \item Computes chronologies from qualified samples
+  \item Evaluates each sample by running CCF with the chronologies
+  \item Iteratively refines the qualified samples until convergence
 }
 
 \strong{QA Code Classification:}
@@ -92,33 +92,20 @@ The function automatically determines optimal batch size based on:
 }
 \examples{
 \dontrun{
-# Prepare your tree-ring data
-dt.input <- data.table(
-  species = "PIPO",
-  SampleID = rep(1:150, each = 100),
-  Year = rep(1900:1999, 150),
-  RawRing = rnorm(15000, 2, 0.5),
-  RW_trt = rnorm(15000, 0, 0.3)
-)
-
-# Run QA analysis with auto-batching
-result <- CFS_qa(
-  dt.input = dt.input,
-  qa.label_data = "Site_A_2024",
-  qa.label_trt = "Spline_Detrend",
-  qa.max_lag = 10,
-  qa.mem_target = 0.6  # Use 60\% of free memory
-)
-
-# Examine results
-summary(result$dt.ccf)
-table(result$dt.ccf$qa_code)
-print(result$dt.chron)
+# loading processed data
+dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+# data processing
+dt.samples_long <- growthTrendR:::prepare_samples_clim(dt.samples_trt, calbai == FALSE)
+# rename to the reserved column name
+setnames(dt.samples_long, c("sample_id", "year", "rw_mm"), c("SampleID", "Year" ,"RawRing"))
+# assign treated series
+# users can decide their own treated series
+dt.samples_long[, RW_trt:= RawRing - shift(RawRing), by = SampleID]
+# quality check on radius alignment based on the treated series
+dt.qa <-CFS_qa(dt.input = dt.samples_long, qa.label_data = "demo-samples",
+qa.label_trt = "difference", qa.min_nseries = 5)
 }
 
-}
-\references{
-Add relevant references for crossdating methodology
 }
 \seealso{
 \code{\link{ccf}} for cross-correlation function

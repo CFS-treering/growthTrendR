@@ -8,7 +8,30 @@
 
 
 #' @export plot_qa
+#' @examples
+#' \dontrun{
+#' # loading processed data
+#' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+#' # data processing
+#' dt.samples_long <- growthTrendR:::prepare_samples_clim(
+#' dt.samples_trt = dt.samples_trt, calbai = FALSE )
 
+#' # rename to the reserved column name
+#' data.table::setnames(
+#' dt.samples_long,
+#' c("sample_id", "year", "rw_mm"),
+#' c("SampleID", "Year" ,"RawRing"))
+
+#' # assign treated series
+#' # users can decide their own treated series
+#' dt.samples_long[, RW_trt:= RawRing - data.table::shift(RawRing), by = SampleID]
+
+#' # quality check on radius alignment based on the treated series
+#' dt.qa <-CFS_qa(dt.input = dt.samples_long, qa.label_data = "demo-samples",
+#' qa.label_trt = "difference", qa.min_nseries = 5)
+#' plots.lst <- plot_qa(dt.qa, qa.out_series = "X003_101_005")
+#' }
+#'
 plot_qa <- function(qa.trt, qa.out_series = "all" ) {
 
   if (!inherits(qa.trt, "cfs_qa")) stop("please check the input of qa.trt, make sure it's the result of CFS_qa() function")
@@ -145,6 +168,19 @@ create_barplot <- function(icol, data) {
 
 
 #' @export plot_freq
+#' @examples
+#'
+#' # loading processed data
+#' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+
+#' dt.freq <- CFS_freq(
+#' dt.samples_trt$tr_all_wide,
+#' freq.label_data = "demo-samples",
+#' freq.uid_level = "uid_radius")
+#'
+#' plots.lst <- plot_freq(dt.freq)
+#'
+#'
 
 plot_freq <- function(dt.freq, out.species = "all" ) {
   if (!inherits(dt.freq, "cfs_freq")) stop("please check the input of dt.freq, make sure it's the result of CFS_freq() function")
@@ -219,6 +255,23 @@ return(plt.lst)
 #' @param dt.scale a table with class "cfs_scale", resulting from function CFS_scale()
 
 #' @export plot_scale
+#' @examples
+#' # loading formatted
+#' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+#' all.sites <- dt.samples_trt$tr_all_wide[,.N, by = c("species", "uid_site", "site_id")][, N:=NULL]
+
+#' # e.g. taking the target sites
+#' target_site <- all.sites[c(1,2), -"uid_site"]
+
+#' ref.sites <- merge(
+#' dt.samples_trt$tr_all_wide[,c("species", "uid_site", "site_id",
+#'  "latitude","longitude", "uid_radius")],
+#' dt.samples_trt$tr_all_long$tr_7_ring_widths, by = c("uid_radius"))
+
+#' dt.scale <- CFS_scale( target_site = target_site, ref_sites = ref.sites,
+#' scale.label_data_ref = "demo-samples", scale.max_dist_km = 200, scale.N_nbs = 2)
+
+#' plots.lst <- plot_scale(dt.scale[[1]])
 
 plot_scale <- function(dt.scale){
   check_optional_deps()
@@ -484,6 +537,14 @@ plot_facet <- function(data, varcols, xylabels, nrow, ncol) {
 #'
 
 #' @export
+#' @examples
+#' \dontrun{
+#' # loading processed data
+
+#' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+#' # genereate data summary report
+#' generate_report(dt.samples_trt)
+#' }
 generate_report <- function(robj, data_report.reports_sel = c(1,2,3,4), output_file = NULL, ...) {
 
   check_optional_deps()
@@ -582,10 +643,22 @@ get_template_and_params <- function(robj_class) {
 #'
 #' @examples
 #' \dontrun{
-#' library(mgcv)
-#' dat <- gamSim(1, n = 200, dist = "normal")
-#' m <- gam_mod(data = dat, m.candidates = "y ~ s(x0) + s(x1)", resp_scale = "resp_gaussian")
-#' plots <- plot_resp(robj = m, ci_method = "posterior", nboot = 500)
+#' # loading processed data
+#' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+#' # climate
+#' dt.clim <- fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
+#' # pre-data for model
+#' dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+
+#' dt.m <- dt.samples_clim[ageC >1]
+
+#' # gamm_site model
+#' m.spatial <-growthTrendR::gamm_spatial(
+#'   data = dt.m, resp_scale = "resp_log",
+#'   m.candidates = c( "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + s(FFD)"))
+
+
+#' plots.lst <- plot_resp(m.spatial)
 #' }
 #'
 
@@ -606,8 +679,8 @@ plot_resp <- function(robj, ...) {
 
   if (length(is_log_model) == 0 )stop("cannot identify response variable scale")
   # pass is_log_model to gam object for ci_resp
-model$is_log_model <- is_log_model
-model$resp_scale <- resp_scale
+# model$is_log_model <- is_log_model
+# model$resp_scale <- resp_scale
   # Extract smooth terms
   dt.vars <- data.table::rbindlist(lapply(model$smooth, function(sm) {
     data.table(
@@ -629,6 +702,8 @@ model$resp_scale <- resp_scale
       model_data$y.resp <- model_data[[names(model_data)[1]]]
     }
   all.vars(formula(model))[1]
+  # removes the random effects for graphing
+  dt.vars <- dt.vars[variable != "uid_site.fac"]
   # names(model$model)
   # Generate plots for each smooth term
   p_list <- lapply(seq_len(nrow(dt.vars)), function(i.var) {
@@ -682,6 +757,10 @@ model$resp_scale <- resp_scale
                                           color = !!sym(byterm)), alpha = 0.6, size = 1)
 
 
+      p <- p +
+        labs(x = var, y = response_var, title = term_name, subtitle = paste("CI method:", unique(dt.pred$ci_method)),
+             color = byterm) +
+        theme_minimal()
 
     } else {
       p <- p +
@@ -690,15 +769,16 @@ model$resp_scale <- resp_scale
         geom_point(data = model_data, aes(x = !!sym(var),
                                           y = y.resp),
                    alpha = 0.6, size = 1, color = "gray30")
+
+      p <- p +
+        labs(x = var, y = response_var, title = term_name, subtitle = paste("CI method:", unique(dt.pred$ci_method))) +
+        theme_minimal()
+
     }
 
 
     # ci_subtitle <- paste("CI method:", unique(dt.pred$ci_method))
 
-    p <- p +
-      labs(x = var, y = response_var, title = term_name, subtitle = paste("CI method:", unique(dt.pred$ci_method)),
-           color = byterm) +
-      theme_minimal()
 
     return(p)
   })

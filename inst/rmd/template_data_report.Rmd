@@ -167,8 +167,8 @@ if (any(c(2,4) %in% reports.sel)) {
   
   
 
-if (rep_site %in% reports.sel) dt.site.out <- table_spc_site(dt.radii.spc, rw_ref, N.nbs.qa) else dt.site.out <- data.table()
-if (rep_species %in% reports.sel)summary_spc <- table_spc(tr_6i,dt.radii.spc) else summary_spc <- data.table()
+if (rep_site %in% reports.sel) dt.site.out <- growthTrendR:::table_spc_site(dt.radii.spc, rw_ref, N.nbs.qa) else dt.site.out <- data.table()
+if (rep_species %in% reports.sel)summary_spc <- growthTrendR:::table_spc(tr_6i,dt.radii.spc) else summary_spc <- data.table()
 
 return(list(dt.spc_radii=dt.radii.spc, dt.spc_site = dt.site.out, dt.spc = summary_spc, qa_code = qa_code) )
 })
@@ -560,16 +560,13 @@ rm(gt_table, scrollable_table)
 
 cat(paste("
 
-<br>
+<br><br>
      *developed  from raw series
-<br>
-
+<br><br>
     **developed  from ",  label_trt, " series
-<br>
-
+<br><br>
      &correlation with chronologies, the value represents correlation (p-value)
-<br>
-
+<br><br>
      %qa_code is identified using the current data as reference dataset
 
 "))

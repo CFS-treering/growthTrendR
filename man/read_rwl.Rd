@@ -2,18 +2,62 @@
 % Please edit documentation in R/misc.R
 \name{read_rwl}
 \alias{read_rwl}
-\title{read rwl files which were downloaded locally from ITRDB}
+\title{import raw ring-width measurement from site ITRDB}
 \usage{
 read_rwl(dir.src, rwl)
 }
 \arguments{
 \item{dir.src}{directory of source rwl files}
 
-\item{rwl}{file name}
+\item{rwl}{file name
+**International Tree-Ring Data Bank (ITRDB) File Format**
+
+#' The International Tree-Ring Data Bank (ITRDB) is maintained by the NOAA
+National Centers for Environmental Information (NCEI) as part of the
+World Data Service for Paleoclimatology.
+See: https://www.ncei.noaa.gov/products/paleoclimatology/tree-ring
+
+Raw ring-width measurement files (`.rwl`) distributed through the ITRDB
+follow the *Tucson fixed-width format*. In this convention, header records
+encode site-level metadata (e.g., site identifier, site name, species code,
+geographic information, and temporal coverage), followed by ring-width
+measurements stored in a decadal layout (ten annual values per line).
+
+
+*Record 1*
+- Columns 1–6: Site ID
+- Columns 10–61: Site Name
+- Columns 62–65: Species code
+- Optional ID fields
+
+*Record 2*
+- Columns 1–6: Site ID
+- Columns 10–22: State / Country
+- Columns 23–30: Species
+- Columns 41–45: Elevation
+- Columns 48–57: Latitude–Longitude
+- Columns 62–63: Measurement type code
+- Columns 68–76: First and last year
+
+*Note:* Latitude–longitude values are expressed in degrees and minutes
+(`ddmm` or `dddmm`).
+
+*Record 3*
+- Columns 1–6: Site ID
+- Columns 10–72: Investigators
+- Columns 73–80: Optional completion date}
 }
 \value{
-two tables: header and rwl measurement
+a list of two tables: header and rwl measurement
 }
 \description{
-read rwl files which were downloaded locally from ITRDB
+import raw ring-width measurement from site ITRDB
+}
+\examples{
+
+# read data from ITRDB
+dir.src <- "https://www.ncei.noaa.gov/pub/data/paleo/treering/measurements/northamerica/canada"
+rwl <- "cana615.rwl"
+dt.rwl <- read_rwl(dir.src, rwl)
+
 }

@@ -10,9 +10,10 @@
 
 #'
 #' @return a data table.
-#' @export
+# #' @export
 
-#'
+#' @keywords internal
+#' @noRd
 table_spc <- function(tr_6i, dt.spc_radii){
 
   dt.radii.spc <- merge(tr_6i, dt.spc_radii, by = "uid_radius")
@@ -54,61 +55,6 @@ table_spc <- function(tr_6i, dt.spc_radii){
 }
 
 
-# #' Generate table for radii report
-# #'
-# #' This function generates the data table for data reporting at project-species-site-radii level .
-# #' @param tr_6i data table of meta data for a specific species
-# #' @param tr_7i data table of tree ring data for a specific species
-# #' @param rep_radii logic, for user to choose if the radii table is presented in the data report.
-# #' @param ... additional arguments
-# #' @param ... Additional arguments passed to \code{CFS_qa()}.
-# #' @return a data table.
-# #' @keywords internal
-# #' @noRd
-# #'
-# table_spc_site_radii <- function(tr_6i, tr_7i, rep_radii = TRUE, ...){
-#   args <- list(...)
-#   qa.label_data <- args$qa.label_data
-#   qa.min_nseries <- args$qa.min_nseries
-# # if (rep_radii == TRUE & nrow(tr_6i) >= qa.min_nseries) {
-#   # note thant nrow(tr_6i) checking in template_data_report.rmd 2025-08-16
-#   if (rep_radii == TRUE) {
-#   tr_7ispc<- copy(tr_7i)
-#   # setnames(tr_7ispc, c("uid_radius", "year", "rw_mm"), c("SampleID", "Year" ,"RawRing"))
-#   tr_7ispc[, c("SampleID", "Year" ,"RawRing"):= .(uid_radius, year, rw_mm)]
-#   # check duplication
-#  if (nrow( tr_7ispc[, .N, by = .(SampleID, Year)][N>1]) > 0) stop("SampleID-Year is not unique key, please check...")
-#   # include RW_trt, this is the series that qa process works on,
-#   # tr_7ispc[, RW_trt:= RawRing - shift(RawRing), by = SampleID]; label_trt <- "differentiated"
-#   if (!("RW_trt" %in% names(tr_7ispc))) stop("please assign the column RW_trt for running the qa process...")
-#   acf.trt <- tr_7ispc[!is.na(RW_trt), .( ar1_trt = round(acf(RW_trt, plot = FALSE)$acf[2],2) ), by = .(SampleID)]
-#
-#   # run quality assessment procedure
-#   qa.trt.ccf <-CFS_qa(dt.input = tr_7ispc, qa.label_data = qa.label_data, qa.min_nseries = qa.min_nseries)
-#   dt.radii.spc <- copy(qa.trt.ccf$dt.stats)
-#
-#   dt.radii.spc[, uid_radius:= as.integer(SampleID)]
-#   dt.radii.spc <- merge(tr_6i[, c("uid_radius", "site_id", "radius_id")], dt.radii.spc, by = "uid_radius")
-#
-# }else{
-#   # qa.trt.ccf <- list()
-#   dt.radii.spc <- tr_7i[, .(N = .N, rw.mean = mean(rw_mm), rw.sd = sd(rw_mm), rw.min = min(rw_mm), rw.max = max(rw_mm), ymin = min(year), ymax = max(year), ar1_rw = acf(rw_mm, plot = FALSE)$acf[2] ), by = .(site_id, radius_id, uid_radius)]
-#   # if more than 10 series, running the correlation with mean
-#   if (nrow(tr_6i) > 10){
-#     # mean.rw <- tr_7i[, mean_rw:= mean(rw_mm), by = uid_radius]
-#     tmp <- merge(tr_7i, tr_7i[, .(mean_rw= mean(rw_mm)), by = year], by = "year")
-#     chk <- tmp[, .(ncorr_mean_rw = .N, result = cor.test(mean_rw, rw_mm)), by = .(uid_radius)]
-#
-#     chk.corr <- chk[, .SD[4], by = uid_radius][, corr_mean_rw:= as.numeric(unlist(result))]
-#
-#     chk.pvalue <- chk[, .SD[3], by = uid_radius][, pcorr_mean_rw:= as.numeric(unlist(result))]
-#
-#     dt.radii.spc <- dt.radii.spc[chk.corr[, c("uid_radius", "corr_mean_rw", "ncorr_mean_rw")], on = "uid_radius"][chk.pvalue[, c("uid_radius", "pcorr_mean_rw")], on = "uid_radius"]
-#   }
-# }
-#   return(dt.radii.spc)
-# }
-
 
 #' Generate table for site report including the kNN result
 #'
@@ -119,9 +65,10 @@ table_spc <- function(tr_6i, dt.spc_radii){
 
 #'
 #' @return a data table.
-#' @export
+# #' @export
 
-
+#' @keywords internal
+#' @noRd
 table_spc_site <- function(dt.radii.spc, rw_ref,  scale.N_nbs){
   dt.site_radii <-merge(rw_ref[,c("uid_site", "site_id", "species", "latitude", "longitude", "uid_tree", "uid_sample", "uid_radius")],
                         dt.radii.spc[, c("uid_radius", "N", "rw.mean", "rw.min", "rw.max")], by = "uid_radius")

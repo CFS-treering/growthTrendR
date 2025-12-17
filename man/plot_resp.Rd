@@ -23,10 +23,18 @@ Small samples automatically trigger the "posterior" method for more robust CIs.
 }
 \examples{
 \dontrun{
-library(mgcv)
-dat <- gamSim(1, n = 200, dist = "normal")
-m <- gam_mod(data = dat, m.candidates = "y ~ s(x0) + s(x1)", resp_scale = "resp_gaussian")
-plots <- plot_resp(robj = m, ci_method = "posterior", nboot = 500)
+# loading processed data
+dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+# climate
+dt.clim <- fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
+# pre-data for model
+dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+dt.m <- dt.samples_clim[ageC >1]
+# gamm_site model
+m.spatial <-growthTrendR::gamm_spatial(
+  data = dt.m, resp_scale = "resp_log",
+  m.candidates = c( "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + s(FFD)"))
+plots.lst <- plot_resp(m.spatial)
 }
 
 }

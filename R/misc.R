@@ -1,52 +1,76 @@
-# this package is developped from tr package A20 for importing ITRDB
-# library(dplR)
-
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# working on downloaded files
-# Format for header records:
-
-# Record #1: 1-6 Site ID, 10-61 Site Name, 62-65 Species Code, optional ID#'s
-# Record #2: 1-6 Site ID, 10-22 State/Country, 23-30 Species, 41-45 Elevation, 48-57 Lat-Long, 62-63 measurement type code**, 68-76 1st & last Year
-# Note: lat-lons are in degrees and minutes, ddmm or dddmm
-# Record #3: 1-6 Site ID, 10-72 Investigators, 73-80 optional completion date
-
-# dt.dplR <- as.data.frame(read.rwl(file.path(dir.src, fn.lst[i])))
-
-
-# dir.src <- "U:/Canada_Tree-Ring_Data/source_data/ITRDB/ITRDB_23_mai_2023"
-# fn.lst <- list.files(path = dir.src, pattern = NULL, all.files = FALSE,
-#                      full.names = FALSE, recursive = FALSE,
-#                      ignore.case = FALSE, include.dirs = FALSE, no.. = FALSE)
-#
-#
-# dt.header.all <- data.table()
-# dt.rwl.all <- data.table()
-#
-# for ( i in 1: length(fn.lst)) {
-#    print(i)
-#   dt.i <- read_itrdb(fn.lst[i])
-#   dt.rwl.all <- rbind(dt.rwl.all, dt.i[[2]])
-#   dt.header.all <- rbind(dt.header.all, dt.i[[1]])
-# }
-#
-# summary(dt.header.all$lat)
-# summary(dt.header.all$lon)
-
-# i <- 197;  rwl<- fn.lst[i]
-#' read rwl files which were downloaded locally from ITRDB
-#'
+#' import raw ring-width measurement from site ITRDB
 #' @param dir.src directory of source rwl files
 #' @param rwl file name
+#' **International Tree-Ring Data Bank (ITRDB) File Format**
 #'
-#' @return two tables: header and rwl measurement
+#'#' The International Tree-Ring Data Bank (ITRDB) is maintained by the NOAA
+#' National Centers for Environmental Information (NCEI) as part of the
+#' World Data Service for Paleoclimatology.
+#' See: https://www.ncei.noaa.gov/products/paleoclimatology/tree-ring
+#'
+#' Raw ring-width measurement files (`.rwl`) distributed through the ITRDB
+#' follow the *Tucson fixed-width format*. In this convention, header records
+#' encode site-level metadata (e.g., site identifier, site name, species code,
+#' geographic information, and temporal coverage), followed by ring-width
+#' measurements stored in a decadal layout (ten annual values per line).
+#'
+#'
+#' *Record 1*
+#' - Columns 1–6: Site ID
+#' - Columns 10–61: Site Name
+#' - Columns 62–65: Species code
+#' - Optional ID fields
+#'
+#' *Record 2*
+#' - Columns 1–6: Site ID
+#' - Columns 10–22: State / Country
+#' - Columns 23–30: Species
+#' - Columns 41–45: Elevation
+#' - Columns 48–57: Latitude–Longitude
+#' - Columns 62–63: Measurement type code
+#' - Columns 68–76: First and last year
+#'
+#' *Note:* Latitude–longitude values are expressed in degrees and minutes
+#' (`ddmm` or `dddmm`).
+#'
+#' *Record 3*
+#' - Columns 1–6: Site ID
+#' - Columns 10–72: Investigators
+#' - Columns 73–80: Optional completion date
+
+#' @return a list of two tables: header and rwl measurement
 #' @export read_rwl
+#' @examples
+#'
+#' # read data from ITRDB
+#' dir.src <- "https://www.ncei.noaa.gov/pub/data/paleo/treering/measurements/northamerica/canada"
+#' rwl <- "cana615.rwl"
+#' dt.rwl <- read_rwl(dir.src, rwl)
 #'
 
 read_rwl <-function (dir.src, rwl) {
+  if (grepl("^https?://", dir.src))
+    # treat as URL
+    path <- paste0(dir.src, "/", rwl) else
+      path <- file.path(dir.src, rwl)
+  con <- if (grepl("^https?://", path)) curl::curl(path) else file(path)
+  # on.exit(close(con))
 
-  dt.lines <- data.table(lines = readLines(con <- file(file.path(dir.src, rwl))))
-  close(con)
+  on.exit({
+    if (isOpen(con)) close(con)
+  }, add = TRUE)
+
+  # Now try to read
+  lines <- tryCatch(
+    readLines(con, warn = FALSE),
+    error = function(e) stop("Could not read from connection: ", e$message)
+  )
+
+
+
+  dt.lines <- data.table::data.table(lines = lines)
+  # dt.lines <- data.table(lines = readLines(con <- file(file.path(dir.src, rwl))))
+  # close(con)
   print(paste0("reading ", rwl))
   comments <- ""
   dt.lines <- dt.lines[!(trimws(lines, which = "both") == "")]
@@ -319,12 +343,23 @@ dt.header$comments.rw <- comments.rw
 #'
 #' @param dt.long data in long format containing at least 3 columns: id, year, rw
 #' @param id column name of series id
-#' @param rw column name of ring width measurement which is in mm
+#' @param rw column name of ring width measurement in mm
 #'
 #'
 #' @return add 3 columns to the original input data, ageC for cambial age, ba_cm2_t_1 for basal area of the previous year in cm2, and bai_cm2 for annual basal area increment in cm2
 #'
 #' @export calc_bai
+#' @examples
+#'  # generate data
+#' dt.rw <- data.table::data.table(
+#'   radius_id = rep(paste0("R", 1:3), each = 5),
+#'   year      = rep(2001:2005, times = 3),
+#'   rw_mm     = round(runif(15, 0.5, 3.5),2)
+#' )
+#' data.table::setorder(dt.rw, radius_id, year)
+#'  # calculate bai
+#' dt.rw <- calc_bai(dt.rw, "radius_id", "rw_mm")
+#'
 
 
 calc_bai <- function(dt.long, id , rw){
@@ -356,4 +391,40 @@ calc_bai <- function(dt.long, id , rw){
   return(dt.long)
 }
 
+#' @keywords internal
+#' @noRd
+prepare_samples_clim <- function(dt.samples_trt, dt.clim= NULL,calbai = TRUE) {
 
+  # 1. samples_long
+  dt.samples_long <- merge(
+    dt.samples_trt$tr_all_wide[, c("uid_site", "site_id", "species",
+                                   "uid_tree", "uid_sample",
+                                   "sample_id", "radius_id", "uid_radius")],
+    dt.samples_trt$tr_all_long$tr_7_ring_widths,
+    by = "uid_radius"
+  )
+
+  data.table::setorder(dt.samples_long, uid_site, uid_radius, year)
+
+  # 2. compute BAI
+  if (calbai == TRUE){
+  dt.samples_long <- calc_bai(
+    dt.samples_long,
+    id = "uid_radius",
+    rw = "rw_mm"
+  )
+  }
+
+  if (!is.null(dt.clim)){
+    # 3. merge climate
+    dt.samples_long <- merge(
+      dt.samples_long,
+      dt.clim,
+      by = c("site_id", "year")
+    )
+
+    data.table::setorder(dt.samples_long, uid_site, uid_radius, year)
+  }
+
+  return(dt.samples_long)
+}

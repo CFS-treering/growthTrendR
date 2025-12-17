@@ -29,3 +29,16 @@ a data table of counts of uid by latitude-longitude per species
 \description{
 frequency distributions by geo-location per species
 }
+\examples{
+
+
+# treated ring measurement
+dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+# Compute frequency statistics at radius level
+dt.freq <- CFS_freq(
+  dt.samples_trt$tr_all_wide,
+  freq.label_data = "demo-samples",
+  freq.uid_level  = "uid_radius"
+)
+class(dt.freq)
+}

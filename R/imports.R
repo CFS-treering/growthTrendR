@@ -8,7 +8,7 @@
 #' @importFrom furrr future_map
 #' @importFrom pryr mem_used object_size
 
-#' @importFrom utils combn
+#' @importFrom utils combn write.csv
 
 
 #' @import data.table
@@ -26,6 +26,7 @@
 #' @importFrom raster crop clamp plot crs crs<-
 #' @importFrom grDevices png dev.off colorRampPalette gray.colors
 #' @importFrom graphics par rect axis layout mtext grid
+#' @importFrom curl curl
 
 
 

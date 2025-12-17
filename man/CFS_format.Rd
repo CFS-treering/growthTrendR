@@ -22,6 +22,17 @@ A list of 3 elements:
 \description{
 converts tree-ring data from various formats into a format compatible with hierarchical structure of the CFS-TRenD data collection (Girardin et al., 2021).
 }
+\examples{
+
+# ring measurement
+dt.samples <- data.table::fread(
+system.file("extdata", "dt.samples.csv", package = "growthTrendR"))
+# formatting the users' data conformed to CFS-TRenD data structure
+dt.samples_trt <- CFS_format(data = list(dt.samples, 39:68), usage = 1, out.csv = NULL)
+# save it to extdata for further use
+# saveRDS(dt.samples_trt, file = "inst/extdata/dt.samples_trt.rds")
+
+}
 \references{
 Girardin, M.P., Guo, X.J., Metsaranta, J., Gervais, D., Campbell, E., Arsenault, A., Isaac-Rentone, M., Harvey, J.E., Bhatti, J., Hogg, E.A. 2021. A national tree-ring repository for Canadian forests (CFS-TRenD): structure, synthesis and applications. Environmental Reviews, 29 (999), 1-17. https://doi.org/10.1139/er-2020-0099
 }

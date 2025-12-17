@@ -1,13 +1,6 @@
-#' Search files for a given word or pattern
-#'
-#' Internal developer helper function for debugging.
-#' Not exported, not documented in the manual.
-#'
-#' @param word A character string or regex pattern to search for.
-#' @param files A character vector of file paths (default: all R files in R/).
 #' @keywords internal
 #' @noRd
-search_files <- function(word, files = list.files("R", pattern = "\\.R$", full.names = TRUE)) {
+search_files_sim <- function(word, files = list.files("R", pattern = "\\.R$", full.names = TRUE)) {
   for (w in word) {
     cat("\n--- Searching for:", w, "---\n")
     results <- lapply(files, function(f) {
@@ -25,6 +18,62 @@ search_files <- function(word, files = list.files("R", pattern = "\\.R$", full.n
     }
   }
 }
+
+
+
+#' Search for text in code or Rmd files
+#'
+#' Internal helper function to search for occurrences of a word or phrase
+#' in R scripts and R Markdown files within a project.
+#'
+#' @param word Character vector. Words or patterns to search for.
+#' @param files Character vector of file paths to search. If `NULL`, the
+#'   function searches in default directories (`R`, `inst/rmd`, `vignettes`)
+#'   for files matching the specified `patterns`.
+#' @param dirs Character vector of directories to search when `files = NULL`.
+#' @param patterns Character vector of file patterns to match (e.g., `\\.R$`, `\\.Rmd$`).
+#'
+#' @return Prints matches to the console. Each match shows the file name and the line containing the match.
+#' @keywords internal
+#' @noRd
+search_files <- function(word, files = NULL, dirs = c("R", "inst/rmd", "vignettes"), patterns = c("\\.R$", "\\.Rmd$")) {
+
+  # If files not provided, build list from dirs and patterns
+  if (is.null(files)) {
+    files <- unlist(lapply(dirs, function(d) {
+      list.files(d, pattern = paste(patterns, collapse = "|"), recursive = TRUE, full.names = TRUE)
+    }))
+  }
+
+  if (length(files) == 0) {
+    stop("No files found to search.")
+  }
+
+  # Ensure word is a character vector
+  word <- as.character(word)
+
+  for (w in word) {
+    cat("\n--- Searching for:", w, "---\n")
+
+    results <- lapply(files, function(f) {
+      lines <- readLines(f, warn = FALSE)
+      hits <- grep(w, lines, value = TRUE)
+      if (length(hits) > 0) {
+        paste0(basename(f), ":", hits)
+      } else {
+        NULL
+      }
+    })
+
+    results <- unlist(results)
+    if (length(results) == 0) {
+      cat("No matches found.\n")
+    } else {
+      cat(paste(results, collapse = "\n"), "\n")
+    }
+  }
+}
+
 
 
 #' Check Unqualified Function Calls in R and Rmd Files

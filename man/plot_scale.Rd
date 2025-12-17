@@ -12,3 +12,17 @@ plot_scale(dt.scale)
 \description{
 This function plots the time series and the geographical distribution of the median ring-width measurements to contrast the target site with its neighbouring sites.
 }
+\examples{
+# loading formatted
+dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+all.sites <- dt.samples_trt$tr_all_wide[,.N, by = c("species", "uid_site", "site_id")][, N:=NULL]
+# e.g. taking the target sites
+target_site <- all.sites[c(1,2), -"uid_site"]
+ref.sites <- merge(
+dt.samples_trt$tr_all_wide[,c("species", "uid_site", "site_id",
+ "latitude","longitude", "uid_radius")],
+dt.samples_trt$tr_all_long$tr_7_ring_widths, by = c("uid_radius"))
+dt.scale <- CFS_scale( target_site = target_site, ref_sites = ref.sites,
+scale.label_data_ref = "demo-samples", scale.max_dist_km = 200, scale.N_nbs = 2)
+plots.lst <- plot_scale(dt.scale[[1]])
+}

@@ -17,8 +17,18 @@
 #' 3) A data table for the percentage of completeness of each variable.
 
 #'
-#' @export CFS_format
+#' @export
+#' @examples
 #'
+#' # ring measurement
+#' dt.samples <- data.table::fread(
+#' system.file("extdata", "dt.samples.csv", package = "growthTrendR"))
+
+#' # formatting the users' data conformed to CFS-TRenD data structure
+#' dt.samples_trt <- CFS_format(data = list(dt.samples, 39:68), usage = 1, out.csv = NULL)
+
+#' # save it to extdata for further use
+#' # saveRDS(dt.samples_trt, file = "inst/extdata/dt.samples_trt.rds")
 
 #'
 CFS_format <- function (data, usage, out.csv = NULL) {
@@ -270,6 +280,20 @@ if (all(c("latitude", "longitutde") %in% names(dt.new))){
 #' @return a data table of counts of uid by latitude-longitude per species
 #' @export CFS_freq
 #'
+#' @examples
+#'
+#'
+#' # treated ring measurement
+#' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+#' # Compute frequency statistics at radius level
+#' dt.freq <- CFS_freq(
+#'   dt.samples_trt$tr_all_wide,
+#'   freq.label_data = "demo-samples",
+#'   freq.uid_level  = "uid_radius"
+#' )
+#' class(dt.freq)
+
+
 
 CFS_freq <- function(tr_meta, freq.label_data = "", freq.uid_level = "uid_radius", freq.cutoff_year = -999,freq.geo_resolution = NULL){
   if (!(freq.uid_level %in% c("uid_project", "uid_site", "uid_tree", "uid_meas", "uid_sample", "uid_radius"))) stop("freq.uid_level should be in c('uid_project', 'uid_site', 'uid_tree', 'uid_meas', 'uid_sample', 'uid_radius')")

@@ -13,7 +13,7 @@ CFS_mapping(
 )
 }
 \arguments{
-\item{data}{A \code{cfs_mapping} object produced by \code{read_series()}.}
+\item{data}{input in wide format.}
 
 \item{year.span}{Numeric vector of length 2 giving the range of years to include.}
 
@@ -37,8 +37,14 @@ or by individual species. It generates yearly interpolated raster maps
 over a user-defined extent or the extent of the input data.
 }
 \examples{
+
 \dontrun{
-data <- read_series("path/to/file.rwl")
-maps <- CFS_mapping(data, year.span = c(1900, 2000), grid.step = 0.5)
+# loading processed data
+dt.samples_trt <- get_test_samples_trt()
+cols.meta = c("uid_tree", "uid_site", "longitude", "latitude", "species")
+dt.mapping <- dt.samples_trt$tr_all_wide[
+  , c(..cols.meta, as.character(1991:1995)), with = FALSE]
+results_mapping <- CFS_mapping(dt.mapping, year.span = c(1991:1993))
 }
+
 }

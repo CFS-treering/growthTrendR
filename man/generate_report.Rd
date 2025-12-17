@@ -35,3 +35,11 @@ R Markdown templates. The function automatically selects the appropriate templat
 based on the input object's class and renders a comprehensive report with
 visualizations and analysis results.
 }
+\examples{
+\dontrun{
+# loading processed data
+dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+# genereate data summary report
+generate_report(dt.samples_trt)
+}
+}

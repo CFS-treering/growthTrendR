@@ -1,270 +1,3 @@
-
-
-#' tree-ring data measurement assessment
-#' @description
-#' Assess tree-ring measurement accuracy using a treated series based on the differences between two consecutive tree-ring measurements.
-#'
-#' @param dt.input tree ring data with at least 3 columns (SampleID, Year, RawRing)
-#' @param qa.label_data description of dt.input
-#' @param qa.label_trt description of treated series
-#' @param qa.batch_size  number of pairs to run in a batch, to avoid memory issues in processing large dataset
-#' @param qa.max_lag maximum lag up to which the correlation should be calculated in CCF
-#' @param qa.max_iter maximum number of iterations of step 2(see Details)
-#' @param qa.min_nseries minimum number of series to run this function
-#' @param qa.blcrit criteria for borderline
-
-#'
-#'
-#'
-#' @return A list of 5 elements:
-#' 1) dt.ccf:	A data table containing the CCF results for all samples, including the quality assessment code (qa_code).
-#' 2) dt.chron:	The final chronologies, including both raw chronologies, the mean of ring measurement of the series with pass,
-#' and the treated  chronologies, calculated as the difference of two consecutive raw chronologies.
-#' 3) dt.stats:	summary statistics of radii
-#' 4) dt.plots, list of tables for generating plots
-#' 5) qa.parms: parameters used
-
-
-#'
-#' @details Assess tree-ring measurement accuracy using a treated series based on the differences between two consecutive tree-ring measurements.
-#' The algorithm consists of two main steps:
-#'
-#'  Step 1. Perform pairwise CCF on the treated series of all possible combinations of the samples.
-#' raw ring chronologies is calculated as the average of the ring measurements of samples that achieve the maximum correlation at lag 0 with at least one other sample in the cross-correlation function (CCF).
-#'  The difference series of the raw ring chronologies is used as the initial treated chronologies for next step.
-#'
-#'  Step 2. Perform CCF between the treated series of each sample and the initial treated chronologies.
-#'  Samples that do not meet the criteria will be removed from the recalculation of the treated chronologies.
-#'  This step is repeated until all remaining samples in the chronologies meet the criteria.
-#'
-#' This process results in five categories classification for all samples (pass, borderline, pm1, highpeak, fail)
-#'
-#'
-#' To enhance efficiency and mitigate potential memory issues,
-#' The function supports both parallel (multi-session) and sequential modes, and also offers a batch processing option for users.
-
-#' @export
-#'
-
-CFS_qa_old <- function(dt.input, qa.label_data = "", qa.label_trt = "",
-                   qa.batch_size = 10000, qa.max_lag = 10, qa.max_iter = 100, qa.min_nseries = 100, qa.blcrit = 0.1){
-
-  check_optional_deps()
-  if (length(setdiff(c("species", "SampleID", "Year","RawRing", "RW_trt" ), names(dt.input))) > 0) stop("at least one of the mandatory columns (species, SampleID, Year, RawRing, RW_trt) doesn't exist, please check...")
-  if ( qa.label_data == "") stop("please specify qa.label_data...")
-  if ( "RW_trt" %in% names(dt.input) & qa.label_trt == "") stop("please specify qa.label_trt...")
-  if (length(unique(dt.input$species)) > 1) stop("only 1 species is allowed in the dataset...")
-  if (length(unique(dt.input$SampleID)) < qa.min_nseries) stop(paste0("please increase the sample size at minumum: ", qa.min_nseries))
-
-  if (nrow(dt.input[, .N, by = .(SampleID, Year)][N > 1]) > 0) stop("SampleID-Year is not unique key, please check...")
-
-  dt.rw_long <- dt.input[, c("SampleID", "Year","RawRing", "RW_trt")]
-  setorder(dt.rw_long, SampleID,Year)
-  # the series to be used for ccf should be in dt.input 2024-12-10
-  # dt.rw_long[, RW_trt:= RawRing - shift(RawRing), by = SampleID]
-
-  # SampleID.chr is the key sampleID, we use it in the functions to represent a sample.
-  # starting with a character to ensure the validity as column name and value of a column
-
-  dt.rw_long[, SampleID.chr:= paste0("d_", SampleID)]
-  setorder(dt.rw_long, SampleID.chr)
-  sample.lst <- sort(unique(dt.rw_long$SampleID.chr))
-
-  dt.rw_wide <- dcast(dt.rw_long[!is.na(RW_trt)], Year ~ SampleID.chr, value.var = "RawRing")
-  dt.trt_wide <- dcast(dt.rw_long[!is.na(RW_trt)], Year ~ SampleID.chr, value.var = "RW_trt")
-
-  setcolorder(dt.trt_wide, c("Year", sample.lst))
-
-
-
-  dt.trt_wide.o <- copy(dt.trt_wide); dt.trt_wide$Year <- NULL;
-  # dt.trt_wide: treated series in wide format for pair-wise ccf
-  # dt.rw_long: ring width series in long format for calculating mean of chronologies
-
-  # step 1: pair-wise ccf to find all the samples which can find at least 1 sample to reach max_ccf @ lag0
-
-
-  # Generate all pairs of columns
-  col_pairs <- utils::combn(names(dt.trt_wide), 2, simplify = FALSE)
-
-  # Detect available cores for parallel processing
-  available_cores <- parallel::detectCores(logical = FALSE) - 1  # Adjusted cores based on system
-
-  # Decide if parallel processing is supported
-  if (available_cores > 1) {
-    future::plan(future::multisession, workers = available_cores)
-  } else {
-    future::plan(future::sequential)
-  }
-
-  # if batch size is not specified, run as 1 batch
-  if (is.null(qa.batch_size)) {
-    pair_batches <- list(col_pairs)
-  }else{
-    pair_batches <- split(col_pairs, ceiling(seq_along(col_pairs) / qa.batch_size))
-  }
-
-  # Run processing on batches with or without parallel
- cat("Progress pair-wise ccf...\n")
-  dt.ccf.pairs <- furrr::future_map(pair_batches, process_batch, dt.wide = dt.trt_wide, qa.max_lag = 10, .progress = TRUE) %>% rbindlist()
-
-
-  cat("\n")
-
-  result_dt.sel <- dt.ccf.pairs[max_lag == 0 & !is.na(max_ccf)]
-
-  ts.sel <- data.table(ts.sel = unlist(c(result_dt.sel$ts1, result_dt.sel$ts2)))
-  ts.sel <- ts.sel[, .N, by = .(ts.sel)]
-  id.candi <- unique(ts.sel$ts.sel)
-
-  # the result of step 1 is id.candi, it serves as the initial sample list of chronologies for step 2
-  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
-
-  # step 2: find the sample list of chronologies satisfying the condition that max_ccf @lag0 for each sample in this list with the chronologies
-
-  # algorithm on pass
-
-  s2.end <- FALSE;  i.iter <- 1;
-  while(!s2.end & i.iter <= qa.max_iter){
-
-    # mean of chronologies
-    # dt.s2.avg <- dt.rw_long[SampleID.chr %in%  id.candi][, .(.N, mean.rw = mean(RawRing)), by = .(Year)]
-    # setorder(dt.s2.avg, Year)
-    # dt.s2.avg [, mean.rw.dif:= mean.rw - shift(mean.rw)]
-
-    # mean of treated chronology as chronologies 2024-12-10
-    dt.s2.avg <- dt.rw_long[SampleID.chr %in%  id.candi][, .(.N, mean.rw = mean(RawRing), mean.rw_trt = mean(RW_trt, na.rm = TRUE)), by = .(Year)]
-
-    dt.s2.wide <- merge(dt.s2.avg[, c("Year", "mean.rw_trt")], dt.trt_wide.o, by = "Year")
-    # ccf of all samples with the chronologies
-    dt.s2.ccf <-rbindlist(lapply(3:ncol(dt.s2.wide), ccf_avg, data = dt.s2.wide, blcrit = qa.blcrit, lag.max = qa.max_lag, qa_code = "Fail"))
-    # valid samples for chronologies
-    id.pass <- unique(dt.s2.ccf[qa_code == "pass"]$SampleID.chr)
-    # id.dif <- setdiff(union(id.candi, id.pass) ,intersect (id.candi, id.pass))
-    s2.end <- length(setdiff(union(id.candi, id.pass) ,intersect (id.candi, id.pass))) == 0
-    print(paste0(i.iter, " N.pass: ", length(id.candi)))
-    # selection list stops changing
-    if ( s2.end != TRUE) {
-      id.candi <- id.pass
-      i.iter <- i.iter + 1
-
-    }
-  }
-  setorder(dt.s2.ccf, SampleID.chr)
-  dt.s2.avg[, c("success", "iteration") := .(s2.end, i.iter)]
-
-  # for generating plots
-  # pre series data for both rw and treated in wide format
-  dt.raw.series <- merge(dt.s2.avg[, c("Year", "mean.rw")], dt.rw_wide, by = "Year")
-  dt.trt.series <- merge(dt.s2.avg[, c("Year", "mean.rw_trt")], dt.trt_wide.o, by = "Year")
-
-  setcolorder(dt.raw.series, c("Year", "mean.rw", sample.lst))
-  setcolorder(dt.trt.series, c("Year", "mean.rw_trt", sample.lst))
-
-
-  # pre data for bar plotting on ccf with chronologies for raw and treated series
-
-  dt.trt.ccf <- copy(dt.s2.ccf)
-  dt.ccf.idlabel <- dt.trt.ccf[ccf.ord==1, c("SampleID.chr", "qa_code", "lag")]
-  dt.ccf.idlabel[, id.label:= paste0(str_sub(SampleID.chr, 3, -1),"$", qa_code,"$", lag)]
-  dt.trt.ccf<- merge(dt.trt.ccf, dt.ccf.idlabel[, c("SampleID.chr", "id.label")],by = "SampleID.chr")
-  dt.trt.ccf <- dcast(dt.trt.ccf, lag ~ id.label, value.var = "acf.trt")
-  names(dt.trt.ccf)
-  idlabel.lst <- sort(unique(dt.ccf.idlabel$id.label))
-  # test if in the same order as others
-  idlabel.lst2 <- str_split_fixed(idlabel.lst, "\\$",3)[,1]
-  if (!all.equal(idlabel.lst2,str_split_fixed(sample.lst, "\\_",2)[,2]  )) print("check the order of id.label in dt.ccf.idlabel")
-  setcolorder(dt.trt.ccf, c("lag", idlabel.lst))
-
-  # input data structure for ccf_avg Year, mean.value, sampleIDs...
-
-  dt.raw.ccf <- rbindlist(lapply(3:ncol(dt.raw.series), ccf_avg, data = dt.raw.series))
-  dt.raw.ccf <- dcast(dt.raw.ccf, lag ~ SampleID.chr, value.var = "acf.trt")
-  names(dt.raw.ccf)
-  setcolorder(dt.raw.ccf, c("lag", sample.lst))
-
-# move to plots_qa
-#
-#   # ccf of all samples with the chronologies
-#   plot.trt.series <- lapply(3:ncol(dt.trt.series), create_plot.series, data = dt.trt.series)
-#   plot.raw.series <- lapply(3:ncol(dt.raw.series), create_plot.series, data = dt.raw.series)
-#   names(plot.trt.series) <- str_split_fixed(colnames(dt.trt.series)[3:ncol(dt.trt.series)], "\\_",2)[,2]
-#   names(plot.raw.series) <- str_split_fixed(colnames(dt.raw.series)[3:ncol(dt.raw.series)], "\\_",2)[,2]
-#   # print(plot.trt.series[[2]])
-#   # print(plot.raw.series[[2]])
-#
-# names(plot.trt.series)
-#
-#   plot.trt.ccf <- lapply(2:ncol(dt.trt.ccf), create_barplot, data = dt.trt.ccf)
-#   plot.raw.ccf <- lapply(2:ncol(dt.raw.ccf), create_barplot, data = dt.raw.ccf)
-#
-#   names(plot.trt.ccf) <- str_split_fixed(colnames(dt.trt.ccf)[2:ncol(dt.trt.ccf)], "\\_",2)[,2]
-#   names(plot.raw.ccf) <- str_split_fixed(colnames(dt.raw.ccf)[2:ncol(dt.raw.ccf)], "\\_",2)[,2]
-#
-#   # print(plot.trt.series[[2]])
-#   # print(plot.raw.ccf[[2]])
-#   # print(plot.trt.ccf[[2]])
-#   # plot.lst <- list(plot.raw.series, plot.trt.series, plot.raw.ccf, plot.trt.ccf )
-#   plot.lst <- list(plot.raw.series = plot.raw.series, plot.trt.series = plot.trt.series, plot.raw.ccf = plot.raw.ccf, plot.trt.ccf = plot.trt.ccf)
-#   # return(list(plot.raw.series = plot.raw.series, plot.trt.series = plot.trt.series, plot.raw.ccf = plot.raw.ccf, plot.trt.ccf = plot.trt.ccf))
-
-
-  # for statistics per radius
-  dt.s2.ccf[, SampleID := str_split_fixed(SampleID.chr, "\\_",2)[,2] ]
-
-
-  # reports on radii
-  dt.radii <- dt.rw_long[, .(N = .N, rw.mean = mean(RawRing), rw.sd = sd(RawRing), rw.min = min(RawRing), rw.max = max(RawRing), ymin = min(Year), ymax = max(Year), ar1_rw = acf(RawRing, plot = FALSE)$acf[2] ), by = .(SampleID.chr)]
-
-  acf.trt <- dt.rw_long[!is.na(RW_trt), .( ar1_trt = round(acf(RW_trt, plot = FALSE)$acf[2],2) ), by = .(SampleID.chr)]
-
-  # correlations
-  dt_wide.rw <- merge(dt.s2.avg[, c("Year", "mean.rw")], dt.rw_wide, by = "Year")
-  dt_wide.trt <- merge(dt.s2.avg[, c("Year", "mean.rw_trt")], dt.trt_wide.o, by = "Year")
-
-  dt.cor <- merge(cor_avg(dt_wide.rw), cor_avg(dt_wide.trt), by = "SampleID.chr")
-
-  stats_radii <- merge(dt.radii, acf.trt, by = "SampleID.chr")
-
-
-  stats_radii <- merge(stats_radii, dt.cor, by = "SampleID.chr")
-
-
-  stats_radii <- merge(dt.s2.ccf[lag == 0, c("SampleID", "SampleID.chr", "qa_code")], stats_radii, by = "SampleID.chr")
-
-
-  dt.s2.ccf[, SampleID.chr := NULL]
-  setcolorder(dt.s2.ccf, "SampleID")
-  stats_radii[, SampleID.chr := NULL]
-
-  # Reset to sequential
-  future::plan(future::sequential)
-  dt.s2.ccf <- data.table(species = unique(dt.input$species), dt.s2.ccf)
-  dt.s2.avg <- data.table(species = unique(dt.input$species), dt.s2.avg)
-  stats_radii <- data.table(species = unique(dt.input$species), stats_radii)
-  qa_code <- data.frame(
-    qa_code = c("pass", "borderline", "pm1", "highpeak", "fail"),
-    Description   = c("The maximum correlation occurs at lag 0",
-                      "The correlation at lag 0 ranks as the second highest, and its difference from the maximum remains within a predefined threshold, categorizing as a quasi-pass",
-                      "The maximum correlation occurs at lag 1 or -1, suggesting slight misalignment.",
-                      "The maximum correlation occurs at a non-zero lag and is more than twice the second-highest value, potentially signaling an issue",
-                      "All other measurements that do not fit into the aforementioned categories fall under this classification.")
-  )
-  result <- list(dt.ccf = dt.s2.ccf, dt.chron = dt.s2.avg, dt.stats = stats_radii,
-                 dt.plots = list(dt.trt.series = dt.trt.series, dt.raw.series = dt.raw.series, dt.trt.ccf = dt.trt.ccf, dt.raw.ccf =dt.raw.ccf),
-                 qa.parms = list(qa.label_data = qa.label_data, qa.label_trt = qa.label_trt, qa.batch_size = qa.batch_size, qa.max_lag = qa.max_lag,
-                                 qa.max_iter = qa.max_iter, qa.min_nseries = qa.min_nseries, qa.blcrit = qa.blcrit, qa.code_desc = qa_code))
-  class(result) <- "cfs_qa"
-  return(result)
-  # the result of step 2 is dt.s2.ccf, samples with qa_code = "Pass" to form the chronologies
-
-}
-
-
-
-# Define a function to calculate max cross-correlation lag
-
 #' pair-wise ccf
 #' @description
 #' pair-wise ccf
@@ -393,6 +126,23 @@ cor_avg <- function(data){
 #' @export CFS_scale
 #'
 
+#' @examples
+#' # loading formatted
+#' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+#' all.sites <- dt.samples_trt$tr_all_wide[,.N, by = c("species", "uid_site", "site_id")][, N:=NULL]
+#' dupes <- all.sites[, .N, by = .(species, site_id)][N > 1]
+
+#' # e.g. taking the target sites
+#' target_site <- all.sites[c(1,2), -"uid_site"]
+
+#' ref.sites <- merge(
+#' dt.samples_trt$tr_all_wide[,c("species", "uid_site", "site_id",
+#'  "latitude","longitude", "uid_radius")],
+#' dt.samples_trt$tr_all_long$tr_7_ring_widths, by = c("uid_radius"))
+
+#' dt.scale <- CFS_scale( target_site = target_site, ref_sites = ref.sites,
+#' scale.label_data_ref = "demo-samples", scale.max_dist_km = 200, scale.N_nbs = 2)
+
 #'
 
 CFS_scale <- function(target_site, ref_sites,
@@ -422,7 +172,8 @@ CFS_scale <- function(target_site, ref_sites,
     stop()
   }
 
-
+  if (scale.max_dist_km < 0) stop(paste0( "please check invalid scale.max_dist_km: ", scale.max_dist_km))
+  if (scale.N_nbs < 1) stop(paste0( "please check invalid scale.N_nbs: ", scale.N_nbs))
   # site list from ref_sites
   site.all <- ref_sites[, .N, by = .(species, uid_site, site_id, latitude, longitude)][, N := NULL]
   target_site.LL <- merge(target_site, site.all, by = c("species", "site_id"))
@@ -455,11 +206,26 @@ CFS_scale <- function(target_site, ref_sites,
     setorder(site.all.spc, dist_to_chk_m)
     site.all.spc$ord <- 0:(nrow(site.all.spc) - 1)
 
-    site.closest <- site.all.spc[
-      dist_to_chk_km <= scale.max_dist_km & ord <= scale.N_nbs
-    ]
 
-    rw.closest <- merge(ref_sites,
+    site.all.spc <- site.all.spc[ord <= scale.N_nbs,]
+    scale.N_nbs.real <- max(site.all.spc$ord)
+    # if ( scale.N_nbs.real< scale.N_nbs) print(paste0("number of neighbours: ", scale.N_nbs.real)) else{
+    #
+    # }
+
+
+    site.closest <- site.all.spc[dist_to_chk_km <= scale.max_dist_km, ]
+
+
+    # if no neighbors were selected
+    if (nrow(site.closest) == 1) {
+      print(paste0( "no neighbours were found within ", scale.max_dist_km, " km, you may need to increase scale.max_dist_km"))
+
+      rw.median <- data.table()
+      dt.plots <- list()
+      }else{
+        # print(paste0("site: ", site.closest$site_id, " has ", nrow(site.all.spc[ord > 0]), " neighbors, the range of distance (km): ", min(site.all.spc[ord > 0]$dist_to_chk_km), " - ", max(site.all.spc[ord > 0]$dist_to_chk_km)))
+        rw.closest <- merge(ref_sites,
                         site.closest[, .(ord,uid_site)],
                         by = "uid_site")
 
@@ -503,15 +269,16 @@ CFS_scale <- function(target_site, ref_sites,
                           rw.max.nbs = max(rw.median),
                           rw.median.nbs = median(rw.median))]
     )[, ratio_median := round(rw.median / rw.median.nbs, 2)]
-
+    dt.plots <-list(med.site.yr = med.site.yr, med.site = med.site)
+    }
     result <- list(
-      dt.plots = list(med.site.yr = med.site.yr, med.site = med.site),
+      dt.plots = dt.plots,
       ratio.median = rw.median,
       scale.parms = c(
         scale.label_data_site = target_site.LL[i]$site_id,
         scale.label_data_ref = scale.label_data_ref,
         scale.max_dist_km = scale.max_dist_km,
-        scale.N_nbs = scale.N_nbs
+        scale.N_nbs = scale.N_nbs.real
       )
     )
     class(result) <- "cfs_scale"
@@ -671,11 +438,11 @@ run_safe_ccf <- function(dt.trt_wide, qa.max_lag = 10, mem_target = 0.6) {
 #'
 #' @return An object of class \code{cfs_qa} containing:
 #'   \describe{
-#'     \item{dt.ccf}{data.table with CCF results and QA codes for each sample}
+#'     \item{dt.ccf}{data.table with CCF results and QA codes (\code{qa_code}) for each series}
 #'     \item{dt.chron}{data.table with chronologies statistics}
 #'     \item{dt.stats}{data.table with summary statistics per radius}
 #'     \item{dt.plots}{List of data.tables formatted for plotting (raw and treated series, CCF plots)}
-#'     \item{qa.parms}{List of QA parameters used in the analysis}
+#'     \item{qa.parms}{List of parameters used in the analysis}
 #'   }
 #'
 #' @details
@@ -685,14 +452,14 @@ run_safe_ccf <- function(dt.trt_wide, qa.max_lag = 10, mem_target = 0.6) {
 #' \itemize{
 #'   \item Computes CCF for all pairs of treated series
 #'   \item Uses auto-batching to manage memory efficiently
-#'   \item Identifies initial candidate samples with max CCF at lag 0
+#'   \item Identifies initial qualified samples with max CCF at lag 0
 #' }
 #'
 #' \strong{Step 2: Iterative chronologies Refinement}
 #' \itemize{
-#'   \item Computes chronologies from candidate samples
-#'   \item Evaluates each sample against the chronologies
-#'   \item Iteratively refines sample list until convergence
+#'   \item Computes chronologies from qualified samples
+#'   \item Evaluates each sample by running CCF with the chronologies
+#'   \item Iteratively refines the qualified samples until convergence
 #' }
 #'
 #' \strong{QA Code Classification:}
@@ -715,45 +482,30 @@ run_safe_ccf <- function(dt.trt_wide, qa.max_lag = 10, mem_target = 0.6) {
 #'
 #' @examples
 #' \dontrun{
-#' # Prepare your tree-ring data
-#' dt.input <- data.table(
-#'   species = "PIPO",
-#'   SampleID = rep(1:150, each = 100),
-#'   Year = rep(1900:1999, 150),
-#'   RawRing = rnorm(15000, 2, 0.5),
-#'   RW_trt = rnorm(15000, 0, 0.3)
-#' )
-#'
-#' # Run QA analysis with auto-batching
-#' result <- CFS_qa(
-#'   dt.input = dt.input,
-#'   qa.label_data = "Site_A_2024",
-#'   qa.label_trt = "Spline_Detrend",
-#'   qa.max_lag = 10,
-#'   qa.mem_target = 0.6  # Use 60% of free memory
-#' )
-#'
-#' # Examine results
-#' summary(result$dt.ccf)
-#' table(result$dt.ccf$qa_code)
-#' print(result$dt.chron)
+#' # loading processed data
+#' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+
+#' # data processing
+#' dt.samples_long <- growthTrendR:::prepare_samples_clim(dt.samples_trt, calbai == FALSE)
+
+#' # rename to the reserved column name
+#' setnames(dt.samples_long, c("sample_id", "year", "rw_mm"), c("SampleID", "Year" ,"RawRing"))
+
+#' # assign treated series
+#' # users can decide their own treated series
+#' dt.samples_long[, RW_trt:= RawRing - shift(RawRing), by = SampleID]
+
+#' # quality check on radius alignment based on the treated series
+#' dt.qa <-CFS_qa(dt.input = dt.samples_long, qa.label_data = "demo-samples",
+#' qa.label_trt = "difference", qa.min_nseries = 5)
 #' }
-#'
-#' @references
-#' Add relevant references for crossdating methodology
 #'
 #' @seealso
 #' \code{\link{ccf}} for cross-correlation function
 #'
-# #' @importFrom data.table data.table setorder dcast rbindlist copy setcolorder
-# #' @importFrom future plan multicore multisession sequential
-# #' @importFrom furrr future_map
-# #' @importFrom pryr mem_used object_size
-# #' @importFrom stats ccf acf cor
-# #' @importFrom utils combn
-# #' @importFrom stringr str_sub str_split_fixed
 #'
 #' @export
+
 CFS_qa <- function(dt.input, qa.label_data = "", qa.label_trt = "",
                    qa.max_lag = 10, qa.max_iter = 100, qa.min_nseries = 100,
                    qa.blcrit = 0.1, qa.mem_target = 0.6) {

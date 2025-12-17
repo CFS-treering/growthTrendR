@@ -36,7 +36,8 @@ utils::globalVariables(c(
   # CFS_scale
   "chk.site", "dist_to_chk_km",
   # plot_mapping
-  "species.inuse",
+  "species.inuse", "non_year_cols",
+
   #plot_resp
   "lwr", "upr", "maxv", "minv",'group',"x","group", "y.resp", 'byterm', 'term', 'fit'
 

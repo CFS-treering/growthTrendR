@@ -24,6 +24,20 @@
 #' If users specify only 1 candidate model through the m.candidates argument, the model is fitted with "REML" method.
 
 #' @export gam_mod
+#' @examples
+#'
+#' # loading processed data
+#' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+
+#' # pre-data for model
+#' dt.samples_long <- growthTrendR:::prepare_samples_clim(dt.samples_trt)
+#' dt.samples_long$uid_site.fac <- as.factor(as.character(dt.samples_long$uid_site))
+#' dt.m <- dt.samples_long
+#'
+#' # gam_mod
+#' m.gam <-gam_mod(data = dt.m, resp_scale = "resp_log",
+#'                                        m.candidates = c( "rw_mm ~ s(year, by = uid_site.fac)",
+#'                                                          "rw_mm ~ year:uid_site.fac"))
 
 gam_mod <- function(data, resp_scale = "", m.candidates){
 
@@ -64,7 +78,20 @@ gam_mod <- function(data, resp_scale = "", m.candidates){
 #' If users specify only 1 candidate model through the m.candidates argument, the model is fitted with "REML" method.
 
 #' @export gamm_radius
+#' @examples
+#'
+#' # loading processed data
+#' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 
+#' # pre-data for model
+#' dt.samples_long <- growthTrendR:::prepare_samples_clim(dt.samples_trt)
+#'
+#' dt.m <- dt.samples_long[uid_site == 1][ageC >1]
+#'
+#' # gamm_radius model
+#' m.radius <-gamm_radius(data = dt.m, resp_scale = "resp_log",
+#'                                        m.candidates = c( "rw_mm ~ s(year)",
+#'                                                          "rw_mm ~ s(year)"))
 gamm_radius <- function(data, resp_scale = "resp_gamma", m.candidates){
 
   main_model(data , resp_scale , m.option = 1, m.candidates)
@@ -104,6 +131,25 @@ gamm_radius <- function(data, resp_scale = "resp_gamma", m.candidates){
 
 #' @export gamm_site
 #'
+#' @examples
+#' #' @examples
+#' # loading processed data
+#' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+#' # climate
+#' dt.clim <- data.table::fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
+#' # pre-data for model
+#' dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+#'
+#' dt.m <- dt.samples_clim[uid_site == 1][ageC >1]
+#'
+#' # gamm_site model
+#' m.site <-gamm_site(data = dt.m, resp_scale = "resp_log",
+#'          m.candidates = c(
+#'          "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + s(FFD)",
+#'          "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + FFD",
+#'          "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC)"))
+#'
+#'
 #'
 gamm_site <- function(data, resp_scale = "resp_gamma", m.candidates){
 
@@ -142,6 +188,25 @@ gamm_site <- function(data, resp_scale = "resp_gamma", m.candidates){
 #' If users specify only 1 candidate model through the m.candidates argument, the model is fitted with "REML" method.
 
 #' @export gamm_spatial
+#' @examples
+#' \dontrun{
+#' # loading processed data
+#' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+#' # climate
+#' dt.clim <- data.table::fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
+#' # pre-data for model
+#' dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+
+#' dt.m <- dt.samples_clim[ageC >1]
+
+#' # gamm_spatial model
+#' m.sp <-gamm_spatial(data = dt.m, resp_scale = "resp_gamma",
+#'        m.candidates = c(
+#'        "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + s(FFD)",
+#'        "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + FFD",
+#'        "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC)"))
+#'        }
+#'
 
 gamm_spatial <- function(data, resp_scale = "resp_gamma", m.candidates){
   data$uid_radius.fac <- as.factor(as.character(data$uid_radius))
@@ -190,6 +255,26 @@ gamm_spatial <- function(data, resp_scale = "resp_gamma", m.candidates){
 #' If users specify only 1 candidate model through the m.candidates argument, the model is fitted with "REML" method.
 
 #' @export bam_spatial
+#' @examples
+#' \dontrun{
+#' # loading processed data
+#' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+#' # climate
+#' dt.clim <- data.table::fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
+#' # pre-data for model
+#' dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+
+#' dt.m <- dt.samples_clim[ageC >1]
+
+#' # bam_spatial model
+#' m.sp <-bam_spatial(data = dt.m, resp_scale = "resp_log",
+#'        m.candidates = c(
+#'        "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + s(FFD)",
+#'        "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + FFD",
+#'        "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC)"))
+#'        }
+#'
+#'
 
 bam_spatial <- function(data, resp_scale = "resp_gamma", m.candidates){
   data$uid_radius.fac <- as.factor(as.character(data$uid_radius))
@@ -215,7 +300,7 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
   if (resp_scale == "resp_gaussian") famil = gaussian("identity")
   if (resp_scale == "resp_gamma") famil = Gamma("log")
 
-  setorder(data, uid_site, uid_radius, ageC)
+  # setorder(data, uid_site, uid_radius, ageC)
 
   # for comparing and selecting model on AIC
   if (length(m.candidates) > 1){
@@ -324,7 +409,7 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
         # r1 <- start_value_rho(m0, plot=TRUE)
         # print (paste0(Sys.time(), "          ar1"))
         # m.tmp <- bam(formul, data=data, rho=start_value_rho(m0.tmp, plot=FALSE), AR.start=data$start.event, method = "ML")
-        setorder(data, uid_site, uid_radius, ageC)
+        # setorder(data, uid_site, uid_radius, ageC)
         data[, start.event := c(TRUE, rep(FALSE, .N - 1)), by = .(uid_site, uid_radius)]
         m.tmp <- tryCatch({
 
@@ -494,7 +579,7 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
 
 
 
-      setorder(data, uid_site, uid_radius, ageC)
+      # setorder(data, uid_site, uid_radius, ageC)
       data[, start.event := c(TRUE, rep(FALSE, .N - 1)), by = .(uid_site, uid_radius)]
 
       # Step 3: Add rho and AR1 structure
@@ -583,7 +668,7 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
           m0.sel <- bam(form.sel,
 
                         method = "fREML",data = data)
-          setorder(data, uid_site, uid_radius, ageC)
+          # setorder(data, uid_site, uid_radius, ageC)
           # data[, idrow:=seq_len(.N), by = .(uid_site, uid_radius)][,start.event := (idrow== 1)][, idrow:= NULL]
           # r1 <- start_value_rho(m0, plot=TRUE)
           # print (paste0(Sys.time(), "          ar1"))
@@ -668,7 +753,13 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
   #   utils::write.csv(tmp.y, file = file.path(out.csv, paste0("prediction ", "REML" ,".csv")), row.names = FALSE, na = "")
   #   utils::write.csv(aic.reml, file = file.path(out.csv, paste0("fitting ", "REML" ,".csv")), row.names = FALSE, na = "")
   # }
+  m.sel$m.candidates <- m.candidates
   m.sel$resp_scale <- resp_scale
+  m.sel$is_log_model <- resp_scale %in% c("resp_gamma", "resp_log")
+  if (m.option %in% c(1,2,3)){
+    m.sel$gam$resp_scale <- resp_scale
+    m.sel$gam$is_log_model <- resp_scale %in% c("resp_gamma", "resp_log")
+    }
   aic.reml$resp_scale <- resp_scale
   return.lst <- list(model = m.sel, fitting = aic.reml, ptable = ptable, stable = stable, pred = tmp.y)
   if (m.option >= 3 & exists("moranI")) return.lst$moranI <- moranI
@@ -775,8 +866,24 @@ format_byterm <- function(model, dt.pred){
 #' }
 #'
 #' @export sterm_imp
+#' @examples
+#' # loading processed data
+#' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+#' # climate
+#' dt.clim <- data.table::fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
+#' # pre-data for model
+#' dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
 
+#' dt.m <- dt.samples_clim[ageC >1]
 
+#' # using gamm_spatial model as an example
+#' m.sp <-gamm_spatial(data = dt.m, resp_scale = "resp_log",
+#'        m.candidates = "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + s(FFD)")
+#'
+#' dt.m[, uid_site.fac:= as.factor(as.character(uid_site))]
+
+#' dt.imp <- sterm_imp(m.sp$model$gam)
+#'
 
 sterm_imp <- function(gam_model, method = c("ssq", "var", "meanabs")) {
   method <- match.arg(method)
@@ -818,7 +925,7 @@ sterm_imp <- function(gam_model, method = c("ssq", "var", "meanabs")) {
 }
 
 
-#' Compute confidence intervals for GAM predictions
+#' Compute prediction and confidence intervals of smooth terms on response scale
 #'
 #' This function computes predicted values and confidence intervals from a fitted GAM model
 #' with a log-link (or other link) and optionally back-transforms predictions to the response scale.
@@ -844,6 +951,25 @@ sterm_imp <- function(gam_model, method = c("ssq", "var", "meanabs")) {
 #'
 
 #' @export
+
+#' @examples
+#' # loading processed data
+#' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+#' # climate
+#' dt.clim <- data.table::fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
+#' # pre-data for model
+#' dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+
+#' dt.m <- dt.samples_clim[ageC >1]
+
+#' # using gamm_spatial model as an example
+#' m.sp <-gamm_spatial(data = dt.m, resp_scale = "resp_log",
+#'        m.candidates = "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + s(FFD)")
+#'
+#' dt.m[, uid_site.fac:= as.factor(as.character(uid_site))]
+
+#' dt.ci <- ci_resp(m.sp$model$gam, newdata = dt.m)
+#'
 ci_resp <- function(model, newdata, nboot = 100,
                     method = c("posterior", "delta_link", "delta_resp", "bootstrap_link", "bootstrap_resp"),
                     level = 0.95) {

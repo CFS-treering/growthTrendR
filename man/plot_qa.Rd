@@ -14,3 +14,25 @@ plot_qa(qa.trt, qa.out_series = "all")
 \description{
 Plotting the time series and cross-correlation to contrast each radius with the chronologies, using both raw ring-width measurements and treated series.
 }
+\examples{
+\dontrun{
+# loading processed data
+dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+# data processing
+dt.samples_long <- growthTrendR:::prepare_samples_clim(
+dt.samples_trt = dt.samples_trt, calbai = FALSE )
+# rename to the reserved column name
+data.table::setnames(
+dt.samples_long,
+c("sample_id", "year", "rw_mm"),
+c("SampleID", "Year" ,"RawRing"))
+# assign treated series
+# users can decide their own treated series
+dt.samples_long[, RW_trt:= RawRing - data.table::shift(RawRing), by = SampleID]
+# quality check on radius alignment based on the treated series
+dt.qa <-CFS_qa(dt.input = dt.samples_long, qa.label_data = "demo-samples",
+qa.label_trt = "difference", qa.min_nseries = 5)
+plots.lst <- plot_qa(dt.qa, qa.out_series = "X003_101_005")
+}
+
+}

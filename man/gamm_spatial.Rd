@@ -36,3 +36,21 @@ Once the optimal model is identified, it will be refitted using the restricted m
 
 If users specify only 1 candidate model through the m.candidates argument, the model is fitted with "REML" method.
 }
+\examples{
+\dontrun{
+# loading processed data
+dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+# climate
+dt.clim <- data.table::fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
+# pre-data for model
+dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+dt.m <- dt.samples_clim[ageC >1]
+# gamm_spatial model
+m.sp <-gamm_spatial(data = dt.m, resp_scale = "resp_gamma",
+       m.candidates = c(
+       "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + s(FFD)",
+       "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + FFD",
+       "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC)"))
+       }
+
+}
