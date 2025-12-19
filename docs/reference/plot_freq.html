@@ -79,6 +79,21 @@
 
 </dl></div>
 
+    <div id="ref-examples">
+    <h2>Examples</h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># loading processed data</span></span></span>
+<span class="r-in"><span><span class="va">dt.samples_trt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"dt.samples_trt.rds"</span>, package <span class="op">=</span> <span class="st">"growthTrendR"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">dt.freq</span> <span class="op">&lt;-</span> <span class="fu"><a href="CFS_freq.html">CFS_freq</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span><span class="va">dt.samples_trt</span><span class="op">$</span><span class="va">tr_all_wide</span>,</span></span>
+<span class="r-in"><span>freq.label_data <span class="op">=</span> <span class="st">"demo-samples"</span>,</span></span>
+<span class="r-in"><span>freq.uid_level <span class="op">=</span> <span class="st">"uid_radius"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">plots.lst</span> <span class="op">&lt;-</span> <span class="fu">plot_freq</span><span class="op">(</span><span class="va">dt.freq</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top"><h2 data-toc-skip>Contents</h2>

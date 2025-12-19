@@ -16,7 +16,6 @@
 #' @import stats
 #' @import mgcv
 #' @import nlme
-#' @import itsadug
 #'
 
 #' @importFrom terra rast crs mask vect xyFromCell values

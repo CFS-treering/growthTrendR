@@ -56,14 +56,7 @@ Ensuring the quality of data measurements is critical to the success of any data
 
 
 ```{r data_qa, echo= FALSE, eval = FALSE, eval=FALSE}
-# # Example: load a dataset included in the package
-# 
-# # ring measurement
-# samples69.o <- fread(system.file("extdata", "samples69.csv", package = "growthTrendR"))
-# 
-# # formatting the users' data conformed to CFS-TRenD structure
-# samples69.trt <- CFS_format(data = list(samples69.o, 39:140), usage = 1, out.csv = NULL)
-# class(samples69.trt)
+
 ```
 
 
@@ -74,16 +67,16 @@ Ring-width measurements from certain sites may occasionally appear unusually hig
 ```{r scale}
 # loading processed data
 # otherwise need to run CFS_format() first as done in data report
-samples69.trt <- readRDS(system.file("extdata", "samples69.trt.rds", package = "growthTrendR"))
+dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 # , message = FALSE, warning = FALSE, results = 'hide'
-all.sites <- samples69.trt$tr_all_wide[,.N, by = c("species", "uid_site", "site_id")][, N:=NULL]
+all.sites <- dt.samples_trt$tr_all_wide[,.N, by = c("species", "uid_site", "site_id")][, N:=NULL]
 if (nrow(all.sites[, .N, by = .(species, site_id)][N>1]) > 0) stop("species-site_id is not unique...")
 # e.g. taking the target sites
 target_site <- all.sites[c(1,2), -"uid_site"]
 
-ref.sites <- merge(samples69.trt$tr_all_wide[,c("species", "uid_site", "site_id", "latitude","longitude", "uid_radius")], samples69.trt$tr_all_long$tr_7_ring_widths, by = c("uid_radius"))
+ref.sites <- merge(dt.samples_trt$tr_all_wide[,c("species", "uid_site", "site_id", "latitude","longitude", "uid_radius")], dt.samples_trt$tr_all_long$tr_7_ring_widths, by = c("uid_radius"))
 
-dt.scale <- CFS_scale( target_site = target_site, ref_sites = ref.sites, scale.label_data_ref = "CFS-TRenD V1.2-proj69", scale.max_dist_km = 20, scale.N_nbs = 5)
+dt.scale <- CFS_scale( target_site = target_site, ref_sites = ref.sites, scale.label_data_ref = "CFS-TRenD V1.2-proj69", scale.max_dist_km = 200, scale.N_nbs = 2)
 ```
 
 
@@ -163,28 +156,22 @@ Tree-ring measurements often exhibit long-term growth trends and interannual var
 ```{r qaa, message = FALSE, warning = FALSE, results = 'hide'}
 
 # loading processed data
-samples69.trt <- readRDS(system.file("extdata", "samples69.trt.rds", package = "growthTrendR"))
+dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 
-# otherwise, run function CFS_format() from raw dataset
-# # ring measurement
-# samples69.o <- fread(system.file("extdata", "samples69.csv", package = "growthTrendR"))
-# 
-# # formatting the users' data conformed to CFS-TRenD structure
-# samples69.trt <- CFS_format(data = list(samples69.o, 39:111), usage = 1, out.csv = NULL)
 
 # data processing
-samples69_long <- merge(samples69.trt$tr_all_wide[, c("uid_site", "site_id", "species", "uid_tree", "uid_sample", "sample_id", "radius_id", "uid_radius")],
-                        samples69.trt$tr_all_long$tr_7_ring_widths, by = "uid_radius")
+dt.samples_long <- merge(dt.samples_trt$tr_all_wide[, c("uid_site", "site_id", "species", "uid_tree", "uid_sample", "sample_id", "radius_id", "uid_radius")],
+                        dt.samples_trt$tr_all_long$tr_7_ring_widths, by = "uid_radius")
 
 # rename to the reserved column name
-setnames(samples69_long, c("sample_id", "year", "rw_mm"), c("SampleID", "Year" ,"RawRing"))
+setnames(dt.samples_long, c("sample_id", "year", "rw_mm"), c("SampleID", "Year" ,"RawRing"))
 
 # assign treated series
 # users can decide their own treated series
-samples69_long[, RW_trt:= RawRing - shift(RawRing), by = SampleID]
+dt.samples_long[, RW_trt:= RawRing - shift(RawRing), by = SampleID]
 
 # quality check on radius alignment based on the treated series
-dt.qa <-CFS_qa(dt.input = samples69_long, qa.label_data = "CFS-TRenD V1.2-proj69", qa.label_trt = "difference", qa.min_nseries = 50)
+dt.qa <-CFS_qa(dt.input = dt.samples_long, qa.label_data = "CFS-TRenD V1.2-proj69", qa.label_trt = "difference", qa.min_nseries = 5)
 ```
 
 #### **arguments of CFS_qa() function:**

@@ -57,25 +57,18 @@ GAMs/GAMMs handle nonlinear relationships and can include random effects (e.g., 
 
 
 # loading processed ring measurement
-samples69.trt <- readRDS(system.file("extdata", "samples69.trt.rds", package = "growthTrendR"))
-
-# if no processed data, run function CFS_format() from raw dataset
-# # ring measurement
-# samples69.o <- fread(system.file("extdata", "samples69.csv", package = "growthTrendR"))
-# 
-# # formatting the users' data conformed to CFS-TRenD structure
-# samples69.trt <- CFS_format(data = list(samples69.o, 39:111), usage = 1, out.csv = NULL)
+dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 
 # climate
-clim69 <- fread(system.file("extdata", "clim69.csv", package = "growthTrendR"))
+dt.clim <- fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
 
 # merge data
-samples69_clim <- merge(samples69.trt$tr_all_wide[, c("uid_site", "site_id","latitude", "longitude",  "species", "uid_tree", "uid_radius")], samples69.trt$tr_all_long$tr_7_ring_widths, by = "uid_radius")
+dt.samples_clim <- merge(dt.samples_trt$tr_all_wide[, c("uid_site", "site_id","latitude", "longitude",  "species", "uid_tree", "uid_radius")], dt.samples_trt$tr_all_long$tr_7_ring_widths, by = "uid_radius")
 
 # # Calculate BAI
-samples69_clim <- calc_bai(samples69_clim, "uid_radius", "rw_mm")
+dt.samples_clim <- calc_bai(dt.samples_clim, "uid_radius", "rw_mm")
 
-samples69_clim <- merge(samples69_clim, clim69, by = c("site_id", "year"))
+dt.samples_clim <- merge(dt.samples_clim, dt.clim, by = c("site_id", "year"))
 ```
 
 <br>
@@ -84,10 +77,10 @@ samples69_clim <- merge(samples69_clim, clim69, by = c("site_id", "year"))
 This example uses gamm_spatial, but users may choose other functions (gamm_radius, gamm_site, bam_spatial, gam_mod) that follows the same arguments, according to their purpose and data.
 
 ```{r mod_fitting,  message = FALSE, warning = FALSE, results = 'hide'}
-setorder(samples69_clim, uid_tree, year)
+setorder(dt.samples_clim, uid_tree, year)
 
 # remove the first 10 years, at least remove ageC == 1, for the log-scale model functions
-m.sp <- gamm_spatial(data = samples69_clim[ageC > 1], resp_scale = "resp_log",
+m.sp <- gamm_spatial(data = dt.samples_clim[ageC > 1], resp_scale = "resp_log",
                      m.candidates =c( "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + s(FFD)",
                                       "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + FFD")
 )

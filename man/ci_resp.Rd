@@ -31,7 +31,8 @@ This function computes predicted values and confidence intervals from a fitted G
 with a log-link (or other link) and optionally back-transforms predictions to the response scale.
 Five methods are supported:
 1. **delta_link**: classic delta method on the linear predictor (link) scale; back-transformed CI is asymmetric.
-2. **delta_resp**: delta method applied directly on the response scale using Var[exp(η)] ≈ exp(2η) Var(η).
+2. **delta_resp**: delta method applied directly on the response scale using
+ \eqn{\mathrm{Var}[\exp(\eta)] \approx \exp(2\eta)\,\mathrm{Var}(\eta)}.
 3. **bootstrap_link**: parametric bootstrap on the linear predictor; quantiles back-transformed.
 4. **bootstrap_resp**: parametric bootstrap on the response scale; quantiles computed after exponentiating.
 5. **posterior**: Bayesian posterior simulation using the model covariance matrix; quantiles on response scale.

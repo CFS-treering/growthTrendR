@@ -13,7 +13,7 @@ meta.Projects <-data.table(Variable = c( "uid_project", "submission_id", "projec
                           Description = c("unique project identification used in treeSource","submission identification", "original project identification",  "Project description",
                                           "year range of the project", "References", "open to public","Name of primary person responsible for the data","Name of secondary person responsible for the data"),
                          Required = c(0,1,1,2,2,2,1,1,2)
-)
+)[, col.ord := seq_len(.N)]
 
 meta.Sites <-data.table(Variable = c( "uid_site",  "site_id",    "latitude" ,      "longitude",  "datasource", "investigators", "province_iso_code"),
                            Format = c("integer", "character",     "numeric",         "numeric", "character", "character", "character"),
@@ -22,7 +22,7 @@ meta.Sites <-data.table(Variable = c( "uid_site",  "site_id",    "latitude" ,   
                                            "original site identification",   "  decimal degrees (positive for N)",
                                   "decimal degrees (negative for W)", "inventory/target", "Investigators", "province iso code"),
                            Required = c(0,1,1,1,1,2,1)
-)
+)[, col.ord := seq_len(.N)]
 
 
 meta.Trees <-data.table(Variable = c( "uid_tree", "uid_site", "tree_id",  "species", "uid_project"),
@@ -30,7 +30,7 @@ meta.Trees <-data.table(Variable = c( "uid_tree", "uid_site", "tree_id",  "speci
                        Description = c("unique tree identification used in treeSource", "unique site identification used in treeSource","original tree identification",
                                        "use 7 character species codes from NFI with no spaces (e.g.; PICEMAR; POPUTRE)", "unique project identification used in treeSource"),
                        Required = c(0,0,1,1,0)
-                      )
+                      )[, col.ord := seq_len(.N)]
 
 
 
@@ -40,7 +40,7 @@ meta.Meas <-data.table(Variable = c( "uid_meas", "uid_tree",  "meas_no",   "meas
                                        "original measurement identification, 0 for missing info", "measurement date, last year in tree_RW in case missing",
                                        "health status: LIVE/DEAD","Stem diameter (cm) at breast height (ca. 1.3 m)", "Total tree height (m)"),
                        Required = c(0,0,2,2,2,2,2)
-)
+)[, col.ord := seq_len(.N)]
 
 
 meta.Samples <-data.table(Variable = c( "uid_sample", "uid_meas", "sample_id", "sample_type",   "sample_ht_m",     "sample_diameter_cm"),
@@ -48,7 +48,7 @@ meta.Samples <-data.table(Variable = c( "uid_sample", "uid_meas", "sample_id", "
                          Description = c("unique sample identification used in treeSource", "unique measurement identification used in treeSource", "sample ID",
                                         "sample type: core/disk",  "height at point of sample (m)", "diameter at point of sample (cm)"),
                          Required = c(0,0,1,2,2,2)
-)
+)[, col.ord := seq_len(.N)]
 
 
 meta.Radius <-data.table(Variable = c( "uid_radius", "uid_sample", "radius_id", "cofecha_id", "ring_meas_method",
@@ -66,7 +66,7 @@ meta.Radius <-data.table(Variable = c( "uid_radius", "uid_sample", "radius_id", 
                                           "Gap-filled distance from start of earliest ring to centre (mm)",
                                           "starting year of the core", "ending year of the core", "user notes on the core"),
                            Required = c(0,0,1,2,2,1,1,2,2,2,2,2,2,2,2)
-                           )
+                           )[, col.ord := seq_len(.N)]
 
 
 # v1.2 uid_ringwidth not necessary, using uid_radius + year as primary key
@@ -75,7 +75,7 @@ meta.Ringwidths <-data.table(Variable = c("uid_radius", "year",  "rw_mm"),
                          Description = c( "unique radius/core identification used in treeSource",
                                          "Year", "ring width (mm)"),
                          Required = c(0,1,1)
-)
+)[, col.ord := seq_len(.N)]
 
 # V1.2 uids being removed
 meta.uids_updated <-data.table(Variable = c("modification_id", "action", "uid_affected", "uid_level",  "submission_id", "uid_project",  "ver_firstupdated",  "ver_lastexist", "reason", "investigator"),
@@ -85,7 +85,7 @@ meta.uids_updated <-data.table(Variable = c("modification_id", "action", "uid_af
                                                 "uid_project which uid_affected belongs to","the first version in which uid_affected get updated",
                                                 "the last version before uid_affected get updated", "reason for updating uid_affected", "investigator"),
                                Required = c(1,1,0,1,1,0,1,1,1,1)
-)
+)[, col.ord := seq_len(.N)]
 
 
 
@@ -100,7 +100,7 @@ meta.all <- rbind(meta.Projects[,table := "tr_1_projects"],
                   meta.Ringwidths[,table := "tr_7_ring_widths"],
                   meta.uids_updated[,table := "tr_8_uids_updated"]
                   )
-meta.all[, col.ord:=seq_len(.N), by = table]
+# meta.all[, col.ord:=seq_len(.N), by = .(table)]
 meta.all$ver.structure <- Ver.stru
 # print(is.data.table(meta.all))
 # Separate the elements with commas

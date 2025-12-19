@@ -1,13 +1,13 @@
 Package: growthTrendR
 Type: Package
-Title: A comprehensive toolkit for data processing, quality assessment and statistical analysis of tree-ring data
+Title: A Comprehensive Toolkit for Data Processing, Quality Assessment and Statistical Analysis of Tree-Ring Data
 Version: 0.9.0
-Date: 2025-09-16
+Date: 2025-12-17
 Authors@R: 
-  c(person(given = "XiaoJing", 
+  c(person(given = "Xiao Jing", 
            family = "Guo",
-           email = "xiaojing.guo@nrcan.gc.ca",
-           role = c("cre", "aut")),
+           email = "xiaojing.guo@nrcan-rncan.gc.ca",
+           role = c("cre", "aut" )),
     person(given = "Martin", 
            family = "Girardin",
            role = "aut"),
@@ -18,7 +18,16 @@ Authors@R:
     person(given = "Elizabeth", family = "Campbell",
            role = "aut"))
 Maintainer: Xiao Jing Guo <xiaojing.guo@nrcan-rncan.gc.ca>
-Description: growthTrendR package offers tools for data formatting, identification of measurement anomalies, and classification of data quality using spatial comparisons and cross-correlation techniques. It integrates flexible detrending and climate–growth modeling through Generalized Additive Mixed Models (GAMMs), enabling robust analyses of non-linear trends and autocorrelated data. growthTrendR also supports standardized visual reporting, including summaries of data completeness, quality diagnostics, and model performance. Compatible with the widely used .rwl file format and tailored for the Canadian Forest Service Tree-Ring Data (CFS-TRenD) repository, growthTrendR provides a comprehensive and adaptable framework for dendrochronologists working with large and complex datasets.
+Description: Offers tools for data formatting, identification of measurement
+ anomalies, and classification of data quality using spatial comparisons and
+ cross-correlation techniques. Integrates flexible detrending and climate–growth
+ modeling through Generalized Additive Mixed Models ('GAMMs'), enabling robust
+ analyses of non-linear trends and 'autocorrelated' data. Supports standardized
+ visual reporting, including data summaries, quality diagnostics,
+ and model performance. Compatible with '.rwl' files and tailored for the Canadian
+ Forest Service Tree-Ring Data ('CFS-TRenD') repository, providing a comprehensive
+ and adaptable framework for 'dendrochronologists' working with large and complex
+ datasets.
 License: GPL-3 
 Encoding: UTF-8
 LazyData: true
@@ -30,7 +39,6 @@ Imports:
   mgcv (>= 1.8.0), 
   ggplot2 (>= 3.0.0), 
   nlme(>= 3.0.0), 
-  itsadug(>= 2.4.0), 
   patchwork(>= 1.0.0), 
   terra (>= 1.7-71), 
   raster(>= 3.6-26), 

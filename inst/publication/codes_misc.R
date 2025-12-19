@@ -134,3 +134,18 @@ devtools::document()
 
 
 
+# Install rhub from CRAN:
+
+  pak::pkg_install("rhub")
+
+  # Setup
+  # Switch to the directory of your package, and call rhub::rhub_setup() to add the R-hub workflow file to your package.
+  rhub::rhub_setup()
+
+  rhub::rhub_doctor()
+
+  # Run checks
+  # Use rhub::rhub_platforms() to get a list of supported platforms and checks:
+
+  rhub::rhub_platforms()
+  rhub::rhub_check()

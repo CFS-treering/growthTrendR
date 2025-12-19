@@ -23,7 +23,6 @@ list including model, fitting statistics, ptable, stable and prediction table
 }
 \description{
 To address the computational limitations of GAMMs for large datasets, this function offers a hybrid solution combining the efficiency of the mgcv::bam() function
-with the itsadug package's post hoc methods for managing temporal autocorrelation.
 }
 \details{
 This function accounts for within-site variability and temporal autocorrelation by including series identity as random effects

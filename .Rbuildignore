@@ -1,6 +1,10 @@
 ^.*\.Rproj$
+^\.github
 ^\.Rproj\.user$
 ^doc/
 ^Meta/
 ^docs/
-^vignettes/
+^inst/publication$
+^doc$
+^Meta$
+^vignettes/vgn.*

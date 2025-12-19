@@ -13,7 +13,6 @@
 <url><loc>/reference/CFS_freq.html</loc></url>
 <url><loc>/reference/CFS_mapping.html</loc></url>
 <url><loc>/reference/CFS_qa.html</loc></url>
-<url><loc>/reference/CFS_qa_old.html</loc></url>
 <url><loc>/reference/CFS_scale.html</loc></url>
 <url><loc>/reference/check_optional_deps.html</loc></url>
 <url><loc>/reference/ci_resp.html</loc></url>
@@ -29,9 +28,6 @@
 <url><loc>/reference/plot_resp.html</loc></url>
 <url><loc>/reference/plot_scale.html</loc></url>
 <url><loc>/reference/read_rwl.html</loc></url>
-<url><loc>/reference/read_series.html</loc></url>
 <url><loc>/reference/sterm_imp.html</loc></url>
-<url><loc>/reference/table_spc.html</loc></url>
-<url><loc>/reference/table_spc_site.html</loc></url>
 </urlset>
 

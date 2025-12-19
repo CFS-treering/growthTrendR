@@ -608,7 +608,7 @@ get_template_and_params <- function(robj_class) {
     cfs_scale_list = "scale",
     cfs_freq = "freq",
     cfs_qa = "qa",
-    cfs_gif = "gif"
+    cfs_map = "map"
   )
 
   template_params <- list(

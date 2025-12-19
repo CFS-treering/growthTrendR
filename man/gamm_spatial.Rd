@@ -27,7 +27,7 @@ models the growth trend or climate-growth relationship at regional-level with mu
 \details{
 This function accounts for within-site variability and temporal autocorrelation by including series identity as random effects
 and a first-order autoregressive (AR1) correlation structures, respectively. Among-site variability and spatial effects are captured by incorporating site identity as random effects.
-The model is refitted automatically by introducing a smooth term for latitude and longitude using the Spatial Over-Smooth ("sos") basis if significant spatial autocorrelation persists.
+The model is refitted automatically by introducing a smooth term for latitude and longitude using the thin plate ("tp") basis if significant spatial autocorrelation persists.
 “Normalized” residuals are provided for future analysis.
 
 If users specify multiple candidate models through the m.candidates argument, the function will fit each candidate model using the maximum likelihood (ML) method.

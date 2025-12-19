@@ -135,7 +135,7 @@ refinement with automatic memory-efficient batch processing.</p>
     <div id="value">
     <h2>Value</h2>
     <p>An object of class <code>cfs_qa</code> containing:</p><dl><dt>dt.ccf</dt>
-<dd><p>data.table with CCF results and QA codes for each sample</p></dd>
+<dd><p>data.table with CCF results and QA codes (<code>qa_code</code>) for each series</p></dd>
 
     <dt>dt.chron</dt>
 <dd><p>data.table with chronologies statistics</p></dd>
@@ -147,7 +147,7 @@ refinement with automatic memory-efficient batch processing.</p>
 <dd><p>List of data.tables formatted for plotting (raw and treated series, CCF plots)</p></dd>
 
     <dt>qa.parms</dt>
-<dd><p>List of QA parameters used in the analysis</p></dd>
+<dd><p>List of parameters used in the analysis</p></dd>
 
 
 </dl></div>
@@ -156,10 +156,10 @@ refinement with automatic memory-efficient batch processing.</p>
     <p>The function performs a two-step quality assurance process:</p>
 <p><strong>Step 1: Pairwise Cross-Correlation</strong></p><ul><li><p>Computes CCF for all pairs of treated series</p></li>
 <li><p>Uses auto-batching to manage memory efficiently</p></li>
-<li><p>Identifies initial candidate samples with max CCF at lag 0</p></li>
-</ul><p><strong>Step 2: Iterative chronologies Refinement</strong></p><ul><li><p>Computes chronologies from candidate samples</p></li>
-<li><p>Evaluates each sample against the chronologies</p></li>
-<li><p>Iteratively refines sample list until convergence</p></li>
+<li><p>Identifies initial qualified samples with max CCF at lag 0</p></li>
+</ul><p><strong>Step 2: Iterative chronologies Refinement</strong></p><ul><li><p>Computes chronologies from qualified samples</p></li>
+<li><p>Evaluates each sample by running CCF with the chronologies</p></li>
+<li><p>Iteratively refines the qualified samples until convergence</p></li>
 </ul><p><strong>QA Code Classification:</strong></p><ul><li><p><code>pass</code>: Maximum correlation at lag 0</p></li>
 <li><p><code>borderline</code>: Second highest correlation at lag 0 (within threshold)</p></li>
 <li><p><code>pm1</code>: Maximum correlation at lag ±1 (slight misalignment)</p></li>
@@ -171,10 +171,6 @@ The function automatically determines optimal batch size based on:</p><ul><li><p
 <li><p>Estimated memory per CCF operation</p></li>
 <li><p>Safety margins to prevent out-of-memory errors</p></li>
 </ul></div>
-    <div id="references">
-    <h2>References</h2>
-    <p>Add relevant references for crossdating methodology</p>
-    </div>
     <div id="see-also">
     <h2>See also</h2>
     <div class="dont-index"><p><code><a href="https://rdrr.io/r/stats/acf.html" class="external-link">ccf</a></code> for cross-correlation function</p></div>
@@ -183,28 +179,18 @@ The function automatically determines optimal batch size based on:</p><ul><li><p
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="co"># Prepare your tree-ring data</span></span></span>
-<span class="r-in"><span><span class="va">dt.input</span> <span class="op">&lt;-</span> <span class="fu">data.table</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  species <span class="op">=</span> <span class="st">"PIPO"</span>,</span></span>
-<span class="r-in"><span>  SampleID <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">150</span>, each <span class="op">=</span> <span class="fl">100</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  Year <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1900</span><span class="op">:</span><span class="fl">1999</span>, <span class="fl">150</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  RawRing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">15000</span>, <span class="fl">2</span>, <span class="fl">0.5</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  RW_trt <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">15000</span>, <span class="fl">0</span>, <span class="fl">0.3</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Run QA analysis with auto-batching</span></span></span>
-<span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">CFS_qa</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  dt.input <span class="op">=</span> <span class="va">dt.input</span>,</span></span>
-<span class="r-in"><span>  qa.label_data <span class="op">=</span> <span class="st">"Site_A_2024"</span>,</span></span>
-<span class="r-in"><span>  qa.label_trt <span class="op">=</span> <span class="st">"Spline_Detrend"</span>,</span></span>
-<span class="r-in"><span>  qa.max_lag <span class="op">=</span> <span class="fl">10</span>,</span></span>
-<span class="r-in"><span>  qa.mem_target <span class="op">=</span> <span class="fl">0.6</span>  <span class="co"># Use 60% of free memory</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Examine results</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">dt.ccf</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">dt.ccf</span><span class="op">$</span><span class="va">qa_code</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">dt.chron</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># loading processed data</span></span></span>
+<span class="r-in"><span><span class="va">dt.samples_trt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"dt.samples_trt.rds"</span>, package <span class="op">=</span> <span class="st">"growthTrendR"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># data processing</span></span></span>
+<span class="r-in"><span><span class="va">dt.samples_long</span> <span class="op">&lt;-</span> <span class="fu">growthTrendR</span><span class="fu">:::</span><span class="fu">prepare_samples_clim</span><span class="op">(</span><span class="va">dt.samples_trt</span>, <span class="va">calbai</span> <span class="op">==</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># rename to the reserved column name</span></span></span>
+<span class="r-in"><span><span class="fu">setnames</span><span class="op">(</span><span class="va">dt.samples_long</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sample_id"</span>, <span class="st">"year"</span>, <span class="st">"rw_mm"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"SampleID"</span>, <span class="st">"Year"</span> ,<span class="st">"RawRing"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># assign treated series</span></span></span>
+<span class="r-in"><span><span class="co"># users can decide their own treated series</span></span></span>
+<span class="r-in"><span><span class="va">dt.samples_long</span><span class="op">[</span>, <span class="va">RW_trt</span><span class="op">:=</span> <span class="va">RawRing</span> <span class="op">-</span> <span class="fu">shift</span><span class="op">(</span><span class="va">RawRing</span><span class="op">)</span>, by <span class="op">=</span> <span class="va">SampleID</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="co"># quality check on radius alignment based on the treated series</span></span></span>
+<span class="r-in"><span><span class="va">dt.qa</span> <span class="op">&lt;-</span><span class="fu">CFS_qa</span><span class="op">(</span>dt.input <span class="op">=</span> <span class="va">dt.samples_long</span>, qa.label_data <span class="op">=</span> <span class="st">"demo-samples"</span>,</span></span>
+<span class="r-in"><span>qa.label_trt <span class="op">=</span> <span class="st">"difference"</span>, qa.min_nseries <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

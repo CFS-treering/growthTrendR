@@ -83,7 +83,7 @@ over a user-defined extent or the extent of the input data.</p>
 
 
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
-<dd><p>A <code>cfs_mapping</code> object produced by <code><a href="read_series.html">read_series()</a></code>.</p></dd>
+<dd><p>input in wide format.</p></dd>
 
 
 <dt id="arg-year-span">year.span<a class="anchor" aria-label="anchor" href="#arg-year-span"></a></dt>
@@ -107,16 +107,22 @@ if <code>FALSE</code>, all species are combined.</p></dd>
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>An object of class <code>cfs_gif</code>, a list of interpolated raster layers
+    <p>An object of class <code>cfs_map</code>, a list of interpolated raster layers
   by species and year.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="read_series.html">read_series</a></span><span class="op">(</span><span class="st">"path/to/file.rwl"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">maps</span> <span class="op">&lt;-</span> <span class="fu">CFS_mapping</span><span class="op">(</span><span class="va">data</span>, year.span <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1900</span>, <span class="fl">2000</span><span class="op">)</span>, grid.step <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="co"># loading processed data</span></span></span>
+<span class="r-in"><span><span class="va">dt.samples_trt</span> <span class="op">&lt;-</span> <span class="fu">get_test_samples_trt</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cols.meta</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"uid_tree"</span>, <span class="st">"uid_site"</span>, <span class="st">"longitude"</span>, <span class="st">"latitude"</span>, <span class="st">"species"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">dt.mapping</span> <span class="op">&lt;-</span> <span class="va">dt.samples_trt</span><span class="op">$</span><span class="va">tr_all_wide</span><span class="op">[</span></span></span>
+<span class="r-in"><span>  , <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">..cols.meta</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="fl">1991</span><span class="op">:</span><span class="fl">1995</span><span class="op">)</span><span class="op">)</span>, with <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="va">results_mapping</span> <span class="op">&lt;-</span> <span class="fu">CFS_mapping</span><span class="op">(</span><span class="va">dt.mapping</span>, year.span <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1991</span><span class="op">:</span><span class="fl">1993</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </div>

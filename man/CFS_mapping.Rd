@@ -27,7 +27,7 @@ determined from the input data.}
 if \code{FALSE}, all species are combined.}
 }
 \value{
-An object of class \code{cfs_gif}, a list of interpolated raster layers
+An object of class \code{cfs_map}, a list of interpolated raster layers
   by species and year.
 }
 \description{

@@ -56,14 +56,14 @@ library(sf)
 # Example: load a dataset included in the package
 
 # ring measurement
-samples69.o <- fread(system.file("extdata", "samples69.csv", package = "growthTrendR"))
+dt.samples <- fread(system.file("extdata", "dt.samples.csv", package = "growthTrendR"))
 
 # formatting the users' data conformed to CFS-TRenD data structure
-samples69.trt <- CFS_format(data = list(samples69.o, 39:111), usage = 1, out.csv = NULL)
-class(samples69.trt)
+dt.samples_trt <- CFS_format(data = list(dt.samples, 39:68), usage = 1, out.csv = NULL)
+class(dt.samples_trt)
 
 # save it to extdata for further use
-# saveRDS(samples69.trt, "inst/extdata/samples69.trt.rds")
+# saveRDS(dt.samples_trt, "inst/extdata/dt.samples_trt.rds")
 ```
 
 <br>
@@ -78,7 +78,7 @@ The column names for the ring-width measurements can follow two formats to indic
 
 It is highly recommended that the ring-width measurement columns are ordered by year and consecutive in the dataset, as the column indices will be used as input for the function CFS_format().
 
-data = list (samples69.o, 39:140)), the second item refers to the column indices
+data = list (dt.samples, 39:68)), the second item refers to the column indices
 
 **usage**
 
@@ -104,7 +104,7 @@ More details on quality assessment will be presented next section.
 ```{r data_report, message = FALSE, warning = FALSE, results = 'hide'}
 
 outfile_data <- tempfile(fileext = ".html")
-generate_report(robj = samples69.trt, qa.label_data = "CFS-TRenD V1.2 proj69 ", data_report.reports_sel = c(1,2,3,4), qa.min_nseries = 50, output_file = outfile_data)
+generate_report(robj = dt.samples_trt, qa.label_data = "demo-samples ", data_report.reports_sel = c(1,2,3,4), qa.min_nseries = 50, output_file = outfile_data)
 
 ```
 

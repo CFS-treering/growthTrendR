@@ -1,23 +1,7 @@
----
-title: "Data summary report"
+params <-
+list(qa.min_nseries = 50, scale.N_nbs = 10)
 
-date: "`r Sys.Date()`"
-output:
-  html_document:
-  theme: flatly
-highlight: tango
-
-params:
-  robj: NULL
-  data_report.reports_sel: NULL
-  qa.min_nseries: !r 50
-  scale.N_nbs: !r 10
-  qa.label_data: !r NULL
-  qa.label_trt: !r NULL
-  
-
----
-```{r setup_data, include=FALSE}
+## ----setup_data, include=FALSE------------------------------------------------
 # This chunk sets global options to hide all R code from appearing in the output
 if (!requireNamespace("htmltools", quietly = TRUE)) {
   # stop("Package 'htmltools' is required to run this function. Please install it.")
@@ -68,30 +52,8 @@ setorder(dist.uids, ord, lon, lat)
 # print(i.spc)
 
 rep_proj <- 1; rep_species <- 2; rep_site <- 3; rep_radii <- 4
-```
 
-
-<br>
-<br>
-
-This report provides an overview of the tree ring data's quality and characteristics at four levels:  
-
-    1. project: Data Completeness: Assessment of missing or incomplete data of the whole data;
-    2. project-species: Data Summary: Summary statistics and descriptions;
-    3. project-species-site: data summary tables and series graphing; 
-    4. project-species-site-radii: Correlation Analysis and quality assessment. 
-  
-
-<br>
-
-project name: <b><u>`r tr_long$tr_1_projects$project_name`</u> </b>
-
-selected reports: <b><u>`r sort(reports.sel)`</u> </b>
-
-<br>
-
-
-```{r qa, eval = any(reports.sel > 1), results = "hide", echo=FALSE, warning=FALSE, message=FALSE}
+## ----qa, eval = any(reports.sel > 1), results = "hide", echo=FALSE, warning=FALSE, message=FALSE----
 
 
 
@@ -161,9 +123,8 @@ if (rep_species %in% reports.sel)summary_spc <- growthTrendR:::table_spc(tr_6i,d
 
 return(list(dt.spc_radii=dt.radii.spc, dt.spc_site = dt.site.out, dt.spc = summary_spc, qa_code = qa_code) )
 })
-```
 
-```{r 1_project_tab,eval=rep_proj %in% reports.sel, results='asis'}
+## ----1_project_tab,eval=rep_proj %in% reports.sel, results='asis'-------------
 
 
 
@@ -213,9 +174,8 @@ grid_layout
 
 
 
-```
-  
-```{r 2_spc_plot, eval = rep_species %in% reports.sel, results='asis', warning=FALSE, message=FALSE, fig.width=10, fig.height=5, fig.align='left'}
+
+## ----2_spc_plot, eval = rep_species %in% reports.sel, results='asis', warning=FALSE, message=FALSE, fig.width=10, fig.height=5, fig.align='left'----
 cat("
 ### Data Summary (Species)
 
@@ -302,12 +262,8 @@ cat(paste("
  
  "))
 
-```
 
-
-<br>
-
-```{r 3_site_plot, eval = rep_site %in% reports.sel, results='asis', echo=FALSE, warning=FALSE, message=FALSE, fig.width=12, fig.height=5, fig.align='left'}  
+## ----3_site_plot, eval = rep_site %in% reports.sel, results='asis', echo=FALSE, warning=FALSE, message=FALSE, fig.width=12, fig.height=5, fig.align='left'----
 cat("
 
 ###  site-level data summary
@@ -359,11 +315,8 @@ for (page in seq(1, n_plots, by = plots_per_page)) {
 
 
 
-```
 
-<br>
-
-```{r 3_site_tab, eval = rep_site %in% reports.sel, results='asis', echo=FALSE, message=FALSE, warning=FALSE, warning=FALSE}  
+## ----3_site_tab, eval = rep_site %in% reports.sel, results='asis', echo=FALSE, message=FALSE, warning=FALSE, warning=FALSE----
 cat("
 
 
@@ -437,12 +390,8 @@ cat(paste("
  
     "))
 
-```
 
-<br>
-
-
-```{r 4_radii_tab, eval = rep_radii %in% reports.sel, results='asis', warning=FALSE, fig.width=10, fig.height=5, fig.align='left'}  
+## ----4_radii_tab, eval = rep_radii %in% reports.sel, results='asis', warning=FALSE, fig.width=10, fig.height=5, fig.align='left'----
 
 
 cat(paste("
@@ -560,11 +509,4 @@ cat(paste("
 
 "))
 
-```
-
-
-
-
-
- 
 

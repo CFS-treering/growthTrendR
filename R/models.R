@@ -178,7 +178,7 @@ gamm_site <- function(data, resp_scale = "resp_gamma", m.candidates){
 #' @details
 #' This function accounts for within-site variability and temporal autocorrelation by including series identity as random effects
 #' and a first-order autoregressive (AR1) correlation structures, respectively. Among-site variability and spatial effects are captured by incorporating site identity as random effects.
-#' The model is refitted automatically by introducing a smooth term for latitude and longitude using the Spatial Over-Smooth ("sos") basis if significant spatial autocorrelation persists.
+#' The model is refitted automatically by introducing a smooth term for latitude and longitude using the thin plate ("tp") basis if significant spatial autocorrelation persists.
 #' “Normalized” residuals are provided for future analysis.
 #'
 #' If users specify multiple candidate models through the m.candidates argument, the function will fit each candidate model using the maximum likelihood (ML) method.
@@ -220,7 +220,6 @@ gamm_spatial <- function(data, resp_scale = "resp_gamma", m.candidates){
 #' spatial growth model for large dataset or vast geographical coverage
 #' @description
 #' To address the computational limitations of GAMMs for large datasets, this function offers a hybrid solution combining the efficiency of the mgcv::bam() function
-#' with the itsadug package's post hoc methods for managing temporal autocorrelation.
 #'
 
 #' @param data data containing all necessary columns to run the model
@@ -410,10 +409,13 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
         # print (paste0(Sys.time(), "          ar1"))
         # m.tmp <- bam(formul, data=data, rho=start_value_rho(m0.tmp, plot=FALSE), AR.start=data$start.event, method = "ML")
         # setorder(data, uid_site, uid_radius, ageC)
+        rho.start <- acf(resid(m0.sel), plot = FALSE)$acf[2]
+        rho.start <- max(min(rho.start, 0.9), -0.9)  # safety clamp
+
         data[, start.event := c(TRUE, rep(FALSE, .N - 1)), by = .(uid_site, uid_radius)]
         m.tmp <- tryCatch({
 
-          bam(formul, data=data, rho=start_value_rho(m0.tmp, plot=FALSE), AR.start=data$start.event, method = "ML")
+          bam(formul, data=data, rho=rho.start, AR.start=data$start.event, method = "ML")
 
 
         }, warning = function(w) {
@@ -583,7 +585,10 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
       data[, start.event := c(TRUE, rep(FALSE, .N - 1)), by = .(uid_site, uid_radius)]
 
       # Step 3: Add rho and AR1 structure
-      rho.start <- start_value_rho(m0.sel, plot = FALSE)
+      # rho.start <- start_value_rho(m0.sel, plot = FALSE)
+      rho.start <- acf(resid(m0.sel), plot = FALSE)$acf[2]
+      rho.start <- max(min(rho.start, 0.9), -0.9)  # safety clamp
+
       # m.sel <- bam(
       #   form.sel,
       #   data = data,
@@ -613,7 +618,7 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
       })
 
 
-      data[start.event==FALSE, res.normalized:=resid_gam(m.sel)]
+      data[start.event==FALSE, res.normalized:=residuals(m.sel, type = "scaled.pearson")]
       # Extract the substring inside parentheses in case in log-scale
       y.char <- sub(".*\\((.*?)\\).*", "\\1", all.vars(m.sel$formula)[1])
 
@@ -672,9 +677,13 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
           # data[, idrow:=seq_len(.N), by = .(uid_site, uid_radius)][,start.event := (idrow== 1)][, idrow:= NULL]
           # r1 <- start_value_rho(m0, plot=TRUE)
           # print (paste0(Sys.time(), "          ar1"))
-          m.sel <- bam(form.sel, data=data, rho=start_value_rho(m0.sel, plot=FALSE), AR.start=data$start.event)
 
-          data[start.event==FALSE, res.normalized.LL:=resid_gam(m.sel)]
+          rho.start <- acf(resid(m0.sel), plot = FALSE)$acf[2]
+          rho.start <- max(min(rho.start, 0.9), -0.9)  # safety clamp
+
+          m.sel <- bam(form.sel, data=data, rho=rho.start, AR.start=data$start.event)
+
+          data[start.event==FALSE, res.normalized.LL:=residuals(m.sel, type = "scaled.pearson")]
 
           # Reset to sequential
           future::plan(future::sequential)
@@ -729,7 +738,7 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
     names(fit.y) <- c("fit.resp", "se.fit.resp")
     tmp.y <- data.table(data, pred.terms, fit.y)
     tmp.y$res.resp <- residuals(m.sel, type = "response")
-    tmp.y[start.event==FALSE,res.resp_normalized := resid_gam(m.sel)]
+    tmp.y[start.event==FALSE,res.resp_normalized := residuals(m.sel, type = "scaled.pearson")]
 
 
 
@@ -931,7 +940,8 @@ sterm_imp <- function(gam_model, method = c("ssq", "var", "meanabs")) {
 #' with a log-link (or other link) and optionally back-transforms predictions to the response scale.
 #' Five methods are supported:
 #' 1. **delta_link**: classic delta method on the linear predictor (link) scale; back-transformed CI is asymmetric.
-#' 2. **delta_resp**: delta method applied directly on the response scale using Var[exp(η)] ≈ exp(2η) Var(η).
+#' 2. **delta_resp**: delta method applied directly on the response scale using
+#'  \eqn{\mathrm{Var}[\exp(\eta)] \approx \exp(2\eta)\,\mathrm{Var}(\eta)}.
 #' 3. **bootstrap_link**: parametric bootstrap on the linear predictor; quantiles back-transformed.
 #' 4. **bootstrap_resp**: parametric bootstrap on the response scale; quantiles computed after exponentiating.
 #' 5. **posterior**: Bayesian posterior simulation using the model covariance matrix; quantiles on response scale.
