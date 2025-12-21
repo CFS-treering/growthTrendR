@@ -149,3 +149,12 @@ devtools::document()
 
   rhub::rhub_platforms()
   rhub::rhub_check()
+
+
+
+  library(installr)
+  updateR()
+  install.packages("data.table", repos = "https://rdatatable.gitlab.io/data/")
+
+  install.packages(c('ggplot2', 'patchwork', 'terra', 'raster', 'furrr', 'future', 'pryr'))
+  install.packages(c('ggforce', 'ggeffects', 'geosphere', 'MuMIn', 'gstat', 'sf', 'spdep', 'magick'))

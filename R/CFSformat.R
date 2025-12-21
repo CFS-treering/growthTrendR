@@ -146,6 +146,7 @@ if (length(add.Vars) > 0) {
 
   setDT(dt.new)
   dt.new[, uid_project := .GRP, by = .(project_name)]
+  # dt.new[, uid_project := as.integer(factor(project_name))]
   # chk site
   site_LL <- dt.new[, .N, by = .(site_id, latitude, longitude)]
   dup.LL <- site_LL[, .N, by = .(site_id)][N>1]
@@ -164,8 +165,16 @@ if (all(c("latitude", "longitutde") %in% names(dt.new))){
   if (min(dt.new$latitude) < 41.7 | max(dt.new$latitude) > 83.1) stop(paste0("latitude not in range: (41.7 , 83.1)"))
   if (min(dt.new$longitude) < -141 | max(dt.new$longitude) > -52.6) stop(paste0("longitude not in range: (-141 , -52.6)"))
 
-  dt.new[, uid_site := .GRP, by = .(site_id, latitude, longitude)]
-}else dt.new[, uid_site := .GRP, by = .(site_id)]
+  dt.new[, uid_site := .GRP, by = c("site_id", "latitude", "longitude")]
+  # dt.new$uid_site <- as.integer(factor(interaction(
+  #   dt.new$site_id,
+  #   dt.new$latitude,
+  #   dt.new$longitude,
+  #   drop = TRUE
+  # )))
+  }else{
+  dt.new[, uid_site := .GRP, by = .(site_id)]
+    }
   chk.spc<-dt.new[, .N, by = .(site_id, tree_id, species)][, .N, by = .(site_id, tree_id)][N > 1]
 
   if (nrow(chk.spc) > 0) {
@@ -179,12 +188,32 @@ if (all(c("latitude", "longitutde") %in% names(dt.new))){
 
   dt.new[, uid_tree := .GRP, by = .(uid_project, uid_site, tree_id)]
 
+  # dt.new$uid_tree <- as.integer(factor(interaction(
+  #    dt.new$uid_project,
+  #    dt.new$uid_site,
+  #    dt.new$tree_id,
+  #   drop = TRUE
+  # )))
 
   dt.new[, uid_meas := .GRP, by = .(uid_tree, meas_no)]
+  # dt.new$uid_meas <- as.integer(factor(interaction(
+  #   dt.new$uid_tree,
+  #   dt.new$meas_no,
+  #   drop = TRUE
+  # )))
+
   dt.new[, uid_sample := .GRP, by = .(uid_meas, sample_id)]
-
+  # dt.new$uid_sample <- as.integer(factor(interaction(
+  #   dt.new$uid_meas,
+  #   dt.new$sample_id,
+  #   drop = TRUE
+  # )))
   dt.new[, uid_radius := .GRP, by = .(uid_sample, radius_id)]
-
+  # dt.new$uid_radius <- as.integer(factor(interaction(
+  #   dt.new$uid_sample,
+  #   dt.new$radius_id,
+  #   drop = TRUE
+  # )))
 
   ys <- dt.rwl[, .(rw_ystart = min(year), rw_yend = max(year)), by = c("uid_radius.tmp")]
   setorder(dt.rwl, uid_radius.tmp, year)
