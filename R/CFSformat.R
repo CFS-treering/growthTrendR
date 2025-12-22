@@ -145,8 +145,8 @@ if (length(add.Vars) > 0) {
   dt.new[dt.new == ''] <- NA
 
   setDT(dt.new)
-  dt.new[, uid_project := .GRP, by = .(project_name)]
-  # dt.new[, uid_project := as.integer(factor(project_name))]
+  # dt.new[, uid_project := .GRP, by = .(project_name)]
+  dt.new[, uid_project := as.integer(factor(project_name))]
   # chk site
   site_LL <- dt.new[, .N, by = .(site_id, latitude, longitude)]
   dup.LL <- site_LL[, .N, by = .(site_id)][N>1]
@@ -165,15 +165,17 @@ if (all(c("latitude", "longitutde") %in% names(dt.new))){
   if (min(dt.new$latitude) < 41.7 | max(dt.new$latitude) > 83.1) stop(paste0("latitude not in range: (41.7 , 83.1)"))
   if (min(dt.new$longitude) < -141 | max(dt.new$longitude) > -52.6) stop(paste0("longitude not in range: (-141 , -52.6)"))
 
-  dt.new[, uid_site := .GRP, by = c("site_id", "latitude", "longitude")]
-  # dt.new$uid_site <- as.integer(factor(interaction(
-  #   dt.new$site_id,
-  #   dt.new$latitude,
-  #   dt.new$longitude,
-  #   drop = TRUE
-  # )))
+  # dt.new[, uid_site := .GRP, by = c("site_id", "latitude", "longitude")]
+  dt.new$uid_site <- as.integer(factor(interaction(
+    dt.new$site_id,
+    dt.new$latitude,
+    dt.new$longitude,
+    drop = TRUE
+  )))
   }else{
-  dt.new[, uid_site := .GRP, by = .(site_id)]
+  # dt.new[, uid_site := .GRP, by = .(site_id)]
+    dt.new[, uid_site := as.integer(factor(site_id))]
+
     }
   chk.spc<-dt.new[, .N, by = .(site_id, tree_id, species)][, .N, by = .(site_id, tree_id)][N > 1]
 
@@ -186,36 +188,44 @@ if (all(c("latitude", "longitutde") %in% names(dt.new))){
   # chk.spc2 <- setdiff(unique(dt.new$species), species_nficode$nfi_species_code)
   # if (length(chk.spc2)  > 0) stop(paste0("species: ", paste(chk.spc2, collapse = ", "), " not recognized, please verify..."))
 
-  dt.new[, uid_tree := .GRP, by = .(uid_project, uid_site, tree_id)]
+  # dt.new[, uid_tree := .GRP, by = .(uid_project, uid_site, tree_id)]
 
-  # dt.new$uid_tree <- as.integer(factor(interaction(
-  #    dt.new$uid_project,
-  #    dt.new$uid_site,
-  #    dt.new$tree_id,
-  #   drop = TRUE
-  # )))
+  dt.new$uid_tree <- as.integer(factor(interaction(
+     dt.new$uid_project,
+     dt.new$uid_site,
+     dt.new$tree_id,
+    drop = TRUE
+  )))
 
-  dt.new[, uid_meas := .GRP, by = .(uid_tree, meas_no)]
-  # dt.new$uid_meas <- as.integer(factor(interaction(
-  #   dt.new$uid_tree,
-  #   dt.new$meas_no,
-  #   drop = TRUE
-  # )))
+  # dt.new[, uid_meas := .GRP, by = .(uid_tree, meas_no)]
+  dt.new$uid_meas <- as.integer(factor(interaction(
+    dt.new$uid_tree,
+    dt.new$meas_no,
+    drop = TRUE
+  )))
 
-  dt.new[, uid_sample := .GRP, by = .(uid_meas, sample_id)]
-  # dt.new$uid_sample <- as.integer(factor(interaction(
-  #   dt.new$uid_meas,
-  #   dt.new$sample_id,
-  #   drop = TRUE
-  # )))
-  dt.new[, uid_radius := .GRP, by = .(uid_sample, radius_id)]
-  # dt.new$uid_radius <- as.integer(factor(interaction(
-  #   dt.new$uid_sample,
-  #   dt.new$radius_id,
-  #   drop = TRUE
-  # )))
+  # dt.new[, uid_sample := .GRP, by = .(uid_meas, sample_id)]
+  dt.new$uid_sample <- as.integer(factor(interaction(
+    dt.new$uid_meas,
+    dt.new$sample_id,
+    drop = TRUE
+  )))
+  # dt.new[, uid_radius := .GRP, by = .(uid_sample, radius_id)]
+  dt.new$uid_radius <- as.integer(factor(interaction(
+    dt.new$uid_sample,
+    dt.new$radius_id,
+    drop = TRUE
+  )))
 
-  ys <- dt.rwl[, .(rw_ystart = min(year), rw_yend = max(year)), by = c("uid_radius.tmp")]
+  # ys <- dt.rwl[, .(rw_ystart = min(year), rw_yend = max(year)), by = c("uid_radius.tmp")]# Using aggregate()
+  ys <- aggregate(
+    year ~ uid_radius.tmp,
+    data = dt.rwl,
+    FUN = function(x) c(rw_ystart = min(x), rw_yend = max(x))
+  )
+  # Unpack the matrix column into separate columns
+  ys <- cbind(ys[, "uid_radius.tmp", drop = FALSE], as.data.frame(ys$year))
+
   setorder(dt.rwl, uid_radius.tmp, year)
   dt.rwl[, ydif:= year - data.table::shift(year), by = "uid_radius.tmp"]
   dt.rwl[, rwinc:= rw_mm - data.table::shift(rw_mm), by = "uid_radius.tmp"]

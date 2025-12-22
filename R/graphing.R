@@ -279,7 +279,7 @@ plot_scale <- function(dt.scale){
   g1 <- ggplot(dt.scale$dt.plots[[1]], aes(x = year, y = rw.median, group = uid_site)) +
 
     geom_line(aes(color = factor(ifelse(ord == 0, "Red group", "Blue group"))),
-              alpha = 0.6, size = 1) +
+              alpha = 0.6, linewidth = 1) +
 
     scale_color_manual(values = c("Red group" = "red", "Blue group" = "darkblue"),
                        labels = c("Red group" = "target", "Blue group" = "neigh."),
