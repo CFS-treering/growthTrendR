@@ -8,11 +8,11 @@
 #' @importFrom furrr future_map
 #' @importFrom pryr mem_used object_size
 
-#' @importFrom utils combn write.csv
+#' @importFrom utils combn write.csv head
 
 
 #' @import data.table
-#' @importFrom dplyr group_by mutate ungroup row_number lag
+#' @importFrom dplyr group_by mutate ungroup row_number
 #' @import stringr
 #' @import stats
 #' @import mgcv

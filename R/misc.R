@@ -381,12 +381,12 @@ calc_bai <- function(data){
     group_by(uid_radius) %>%
     mutate(
       ageC = row_number(),
-      radius = cumsum(as.numeric(rw_mm)),            # cumulative radius
-      radius_prev = lag(cumsum(as.numeric(rw_mm)),  # previous radius
-                        default = 0)
+      radius = cumsum(as.numeric(rw_mm))
+    ) %>%
+    mutate(
+      radius_prev = c(0, utils::head(radius, -1))
     ) %>%
     ungroup()
-
   data <- as.data.table(data)
  # data[, `:=`(ageC = seq_len(.N),
   #                radius = cumsum(eval(parse(text = rw))),  # Cumulative radius (assumes RW is added each year)
