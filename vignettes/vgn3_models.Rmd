@@ -66,7 +66,7 @@ dt.clim <- fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR")
 dt.samples_clim <- merge(dt.samples_trt$tr_all_wide[, c("uid_site", "site_id","latitude", "longitude",  "species", "uid_tree", "uid_radius")], dt.samples_trt$tr_all_long$tr_7_ring_widths, by = "uid_radius")
 
 # # Calculate BAI
-dt.samples_clim <- calc_bai(dt.samples_clim, "uid_radius", "rw_mm")
+dt.samples_clim <- calc_bai(dt.samples_clim)
 
 dt.samples_clim <- merge(dt.samples_clim, dt.clim, by = c("site_id", "year"))
 ```

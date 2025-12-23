@@ -4,14 +4,10 @@
 \alias{calc_bai}
 \title{calculate annual basal area increment}
 \usage{
-calc_bai(dt.long, id, rw)
+calc_bai(data)
 }
 \arguments{
-\item{dt.long}{data in long format containing at least 3 columns: id, year, rw}
-
-\item{id}{column name of series id}
-
-\item{rw}{column name of ring width measurement in mm}
+\item{data}{data in long format containing at least 3 columns: id, year, rw}
 }
 \value{
 add 3 columns to the original input data, ageC for cambial age, ba_cm2_t_1 for basal area of the previous year in cm2, and bai_cm2 for annual basal area increment in cm2
@@ -22,12 +18,12 @@ calculate basal area (cm2) and basal area increment (cm2)
 \examples{
  # generate data
 dt.rw <- data.table::data.table(
-  radius_id = rep(paste0("R", 1:3), each = 5),
+  uid_radius = rep(paste0("R", 1:3), each = 5),
   year      = rep(2001:2005, times = 3),
   rw_mm     = round(runif(15, 0.5, 3.5),2)
 )
-data.table::setorder(dt.rw, radius_id, year)
+data.table::setorder(dt.rw, uid_radius, year)
  # calculate bai
-dt.rw <- calc_bai(dt.rw, "radius_id", "rw_mm")
+dt.rw <- calc_bai(dt.rw)
 
 }

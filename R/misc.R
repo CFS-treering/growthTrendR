@@ -341,9 +341,7 @@ dt.header$comments.rw <- comments.rw
 #' calculate basal area (cm2) and basal area increment (cm2)
 #'
 #'
-#' @param dt.long data in long format containing at least 3 columns: id, year, rw
-#' @param id column name of series id
-#' @param rw column name of ring width measurement in mm
+#' @param data data in long format containing at least 3 columns: id, year, rw
 #'
 #'
 #' @return add 3 columns to the original input data, ageC for cambial age, ba_cm2_t_1 for basal area of the previous year in cm2, and bai_cm2 for annual basal area increment in cm2
@@ -352,43 +350,57 @@ dt.header$comments.rw <- comments.rw
 #' @examples
 #'  # generate data
 #' dt.rw <- data.table::data.table(
-#'   radius_id = rep(paste0("R", 1:3), each = 5),
+#'   uid_radius = rep(paste0("R", 1:3), each = 5),
 #'   year      = rep(2001:2005, times = 3),
 #'   rw_mm     = round(runif(15, 0.5, 3.5),2)
 #' )
-#' data.table::setorder(dt.rw, radius_id, year)
+#' data.table::setorder(dt.rw, uid_radius, year)
 #'  # calculate bai
-#' dt.rw <- calc_bai(dt.rw, "radius_id", "rw_mm")
+#' dt.rw <- calc_bai(dt.rw)
 #'
 
 
-calc_bai <- function(dt.long, id , rw){
-  setDT(dt.long)
-  med.rw <- median(as.numeric(dt.long[[rw]]), na.rm = TRUE)
+calc_bai <- function(data){
+  setDT(data)
+  required_cols <- c("uid_radius", "year", "rw_mm")
+  if (!all(required_cols %in% names(data))) {
+    stop("Missing required columns: ",
+         paste(setdiff(required_cols, names(data)), collapse = ", "))
+  }
+  med.rw <- median(as.numeric(data$rw_mm, na.rm = TRUE))
   # cat("please assure the unit of ", rw, " is mm")
 
-  if (!all(c(id, "year", rw) %in% names(dt.long))) stop (paste0("at least one of the variables ", id, "year", rw, "not exists, please verify..."))
-
-  if (nrow(dt.long[, .N, by = eval(c(id, "year"))][N>1]) > 0) stop (paste0(id, "-year is not a unique key, please verify..."))
+  if (nrow(data[, .N, by = c("uid_radius", "year")][N>1]) > 0) stop (paste0("uid_radius-year is not a unique key, please verify..."))
 
   if (med.rw > 10) print(paste0("median of rw ", med.rw, " seems too big, assure it's in mm"))
   if (med.rw < 1) print(paste0("median of rw ", med.rw, " seems too small, assure it's in mm"))
 
-  setorderv(dt.long, c(id, "year"))
+  setorderv(data, c("uid_radius", "year"))
 
-  dt.long[, `:=`(ageC = seq_len(.N),
-                 radius = cumsum(eval(parse(text = rw))),  # Cumulative radius (assumes RW is added each year)
-                 radius_prev = data.table::shift(cumsum(eval(parse(text = rw))), fill = 0)), by = eval(id)]  # Previous radius (shifted)
+  data <- data %>%
+    group_by(uid_radius) %>%
+    mutate(
+      ageC = row_number(),
+      radius = cumsum(as.numeric(rw_mm)),            # cumulative radius
+      radius_prev = lag(cumsum(as.numeric(rw_mm)),  # previous radius
+                        default = 0)
+    ) %>%
+    ungroup()
+
+  data <- as.data.table(data)
+ # data[, `:=`(ageC = seq_len(.N),
+  #                radius = cumsum(eval(parse(text = rw))),  # Cumulative radius (assumes RW is added each year)
+  #                radius_prev = data.table::shift(cumsum(eval(parse(text = rw))), fill = 0)), by = eval(id)]  # Previous radius (shifted)
 
   # Compute previous BA in cm2
-  dt.long[, ba_cm2_t_1 := pi * (radius_prev^2)/100]
+  data[, ba_cm2_t_1 := pi * (radius_prev^2)/100]
 
-  dt.long[, bai_cm2 := pi * (radius^2 - radius_prev^2)/100]
-  dt.long[bai_cm2 < 0]
+  data[, bai_cm2 := pi * (radius^2 - radius_prev^2)/100]
+  data[bai_cm2 < 0]
 
   # Drop the radius columns if not needed
-  dt.long[, c("radius", "radius_prev") := NULL]
-  return(dt.long)
+  data[, c("radius", "radius_prev") := NULL]
+  return(data)
 }
 
 #' @keywords internal
@@ -408,11 +420,7 @@ prepare_samples_clim <- function(dt.samples_trt, dt.clim= NULL,calbai = TRUE) {
 
   # 2. compute BAI
   if (calbai == TRUE){
-  dt.samples_long <- calc_bai(
-    dt.samples_long,
-    id = "uid_radius",
-    rw = "rw_mm"
-  )
+  dt.samples_long <- calc_bai(dt.samples_long)
   }
 
   if (!is.null(dt.clim)){

@@ -46,7 +46,8 @@ Imports:
   future(>= 1.34.0),
   pryr(>= 0.1.6), 
   htmltools(>= 0.5.9),
-  curl(>= 7.0.0)
+  curl(>= 7.0.0),
+  dplyr(>= 1.1.4)
 Suggests: 
   knitr, 
   geosphere, 

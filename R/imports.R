@@ -12,6 +12,7 @@
 
 
 #' @import data.table
+#' @importFrom dplyr group_by mutate ungroup row_number lag
 #' @import stringr
 #' @import stats
 #' @import mgcv

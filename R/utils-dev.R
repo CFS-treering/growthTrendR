@@ -1,3 +1,24 @@
+search_files_sim2 <- function(words, files = list.files("R", pattern = "\\.R$", full.names = TRUE)) {
+
+  # Ensure words is a character vector
+  words <- as.character(words)
+
+  for (f in files) {
+    lines <- readLines(f, warn = FALSE)
+
+    # Check if all words appear in the same line
+    hits_idx <- which(sapply(lines, function(line) all(sapply(words, function(w) grepl(w, line)))))
+
+    if (length(hits_idx) > 0) {
+      cat("\n--- Matches in file:", basename(f), "---\n")
+      for (i in hits_idx) {
+        cat("Line", i, ":", lines[i], "\n")
+      }
+    }
+  }
+}
+
+
 #' @keywords internal
 #' @noRd
 search_files_sim <- function(word, files = list.files("R", pattern = "\\.R$", full.names = TRUE)) {
