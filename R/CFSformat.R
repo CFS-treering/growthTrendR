@@ -245,7 +245,7 @@ if (all(c("latitude", "longitutde") %in% names(dt.new))){
 
   dt.new <- dt.new[ys, on = .(uid_radius.tmp)]
   dt.new[, c("ymin.proj", "ymax.proj"):= .(min(rw_ystart), max(rw_yend) ), by = .(uid_project)]
-  dt.new[, yr.meas:= max(ys), by = .(uid_meas)]
+  dt.new[, c("yr.meas"):= .(max(ys)), by = .(uid_meas)]
 
   dt.new[is.na(meas_date), meas_date:= paste0(yr.meas, "-00-00")]
   dt.new[, year_range:= paste0(ymin.proj, " ; ", ymax.proj)]

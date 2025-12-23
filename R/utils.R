@@ -16,7 +16,7 @@ check_optional_deps <- function() {
 }
 
 safe_group_diff <- function(x, group) {
-  x <- as.integer(x)
+  x <- as.numeric(x)
   group <- as.character(group)
 
   ave(
