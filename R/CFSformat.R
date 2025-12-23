@@ -228,17 +228,15 @@ if (all(c("latitude", "longitutde") %in% names(dt.new))){
 
   setorder(dt.rwl, uid_radius.tmp, year)
   # dt.rwl[, ydif:= year - data.table::shift(year), by = "uid_radius.tmp"]
-  dt.rwl[
-    ,
-    ydif := c(NA_integer_, diff(as.integer(year))),
-    by = uid_radius.tmp
-  ]
-  dt.rwl[, rwinc:= rw_mm - data.table::shift(rw_mm), by = "uid_radius.tmp"]
-  dt.rwl[
-    ,
-    rwinc := c(NA_integer_, diff(as.integer(rw_mm))),
-    by = uid_radius.tmp
-  ]
+  dt.rwl$ydif <- safe_group_diff(
+    dt.rwl$year,
+    dt.rwl$uid_radius.tmp
+  )
+  # dt.rwl[, rwinc:= rw_mm - data.table::shift(rw_mm), by = "uid_radius.tmp"]
+  dt.rwl$rwinc <- safe_group_diff(
+    dt.rwl$rw_mm,
+    dt.rwl$uid_radius.tmp
+  )
   chk.ydif <- dt.rwl[, .SD[-1], by = uid_radius.tmp][is.na(ydif)][, .N, by = .(radius_id)]
   if (nrow(chk.ydif) > 0) stop(paste0("radius_id: ", paste(chk.ydif$radius_id, collapse = ", "), " with missing year, please verify..." ))
   # str(dt.rwl)

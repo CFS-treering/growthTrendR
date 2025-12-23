@@ -14,3 +14,17 @@ check_optional_deps <- function() {
     )
   }
 }
+
+safe_group_diff <- function(x, group) {
+  x <- as.integer(x)
+  group <- as.character(group)
+
+  ave(
+    x,
+    group,
+    FUN = function(v) {
+      if (length(v) == 0L) return(integer())
+      c(NA_integer_, diff(v))
+    }
+  )
+}
