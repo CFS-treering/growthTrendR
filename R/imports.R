@@ -12,7 +12,7 @@
 
 
 #' @import data.table
-#' @importFrom dplyr group_by mutate ungroup row_number
+#' @importFrom dplyr group_by mutate ungroup row_number summarise n
 #' @import stringr
 #' @import stats
 #' @import mgcv

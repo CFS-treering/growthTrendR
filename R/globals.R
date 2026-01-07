@@ -25,7 +25,7 @@ utils::globalVariables(c(
   "acf.trt", "ccf.ord", "max_lag", "max_ccf", "SampleID.chr", "RawRing", "RW_trt", "Year",
   "mean.rw.dif","mean.rw", "dt.trt.wide", "qa_code", "col.ord",
   "SampleID",  "colr", "id.label", "rw.treated",
-
+   "isolated", "main_max", "main_min", "year_max",   "year_min",
   # gamm_main
   "ageC", "res.normalized", "res.normalized.LL",  "res.resp_normalized",
   "lat_use", "lon_use", "start.event", "aicc", "importance_pct",
@@ -37,10 +37,10 @@ utils::globalVariables(c(
   "chk.site", "dist_to_chk_km",
   # plot_mapping
   "species.inuse", "non_year_cols",
-
+  # sel_trees
+  "dif1.3", "nseries", "sample_ht_m" ,
   #plot_resp
   "lwr", "upr", "maxv", "minv",'group',"x","group", "y.resp", 'byterm', 'term', 'fit'
-
 
   )
 )

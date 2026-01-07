@@ -76,7 +76,7 @@ The function performs a two-step quality assurance process:
 \itemize{
   \item \code{pass}: Maximum correlation at lag 0
   \item \code{borderline}: Second highest correlation at lag 0 (within threshold)
-  \item \code{pm1}: Maximum correlation at lag ±1 (slight misalignment)
+  \item \code{pm1}: Maximum correlation at lag +/- 1 (slight misalignment)
   \item \code{highpeak}: Maximum at non-zero lag, >2x second highest
   \item \code{fail}: All other cases
 }

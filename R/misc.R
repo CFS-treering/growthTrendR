@@ -436,3 +436,140 @@ prepare_samples_clim <- function(dt.samples_trt, dt.clim= NULL,calbai = TRUE) {
 
   return(dt.samples_long)
 }
+
+
+#' Select one representative radius per tree
+#'
+#' Internal function to select a single measurement, sample, and radius
+#' per tree based on the following rules:
+#' 1. Keep the latest measurement per tree.
+#' 2. Keep the sample closest to 1.3 m height per measurement.
+#' 3. Keep the radius with the most ring-width series per sample.
+#'
+#' Basic QA checks are performed to detect duplicated uid_radius in
+#' metadata and duplicated (uid_radius, year) combinations in ring-width
+#' data. These checks are informative and do not stop execution.
+#'
+#' @param dt.meta data.table. Metadata table containing tree, sample,
+#'   and radius information.
+#' @param dt.rwl data.table. Ring-width table containing yearly values
+#'   per radius.
+#'
+#' @return A list with two elements:
+#'   \describe{
+#'     \item{meta.sel}{Filtered metadata table.}
+#'     \item{rw.sel}{Filtered ring-width table.}
+#'   }
+#'
+#' @keywords internal
+#' @noRd
+sel_trees <- function(dt.meta, dt.rwl) {
+
+  # ---------------------------
+  # 0. Check required columns
+  # ---------------------------
+  meta_cols <- c(
+    "uid_tree", "uid_meas", "meas_date",
+    "uid_sample", "sample_ht_m", "uid_radius"
+  )
+
+  rwl_cols <- c("uid_radius", "year")
+
+  missing_meta <- setdiff(meta_cols, names(dt.meta))
+  missing_rwl  <- setdiff(rwl_cols, names(dt.rwl))
+
+  if (length(missing_meta) > 0) {
+    stop("dt.meta missing columns: ", paste(missing_meta, collapse = ", "))
+  }
+
+  if (length(missing_rwl) > 0) {
+    stop("dt.rwl missing columns: ", paste(missing_rwl, collapse = ", "))
+  }
+
+  data.table::setDT(dt.meta)
+  data.table::setDT(dt.rwl)
+
+  # ---------------------------
+  # 1. QA checks (informative)
+  # ---------------------------
+  if (nrow(dt.meta[, .N, by = uid_radius][N > 1]) > 0) {
+    message("Multiple rows per uid_radius in dt.meta")
+  }
+
+  if (nrow(dt.rwl[, .N, by = .(uid_radius, year)][N > 1]) > 0) {
+    message("Duplicate (uid_radius, year) in dt.rwl")
+  }
+
+  # ---------------------------
+  # 2. Keep last measurement per tree
+  # ---------------------------
+  dt.unique.meas <- dt.meta[, .N, by = .(uid_tree, uid_meas, meas_date)]
+
+  if (any(duplicated(dt.unique.meas, by = "uid_tree"))) {
+    data.table::setorder(dt.unique.meas, uid_tree, meas_date)
+    dt.unique.meas <- dt.unique.meas[, .SD[.N], by = uid_tree]
+    dt.meta.sel <- merge(
+      dt.meta,
+      dt.unique.meas[, "uid_meas"],
+      by = "uid_meas"
+    )
+  } else {
+    dt.meta.sel <- dt.meta
+  }
+
+  # ---------------------------
+  # 3. Sample closest to 1.3 m
+  # ---------------------------
+  dt.meta.sel[, dif1.3 := abs(sample_ht_m - 1.3)]
+
+  dt.unique.sample <- dt.meta.sel[
+    , .N, by = .(uid_tree, uid_meas, uid_sample, dif1.3)
+  ]
+
+  if (any(duplicated(dt.unique.sample, by = "uid_meas"))) {
+    data.table::setorder(dt.unique.sample, uid_meas, dif1.3)
+    dt.unique.sample <- dt.unique.sample[, .SD[1], by = uid_meas]
+    dt.meta.sel <- merge(
+      dt.meta.sel,
+      dt.unique.sample[, "uid_sample"],
+      by = "uid_sample"
+    )
+  }
+
+  # ---------------------------
+  # 4. Radius with most series
+  # ---------------------------
+  dt.unique.radius <- merge(
+    dt.rwl,
+    dt.meta.sel[, c("uid_sample", "uid_radius")],
+    by = "uid_radius"
+  )[, .(nseries = .N), by = .(uid_sample, uid_radius)]
+
+  if (any(duplicated(dt.unique.radius, by = "uid_sample"))) {
+    data.table::setorder(dt.unique.radius, uid_sample, -nseries)
+    dt.unique.radius <- dt.unique.radius[, .SD[1], by = uid_sample]
+    dt.meta.sel <- merge(
+      dt.meta.sel,
+      dt.unique.radius[, "uid_radius"],
+      by = "uid_radius"
+    )
+  }
+
+  # ---------------------------
+  # 5. Subset ring-width table
+  # ---------------------------
+  dt.rwl.sel <- merge(
+    dt.rwl,
+    dt.meta.sel[, "uid_radius"],
+    by = "uid_radius"
+  )
+
+  # ---------------------------
+  # Return
+  # ---------------------------
+  list(
+    meta.sel = dt.meta.sel,
+    rw.sel   = dt.rwl.sel
+  )
+}
+

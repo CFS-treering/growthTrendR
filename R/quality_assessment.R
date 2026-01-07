@@ -34,6 +34,7 @@ ccf_avg <- function(icol, data, blcrit = 0.1, lag.max = 10, qa_code="fail"){
 
   dt.pairs <- ccf(data[,2],data[,icol, with = FALSE],lag.max=lag.max,plot=FALSE, na.action = na.pass)
   dt.ccf <- data.table(SampleID.chr = names(data)[icol], lag = as.vector(dt.pairs$lag), acf.trt = as.vector(dt.pairs$acf))
+  dt.ccf <- dt.ccf[!is.na(acf.trt)]
   setorder(dt.ccf, -acf.trt)
   dt.ccf[, ccf.ord:= 1:.N]
   setorder(dt.ccf, lag)
@@ -466,7 +467,7 @@ run_safe_ccf <- function(dt.trt_wide, qa.max_lag = 10, mem_target = 0.6) {
 #' \itemize{
 #'   \item \code{pass}: Maximum correlation at lag 0
 #'   \item \code{borderline}: Second highest correlation at lag 0 (within threshold)
-#'   \item \code{pm1}: Maximum correlation at lag ±1 (slight misalignment)
+#'   \item \code{pm1}: Maximum correlation at lag +/- 1 (slight misalignment)
 #'   \item \code{highpeak}: Maximum at non-zero lag, >2x second highest
 #'   \item \code{fail}: All other cases
 #' }
@@ -525,7 +526,11 @@ CFS_qa <- function(dt.input, qa.label_data = "", qa.label_trt = "",
   if (nrow(dt.input[, .N, by = .(SampleID, Year)][N > 1]) > 0) {
     stop("SampleID-Year is not unique key, please check...")
   }
-
+  range <- detect_isolated_year_ranges(dt.input)
+  if (nrow(range[isolated == TRUE])) stop(paste(
+    "please check the year range of samples: ",
+    paste(range[isolated == TRUE]$SampleID, collapse = ", ")
+    ))
   # Prepare data
   dt.rw_long <- dt.input[, c("SampleID", "Year","RawRing", "RW_trt")]
   setorder(dt.rw_long, SampleID, Year)
@@ -705,4 +710,47 @@ CFS_qa <- function(dt.input, qa.label_data = "", qa.label_trt = "",
   message(strrep("=", 60))
 
   return(result)
+}
+
+#' Detect Isolated Year Ranges for Samples
+#'
+#' This function summarizes year ranges for each sample (identified by uid_radius)
+#' and flags samples as "isolated" if their year ranges fall outside the main cluster
+#' defined by quantiles.
+#'
+#' @param df A data frame containing at least two columns:
+#'   \code{uid_radius} (sample ID) and \code{year} (numeric year).
+#' @param q_low Numeric, the lower quantile used to define the main cluster (default 0.25).
+#' @param q_high Numeric, the upper quantile used to define the main cluster (default 0.75).
+#'
+#'
+#' @keywords internal
+#' @noRd
+detect_isolated_year_ranges <- function(df, q_low = 0.25, q_high = 0.75) {
+  range <- df %>%
+    group_by(SampleID) %>%
+    summarise(
+      N = n(),
+      year_min = min(Year, na.rm = TRUE),
+      year_max = max(Year, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      main_min = quantile(year_min, q_low),
+      main_max = quantile(year_max, q_high),
+      isolated = year_max < main_min | year_min > main_max
+    )
+  range<- as.data.table(range)
+  if (nrow(range[isolated== TRUE]) > 0) {
+    cat("\nMain-stream year range:\n")
+    cat(unique(range$main_min), " - ",  unique(range$main_max), "\n")
+    # print isolated
+    cat("\n=== Isolated samples ===\n")
+    print(
+      range[isolated== TRUE, c("SampleID", "year_min", "year_max")]
+
+    )
+  }
+  if (nrow(range[N < 30]) > 0) cat(paste0("number of short series (30 or less) ", nrow(range[N < 30])))
+  return(range)
 }

@@ -303,6 +303,7 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
 
   # for comparing and selecting model on AIC
   if (length(m.candidates) > 1){
+    aic.all <- data.table()
     for (i in 1:length(m.candidates)){
       formul <- as.formula(m.candidates[i])
       # in log-scale, log-transfrom response variable
@@ -440,25 +441,28 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
         aic.tmp <- data.table(i = i, form = gsub("\\\\", "", paste(deparse(formul), collapse = " ")), aic =  AIC(m.tmp), aicc = MuMIn::AICc(m.tmp), bic =  BIC(m.tmp), methd = "ML")
         if (m.option %in% c(1,2,3)) aic.tmp <- data.table(aic.tmp, R2 = summary(m.tmp$gam)$r.sq) else aic.tmp <- data.table(aic.tmp, R2 = summary(m.tmp)$r.sq)
 
+        aic.all <- rbind(aic.all, aic.tmp)
     # }
 
-      if (i == 1) {
-        # aicc.mn <- aic.tmp$aicc
-        # m.sel <- m.tmp
-        # i.sel <- i
-        aic.all <- aic.tmp
-      } else{
-        aic.all <- rbind(aic.all, aic.tmp)
-        # if (aicc.mn > aic.tmp$aicc){
-        #   aic.mn <- aic.tmp$aicc
-        #   m.sel <- m.tmp
-        #   i.sel <- i
-        # }
-      }
+      # if (i == 1) {
+      #   # aicc.mn <- aic.tmp$aicc
+      #   # m.sel <- m.tmp
+      #   # i.sel <- i
+      #   aic.all <- aic.tmp
+      # } else{
+      #   aic.all <- rbind(aic.all, aic.tmp)
+      #   # if (aicc.mn > aic.tmp$aicc){
+      #   #   aic.mn <- aic.tmp$aicc
+      #   #   m.sel <- m.tmp
+      #   #   i.sel <- i
+      #   # }
+      # }
       rm(aic.tmp, m.tmp)
     }
-    aic.all[aicc == min(aicc), selected := "*"]
-    form.sel <- as.formula(aic.all[selected == "*"]$form)
+    if (nrow(aic.all) > 0) {
+      aic.all[aicc == min(aicc), selected := "*"]
+      form.sel <- as.formula(aic.all[selected == "*"]$form)
+    }else form.sel <- character(0)
     # rm(m.sel)
 
 
@@ -470,6 +474,15 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
   }
 
   # fitting REML for prediction
+  if (length(form.sel) == 0) return(list(
+  status  = "fail",
+  model   = NULL,
+  fitting = NA_real_,
+  ptable  = NULL,
+  stable  = NULL,
+  pred    = NULL,
+  error   = "Model did not converge"
+))
 
   if (m.option == 0) {
     # m.sel <- gam(form.sel,
@@ -770,7 +783,8 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
     m.sel$gam$is_log_model <- resp_scale %in% c("resp_gamma", "resp_log")
     }
   aic.reml$resp_scale <- resp_scale
-  return.lst <- list(model = m.sel, fitting = aic.reml, ptable = ptable, stable = stable, pred = tmp.y)
+  return.lst <- list(status  = "ok",model = m.sel, fitting = aic.reml, ptable = ptable, stable = stable, pred = tmp.y,
+                     error   = NULL)
   if (m.option >= 3 & exists("moranI")) return.lst$moranI <- moranI
   if (length(m.candidates) > 1)  return.lst$fitting_ML <- aic.all
   class(return.lst) <- "cfs_model"
