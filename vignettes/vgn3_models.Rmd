@@ -129,6 +129,7 @@ cat('
 ')
 
 htmltools::includeHTML(outfile_mod)  # embed in vignette
+cat('</div>')
 ```
 ------------------------------------------------------------------------
 

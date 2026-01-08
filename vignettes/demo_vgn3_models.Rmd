@@ -39,7 +39,7 @@ if (!requireNamespace("htmltools", quietly = TRUE)) {
 library(growthTrendR)
 library(data.table)
 library(ggplot2)
-library(sf)
+# library(sf)
 
 
 ```
@@ -49,6 +49,7 @@ GAMs/GAMMs handle nonlinear relationships and can include random effects (e.g., 
 
 
 ### **prepare data for model:**
+
 ```{r mod_data,  message = FALSE, warning = FALSE, results = 'hide'}
 
 
@@ -59,7 +60,9 @@ dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package =
 dt.clim <- fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
 
 # merge data
-dt.samples_clim <- merge(dt.samples_trt$tr_all_wide[, c("uid_site", "site_id","latitude", "longitude",  "species", "uid_tree", "uid_radius")], dt.samples_trt$tr_all_long$tr_7_ring_widths, by = "uid_radius")
+dt.samples_clim <- merge(
+  dt.samples_trt$tr_all_wide[, c("uid_site", "site_id","latitude", "longitude",  "species", "uid_tree", "uid_radius")], 
+  dt.samples_trt$tr_all_long$tr_7_ring_widths, by = "uid_radius")
 
 # # Calculate BAI
 dt.samples_clim <- calc_bai(dt.samples_clim)
@@ -129,6 +132,7 @@ cat('
 ')
 
 htmltools::includeHTML(outfile_mod)  # embed in vignette
+cat('</div>')
 ```
 ------------------------------------------------------------------------
 
