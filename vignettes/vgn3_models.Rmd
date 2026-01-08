@@ -15,7 +15,7 @@ linkcolor: blue             # Hyperlink color (for PDF output)
 
 
 vignette: >
-  %\VignetteIndexEntry{Additive Models}
+  %\VignetteIndexEntry{Gerneralized Additive Models}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

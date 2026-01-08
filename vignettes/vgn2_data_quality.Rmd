@@ -1,6 +1,5 @@
 ---
-title: "Data Quality"
-date: "`r Sys.Date()`"
+title: "Data Quality Assessment"
 output:
   html_document:
     theme: flatly
@@ -15,7 +14,7 @@ linkcolor: blue             # Hyperlink color (for PDF output)
 
 
 vignette: >
-  %\VignetteIndexEntry{Data Quality}
+  %\VignetteIndexEntry{Data Quality Assessment}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

@@ -1,6 +1,5 @@
 ---
 title: "Data Processing"
-date: "`r Sys.Date()`"
 output:
   html_document:
     theme: flatly
