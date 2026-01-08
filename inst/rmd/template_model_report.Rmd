@@ -1,5 +1,5 @@
 ---
-title: "Generalized Additive Model Analysis Report"
+title: "Modeling and Diagnostics Report"
 
 date: "`r Sys.Date()`"
 output:
@@ -20,7 +20,8 @@ library(dplyr)
 library(stringr)
 library(growthTrendR)
 library(ggeffects)
-library(cowplot)
+# library(cowplot)
+library(patchwork)
 
 ```
 <br>
@@ -74,7 +75,7 @@ if (nrow(robj$stable) > 0){
 # method <- unique(term_important$method)
 tab <- term_important[, c(1,2)]
 colnames(tab) <- c("Term", "Score (%)")
-knitr::kable(tab, caption = "Relative importance of smooth terms based on deviance partitioning.",
+knitr::kable(tab, caption = "Relative importance of smooth terms",
       align = c("l", "r"))
 }else{
   cat("\n**no smooth term in the model...**\n")
@@ -103,11 +104,15 @@ if ("bam" %in% class(robj$model)) {
 }else{
 plot_list <- plot_resp(robj = robj)
 
-combined <- plot_grid(
-  plotlist = plot_list,
-  ncol = 2,
-  labels = LETTERS[1:length(plot_list)]
-)
+# combined <- plot_grid(
+#   plotlist = plot_list,
+#   ncol = 2,
+#   labels = LETTERS[1:length(plot_list)]
+# )
+
+combined <- wrap_plots(plot_list, ncol = 2) + 
+  plot_annotation(tag_levels = 'a',
+      tag_suffix = ")")
 
 print(combined)
 }
