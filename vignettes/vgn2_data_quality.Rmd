@@ -167,8 +167,12 @@ setnames(dt.samples_long, c("sample_id", "year", "rw_mm"), c("SampleID", "Year" 
 
 # assign treated series
 # users can decide their own treated series
-dt.samples_long[, RW_trt:= RawRing - shift(RawRing), by = SampleID]
-
+# dt.samples_long[, RW_trt:= RawRing - shift(RawRing), by = SampleID]
+setorder(dt.samples_long, SampleID, Year)
+dt.samples_long[, RW_trt := {
+  x <- as.numeric(RawRing)
+  if (.N > 1L) c(NA_real_, diff(x)) else NA_real_
+}, by = SampleID]
 # quality check on radius alignment based on the treated series
 dt.qa <-CFS_qa(dt.input = dt.samples_long, qa.label_data = "CFS-TRenD V1.2-proj69", qa.label_trt = "difference", qa.min_nseries = 5)
 ```
