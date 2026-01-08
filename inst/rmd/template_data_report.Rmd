@@ -98,7 +98,25 @@ selected reports: <b><u>`r sort(reports.sel)`</u> </b>
 # qa <- lapply(1:length(spc.lst), function(i.spc, min.nseries = min.nseries.qa, N.nbs = N.nbs.qa){
 if (!("RW_trt" %in% names(tr_7))) {
   setorder(tr_7, uid_radius, year)
-  tr_7[, RW_trt:= rw_mm - shift(rw_mm), by = uid_radius]
+  # tr_7[, RW_trt:= rw_mm - shift(rw_mm), by = uid_radius]
+  tr_7$RW_trt <-
+  ave(
+    as.numeric(tr_7$rw_mm),
+    tr_7$uid_radius,
+    FUN = function(x)
+      if (length(x) > 1L) c(NA_real_, diff(x)) else NA_real_
+  )
+
+  
+  tr_7$RW_trt <-
+  ave(
+    as.numeric(dt.samples_long$RawRing),
+    dt.samples_long$SampleID,
+    FUN = function(x)
+      if (length(x) > 1L) c(NA_real_, diff(x)) else NA_real_
+  )
+
+  
   label_trt <- "differentiated"
   }
  qa <- lapply(1:length(spc.lst), function(i.spc){
