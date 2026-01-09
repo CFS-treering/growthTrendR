@@ -3,7 +3,7 @@ utils::globalVariables(c( ":=", ".", "!!"))
 utils::globalVariables(c( "Format", "FormatV"))
 
 utils::globalVariables(c(
-  "N", "Required", "Variable", "latitude", "longitude",
+  "N", "Required", "Variable", "latitude", "longitude", "meas_no2",
   "meas_no","project_name", "radius_id", "sample_id", "site_id", "tr_1_projects", "tr_2_sites",
   "tr_3_trees", "tr_4_meas", "tr_5_samples", "tr_6_radiuses", "tree_id", "uid_meas",
   "uid_project", "uid_radius", "uid_sample", "uid_site", "uid_tree",
