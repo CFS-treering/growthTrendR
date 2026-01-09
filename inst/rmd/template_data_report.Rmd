@@ -107,17 +107,7 @@ if (!("RW_trt" %in% names(tr_7))) {
       if (length(x) > 1L) c(NA_real_, diff(x)) else NA_real_
   )
 
-  
-  tr_7$RW_trt <-
-  ave(
-    as.numeric(dt.samples_long$RawRing),
-    dt.samples_long$SampleID,
-    FUN = function(x)
-      if (length(x) > 1L) c(NA_real_, diff(x)) else NA_real_
-  )
-
-  
-  label_trt <- "differentiated"
+ label_trt <- "differentiated"
   }
  qa <- lapply(1:length(spc.lst), function(i.spc){
  
