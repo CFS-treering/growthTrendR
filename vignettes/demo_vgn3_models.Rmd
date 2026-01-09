@@ -1,5 +1,5 @@
 ---
-title: "Gerneralized Additive Models"
+title: "Generalized Additive Models"
 output:
   html_document:
     theme: flatly
@@ -15,7 +15,7 @@ linkcolor: blue             # Hyperlink color (for PDF output)
 
 
 vignette: >
-  %\VignetteIndexEntry{Gerneralized Additive Models}
+  %\VignetteIndexEntry{Generalized Additive Models}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
