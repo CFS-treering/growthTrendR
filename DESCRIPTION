@@ -1,7 +1,7 @@
 Package: growthTrendR
 Type: Package
 Title: A Comprehensive Toolkit for Data Processing, Quality Assessment and Statistical Analysis of Tree-Ring Data
-Version: 0.1.1
+Version: 0.1.1.9000
 Date: 2025-12-17
 Authors@R: 
   c(person(given = "Xiao Jing", 

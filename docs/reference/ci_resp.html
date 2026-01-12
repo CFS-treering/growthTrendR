@@ -3,7 +3,8 @@
 with a log-link (or other link) and optionally back-transforms predictions to the response scale.
 Five methods are supported:
 1. **delta_link**: classic delta method on the linear predictor (link) scale; back-transformed CI is asymmetric.
-2. **delta_resp**: delta method applied directly on the response scale using Var[exp(η)] ≈ exp(2η) Var(η).
+2. **delta_resp**: delta method applied directly on the response scale using
+ \(\mathrm{Var}[\exp(\eta)] \approx \exp(2\eta)\,\mathrm{Var}(\eta)\).
 3. **bootstrap_link**: parametric bootstrap on the linear predictor; quantiles back-transformed.
 4. **bootstrap_resp**: parametric bootstrap on the response scale; quantiles computed after exponentiating.
 5. **posterior**: Bayesian posterior simulation using the model covariance matrix; quantiles on response scale."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
@@ -24,7 +25,7 @@ Five methods are supported:
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">growthTrendR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.9.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.1.9000</span>
       </span>
     </div>
 
@@ -39,16 +40,19 @@ Five methods are supported:
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
+      <a href="../articles/demo_vgn3_models.html">Generalized Additive Models</a>
+    </li>
+    <li>
       <a href="../articles/vgn0_Introduction.html">Introduction</a>
     </li>
     <li>
       <a href="../articles/vgn1_data_processing.html">Data Processing</a>
     </li>
     <li>
-      <a href="../articles/vgn2_data_quality.html">Data Quality</a>
+      <a href="../articles/vgn2_data_quality.html">Data Quality Assessment</a>
     </li>
     <li>
-      <a href="../articles/vgn3_models.html">Additive Models</a>
+      <a href="../articles/vgn3_models.html">Generalized Additive Models</a>
     </li>
   </ul></li>
       </ul><ul class="nav navbar-nav navbar-right"></ul></div><!--/.nav-collapse -->
@@ -70,7 +74,8 @@ Five methods are supported:
 with a log-link (or other link) and optionally back-transforms predictions to the response scale.
 Five methods are supported:
 1. **delta_link**: classic delta method on the linear predictor (link) scale; back-transformed CI is asymmetric.
-2. **delta_resp**: delta method applied directly on the response scale using Var[exp(η)] ≈ exp(2η) Var(η).
+2. **delta_resp**: delta method applied directly on the response scale using
+ \(\mathrm{Var}[\exp(\eta)] \approx \exp(2\eta)\,\mathrm{Var}(\eta)\).
 3. **bootstrap_link**: parametric bootstrap on the linear predictor; quantiles back-transformed.
 4. **bootstrap_resp**: parametric bootstrap on the response scale; quantiles computed after exponentiating.
 5. **posterior**: Bayesian posterior simulation using the model covariance matrix; quantiles on response scale.</p>
@@ -174,11 +179,11 @@ Five methods are supported:
 
 
       <footer><div class="copyright">
-  <p></p><p>Developed by XiaoJing Guo, Martin Girardin, Juha Metsaranta, David Gervais, Elizabeth Campbell.</p>
+  <p></p><p>Developed by Xiao Jing Guo, Martin Girardin, Juha Metsaranta, David Gervais, Elizabeth Campbell.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
       </footer></div>
