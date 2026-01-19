@@ -29,6 +29,10 @@ filename and opened in RStudio viewer.}
 parameters vary by template type and are filtered to only include those
 recognized by the selected template.}
 }
+\value{
+Invisibly returns the file path of the generated report.
+The function is primarily called for its side effect of generating the report file.
+}
 \description{
 Creates HTML reports from various analysis objects using predefined
 R Markdown templates. The function automatically selects the appropriate template
@@ -36,10 +40,11 @@ based on the input object's class and renders a comprehensive report with
 visualizations and analysis results.
 }
 \examples{
-\dontrun{
+
 # loading processed data
 dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 # genereate data summary report
-generate_report(dt.samples_trt)
-}
+outfile_data <- tempfile(fileext = ".html")
+generate_report(robj = dt.samples_trt, output_file = outfile_data)
+
 }

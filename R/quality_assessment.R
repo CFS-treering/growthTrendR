@@ -160,18 +160,20 @@ CFS_scale <- function(target_site, ref_sites,
   # check duplicates
   dup_sites <- target_site[, .N, by = .(species, site_id)][N > 1]
   if (nrow(dup_sites) > 0) {
-    message("Duplicated rows found in target_site:")
-    print(dup_sites)
-    stop()
+    stop("Duplicated rows found in target_site:\n",
+         paste(capture.output(print(dup_sites)), collapse = "\n"))
   }
+
 
   # check unmatched sites
   unmatched <- target_site[!ref_sites, on = .(species, site_id)]
   if (nrow(unmatched) > 0) {
-    message("The following (species, site_id) not found in ref_sites:")
-    print(unmatched)
-    stop()
+    stop(
+      "The following (species, site_id) not found in ref_sites:\n",
+      paste(capture.output(print(unmatched)), collapse = "\n")
+    )
   }
+
 
   if (scale.max_dist_km < 0) stop(paste0( "please check invalid scale.max_dist_km: ", scale.max_dist_km))
   if (scale.N_nbs < 1) stop(paste0( "please check invalid scale.N_nbs: ", scale.N_nbs))
@@ -180,11 +182,16 @@ CFS_scale <- function(target_site, ref_sites,
   target_site.LL <- merge(target_site, site.all, by = c("species", "site_id"))
 
 
-  if (nrow(target_site.LL[, .N, by = .(species, site_id)][N > 1]) > 0) {
-    message("Duplicated rows found after merging with reference dataset, check reference dataset species-site_id associated with multiple uid_site")
-    print(dup_sites)
-    stop()
+  dup_rows <- target_site.LL[, .N, by = .(species, site_id)][N > 1]
+
+  if (nrow(dup_rows) > 0) {
+    stop(
+      "Duplicated rows found after merging with reference dataset.\n",
+      "Check reference dataset: species-site_id associated with multiple uid_site:\n",
+      paste(capture.output(print(dup_rows)), collapse = "\n")
+    )
   }
+
 
   # loop per row
   results_list <- lapply(1:nrow(target_site.LL), function(i) {
@@ -210,9 +217,6 @@ CFS_scale <- function(target_site, ref_sites,
 
     site.all.spc <- site.all.spc[ord <= scale.N_nbs,]
     scale.N_nbs.real <- max(site.all.spc$ord)
-    # if ( scale.N_nbs.real< scale.N_nbs) print(paste0("number of neighbours: ", scale.N_nbs.real)) else{
-    #
-    # }
 
 
     site.closest <- site.all.spc[dist_to_chk_km <= scale.max_dist_km, ]
@@ -220,12 +224,17 @@ CFS_scale <- function(target_site, ref_sites,
 
     # if no neighbors were selected
     if (nrow(site.closest) == 1) {
-      print(paste0( "no neighbours were found within ", scale.max_dist_km, " km, you may need to increase scale.max_dist_km"))
+
+      message(
+        "No neighbours were found within ", scale.max_dist_km,
+        " km. You may need to increase scale.max_dist_km."
+      )
+
 
       rw.median <- data.table()
       dt.plots <- list()
       }else{
-        # print(paste0("site: ", site.closest$site_id, " has ", nrow(site.all.spc[ord > 0]), " neighbors, the range of distance (km): ", min(site.all.spc[ord > 0]$dist_to_chk_km), " - ", max(site.all.spc[ord > 0]$dist_to_chk_km)))
+
         rw.closest <- merge(ref_sites,
                         site.closest[, .(ord,uid_site)],
                         by = "uid_site")
@@ -403,14 +412,15 @@ run_safe_ccf <- function(dt.trt_wide, qa.max_lag = 10, mem_target = 0.6) {
   message(sprintf("Processing %d batches...", length(pair_batches)))
 
   # Run with progress
-  cat("Progress pair-wise ccf...\n")
+  message("Progress pair-wise ccf...")
+
   dt.ccf.pairs <- future_map(pair_batches, function(batch) {
     res <- process_batch(batch, dt.wide = dt.trt_wide, qa.max_lag = qa.max_lag)
     gc(verbose = FALSE)
     res
   }, .progress = TRUE) %>% rbindlist()
 
-  cat("\n")
+  # cat("\n")
   dt.ccf.pairs
 }
 
@@ -482,24 +492,26 @@ run_safe_ccf <- function(dt.trt_wide, qa.max_lag = 10, mem_target = 0.6) {
 #' }
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # loading processed data
 #' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 
 #' # data processing
-#' dt.samples_long <- growthTrendR:::prepare_samples_clim(dt.samples_trt, calbai == FALSE)
+#' dt.samples_long <- prepare_samples_clim(dt.samples_trt, calbai = FALSE)
 
 #' # rename to the reserved column name
-#' setnames(dt.samples_long, c("sample_id", "year", "rw_mm"), c("SampleID", "Year" ,"RawRing"))
+#' data.table::setnames(dt.samples_long,
+#' c("sample_id", "year", "rw_mm"), c("SampleID", "Year" ,"RawRing"))
 
 #' # assign treated series
 #' # users can decide their own treated series
-#' dt.samples_long[, RW_trt:= RawRing - shift(RawRing), by = SampleID]
+#' data.table::setorder(dt.samples_long, SampleID,Year)
+#' dt.samples_long[, RW_trt:= RawRing - data.table::shift(RawRing), by = SampleID]
 
 #' # quality check on radius alignment based on the treated series
 #' dt.qa <-CFS_qa(dt.input = dt.samples_long, qa.label_data = "demo-samples",
 #' qa.label_trt = "difference", qa.min_nseries = 5)
-#' }
+#'}
 #'
 #' @seealso
 #' \code{\link{ccf}} for cross-correlation function
@@ -588,7 +600,7 @@ CFS_qa <- function(dt.input, qa.label_data = "", qa.label_trt = "",
     id.pass <- unique(dt.s2.ccf[qa_code == "pass"]$SampleID.chr)
     s2.end <- length(setdiff(union(id.candi, id.pass), intersect(id.candi, id.pass))) == 0
 
-    print(paste0(i.iter, " N.pass: ", length(id.candi)))
+    # message(paste0(i.iter, " N.pass: ", length(id.candi)))
 
     if (s2.end != TRUE) {
       id.candi <- id.pass
@@ -620,7 +632,7 @@ CFS_qa <- function(dt.input, qa.label_data = "", qa.label_trt = "",
   idlabel.lst2 <- str_split_fixed(idlabel.lst, "\\$", 3)[, 1]
 
   if (!all.equal(idlabel.lst2, str_split_fixed(sample.lst, "\\_", 2)[, 2])) {
-    print("check the order of id.label in dt.ccf.idlabel")
+    message("check the order of id.label in dt.ccf.idlabel")
   }
 
   setcolorder(dt.trt.ccf, c("lag", idlabel.lst))
@@ -741,16 +753,19 @@ detect_isolated_year_ranges <- function(df, q_low = 0.25, q_high = 0.75) {
       isolated = year_max < main_min | year_min > main_max
     )
   range<- as.data.table(range)
-  if (nrow(range[isolated== TRUE]) > 0) {
-    cat("\nMain-stream year range:\n")
-    cat(unique(range$main_min), " - ",  unique(range$main_max), "\n")
-    # print isolated
-    cat("\n=== Isolated samples ===\n")
-    print(
-      range[isolated== TRUE, c("SampleID", "year_min", "year_max")]
+  isolated_rows <- range[isolated == TRUE]
 
-    )
+  if (nrow(isolated_rows) > 0) {
+
+    message("\nMain-stream year range:")
+    message(unique(range$main_min), " - ", unique(range$main_max))
+
+    message("\n=== Isolated samples ===")
+    # Convert data.table to text lines for safe printing
+    message(paste(capture.output(isolated_rows[, .(SampleID, year_min, year_max)])),
+            sep = "\n")
   }
-  if (nrow(range[N < 30]) > 0) cat(paste0("number of short series (30 or less) ", nrow(range[N < 30])))
+
+  if (nrow(range[N < 30]) > 0) message(paste0("number of short series (30 or less) ", nrow(range[N < 30])))
   return(range)
 }

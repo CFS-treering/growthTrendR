@@ -29,7 +29,7 @@ test_that("plot_qa returns correct structure", {
   # loading processed data
   dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
   # data processing
-  dt.samples_long <- growthTrendR:::prepare_samples_clim(dt.samples_trt = dt.samples_trt, calbai = FALSE )
+  dt.samples_long <- prepare_samples_clim(dt.samples_trt = dt.samples_trt, calbai = FALSE )
 
   # rename to the reserved column name
   setnames(dt.samples_long, c("sample_id", "year", "rw_mm"), c("SampleID", "Year" ,"RawRing"))
@@ -71,7 +71,7 @@ test_that("plot_resp returns correct structure", {
   # climate
   dt.clim <- fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
   # pre-data for model
-  dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+  dt.samples_clim <- prepare_samples_clim(dt.samples_trt, dt.clim)
 
   dt.m <- dt.samples_clim[ageC >1]
 

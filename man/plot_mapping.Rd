@@ -8,6 +8,7 @@ plot_mapping(
   mapping_results,
   crs.src = "EPSG:4326",
   parms.out = c("csv", "tif", "png", "gif"),
+  dir.shp = NULL,
   dir.out = NULL,
   animation_fps = 1,
   ...
@@ -25,6 +26,8 @@ The function will stop with an error if `crs.src` is not provided in this format
 Supported values are \code{"csv"}, \code{"tif"},
 \code{"png"}, and \code{"gif"}.}
 
+\item{dir.shp}{Character or NULL. Path to the folder containing shapefiles for cropping data to the Canadian boreal regions. Only used for specific research purposes; if NULL (default), no cropping is applied and all data are included.}
+
 \item{dir.out}{Output directory used to save generated files.
 Required when \code{parms.out} is not empty.}
 
@@ -34,7 +37,7 @@ Required when \code{parms.out} is not empty.}
 \code{plot_tree_ring_map}, such as \code{png.text}.}
 }
 \value{
-A named list containing png of each year
+A magick-image object representing an animated GIF composed of the generated frames.
 }
 \description{
 Visualizes spatial interpolation results produced by
@@ -51,7 +54,7 @@ When \code{"gif"} is requested in \code{parms.out}, yearly
 PNG images are combined into animated GIFs.
 }
 \examples{
-\dontrun{
+\donttest{
 # Load processed demo data
 dt.samples_trt <- readRDS(
   system.file("extdata", "dt.samples_trt.rds",
@@ -68,19 +71,20 @@ mapping_results <- CFS_mapping(
   year.span = c(1991, 1993)
 )
 
-# generate plots and export png and gif to the specified folder
-png_list <- plot_mapping(
+# generate png plots
+img_ani <- plot_mapping(
 mapping_results = mapping_results,
-parms.out = c("png", "gif"),
-dir.out = "mapping_test",
+parms.out = NULL,
+dir.shp = NULL,
+dir.out = NULL,
 png.text = list(
   text_top  = "Ring width measurement - ",
   text_bott = "Source: demo-samples",
   text_side = "ring width (mm)"
 )
 )
-
 }
+
 }
 \seealso{
 \code{\link{CFS_mapping}}

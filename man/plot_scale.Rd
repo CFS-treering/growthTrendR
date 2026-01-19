@@ -9,6 +9,15 @@ plot_scale(dt.scale)
 \arguments{
 \item{dt.scale}{a table with class "cfs_scale", resulting from function CFS_scale()}
 }
+\value{
+A named list with two \code{ggplot} objects showing the contrast
+between the target site and its neighboring sites:
+\describe{
+  \item{plot.year}{A time-series plot of median ring width by year.}
+  \item{plot.ll}{A spatial plot showing the geographic location of the sites,
+  with point size proportional to the magnitude of site-level ring-width measurements.}
+}
+}
 \description{
 This function plots the time series and the geographical distribution of the median ring-width measurements to contrast the target site with its neighbouring sites.
 }

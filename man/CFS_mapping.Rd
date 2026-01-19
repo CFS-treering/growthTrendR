@@ -38,9 +38,9 @@ over a user-defined extent or the extent of the input data.
 }
 \examples{
 
-\dontrun{
+\donttest{
 # loading processed data
-dt.samples_trt <- get_test_samples_trt()
+dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 cols.meta = c("uid_tree", "uid_site", "longitude", "latitude", "species")
 dt.mapping <- dt.samples_trt$tr_all_wide[
   , c(..cols.meta, as.character(1991:1995)), with = FALSE]

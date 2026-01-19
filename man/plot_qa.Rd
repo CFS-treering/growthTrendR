@@ -11,15 +11,26 @@ plot_qa(qa.trt, qa.out_series = "all")
 
 \item{qa.out_series}{series_id list to be plotted, default "all" for plotting the graphs for all.}
 }
+\value{
+A named list of tree-ring series, where each element corresponds to
+a series requested via \code{qa.out_series}. Each element is itself a list
+containing four \code{ggplot} objects:
+\describe{
+  \item{plot.raw.series}{Raw tree-ring series vs year.}
+  \item{plot.trt.series}{Treated (detrended/standardized) series vs year.}
+  \item{plot.raw.ccf}{Cross-correlation function of the raw series.}
+  \item{plot.trt.ccf}{Cross-correlation function of the treated series.}
+}
+}
 \description{
 Plotting the time series and cross-correlation to contrast each radius with the chronologies, using both raw ring-width measurements and treated series.
 }
 \examples{
-\dontrun{
+
 # loading processed data
 dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 # data processing
-dt.samples_long <- growthTrendR:::prepare_samples_clim(
+dt.samples_long <- prepare_samples_clim(
 dt.samples_trt = dt.samples_trt, calbai = FALSE )
 # rename to the reserved column name
 data.table::setnames(
@@ -33,6 +44,6 @@ dt.samples_long[, RW_trt:= RawRing - data.table::shift(RawRing), by = SampleID]
 dt.qa <-CFS_qa(dt.input = dt.samples_long, qa.label_data = "demo-samples",
 qa.label_trt = "difference", qa.min_nseries = 5)
 plots.lst <- plot_qa(dt.qa, qa.out_series = "X003_101_005")
-}
+
 
 }

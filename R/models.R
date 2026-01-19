@@ -30,7 +30,7 @@
 #' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 
 #' # pre-data for model
-#' dt.samples_long <- growthTrendR:::prepare_samples_clim(dt.samples_trt)
+#' dt.samples_long <- prepare_samples_clim(dt.samples_trt)
 #' dt.samples_long$uid_site.fac <- as.factor(as.character(dt.samples_long$uid_site))
 #' dt.m <- dt.samples_long
 #'
@@ -84,7 +84,7 @@ gam_mod <- function(data, resp_scale = "", m.candidates){
 #' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 
 #' # pre-data for model
-#' dt.samples_long <- growthTrendR:::prepare_samples_clim(dt.samples_trt)
+#' dt.samples_long <- prepare_samples_clim(dt.samples_trt)
 #'
 #' dt.m <- dt.samples_long[uid_site == 1][ageC >1]
 #'
@@ -138,7 +138,7 @@ gamm_radius <- function(data, resp_scale = "resp_gamma", m.candidates){
 #' # climate
 #' dt.clim <- data.table::fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
 #' # pre-data for model
-#' dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+#' dt.samples_clim <- prepare_samples_clim(dt.samples_trt, dt.clim)
 #'
 #' dt.m <- dt.samples_clim[uid_site == 1][ageC >1]
 #'
@@ -189,13 +189,13 @@ gamm_site <- function(data, resp_scale = "resp_gamma", m.candidates){
 
 #' @export gamm_spatial
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # loading processed data
 #' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 #' # climate
 #' dt.clim <- data.table::fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
 #' # pre-data for model
-#' dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+#' dt.samples_clim <- prepare_samples_clim(dt.samples_trt, dt.clim)
 
 #' dt.m <- dt.samples_clim[ageC >1]
 
@@ -205,7 +205,7 @@ gamm_site <- function(data, resp_scale = "resp_gamma", m.candidates){
 #'        "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + s(FFD)",
 #'        "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + FFD",
 #'        "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC)"))
-#'        }
+#'}
 #'
 
 gamm_spatial <- function(data, resp_scale = "resp_gamma", m.candidates){
@@ -255,13 +255,13 @@ gamm_spatial <- function(data, resp_scale = "resp_gamma", m.candidates){
 
 #' @export bam_spatial
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # loading processed data
 #' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 #' # climate
 #' dt.clim <- data.table::fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
 #' # pre-data for model
-#' dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+#' dt.samples_clim <- prepare_samples_clim(dt.samples_trt, dt.clim)
 
 #' dt.m <- dt.samples_clim[ageC >1]
 
@@ -271,7 +271,7 @@ gamm_spatial <- function(data, resp_scale = "resp_gamma", m.candidates){
 #'        "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + s(FFD)",
 #'        "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + FFD",
 #'        "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC)"))
-#'        }
+#'}
 #'
 #'
 
@@ -410,7 +410,7 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
         # print (paste0(Sys.time(), "          ar1"))
         # m.tmp <- bam(formul, data=data, rho=start_value_rho(m0.tmp, plot=FALSE), AR.start=data$start.event, method = "ML")
         # setorder(data, uid_site, uid_radius, ageC)
-        rho.start <- acf(resid(m0.sel), plot = FALSE)$acf[2]
+        rho.start <- acf(resid(m0.tmp), plot = FALSE)$acf[2]
         rho.start <- max(min(rho.start, 0.9), -0.9)  # safety clamp
 
         data[, start.event := c(TRUE, rep(FALSE, .N - 1)), by = .(uid_site, uid_radius)]
@@ -631,7 +631,7 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
       })
 
 
-      data[start.event==FALSE, res.normalized:=residuals(m.sel, type = "scaled.pearson")]
+      data[, res.normalized:=residuals(m.sel, type = "scaled.pearson")]
       # Extract the substring inside parentheses in case in log-scale
       y.char <- sub(".*\\((.*?)\\).*", "\\1", all.vars(m.sel$formula)[1])
 
@@ -696,7 +696,7 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
 
           m.sel <- bam(form.sel, data=data, rho=rho.start, AR.start=data$start.event)
 
-          data[start.event==FALSE, res.normalized.LL:=residuals(m.sel, type = "scaled.pearson")]
+          data[, res.normalized.LL:=residuals(m.sel, type = "scaled.pearson")]
 
           # Reset to sequential
           future::plan(future::sequential)
@@ -751,7 +751,7 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
     names(fit.y) <- c("fit.resp", "se.fit.resp")
     tmp.y <- data.table(data, pred.terms, fit.y)
     tmp.y$res.resp <- residuals(m.sel, type = "response")
-    tmp.y[start.event==FALSE,res.resp_normalized := residuals(m.sel, type = "scaled.pearson")]
+    tmp.y[,res.resp_normalized := residuals(m.sel, type = "scaled.pearson")]
 
 
 
@@ -895,7 +895,7 @@ format_byterm <- function(model, dt.pred){
 #' # climate
 #' dt.clim <- data.table::fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
 #' # pre-data for model
-#' dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+#' dt.samples_clim <- prepare_samples_clim(dt.samples_trt, dt.clim)
 
 #' dt.m <- dt.samples_clim[ageC >1]
 
@@ -982,7 +982,7 @@ sterm_imp <- function(gam_model, method = c("ssq", "var", "meanabs")) {
 #' # climate
 #' dt.clim <- data.table::fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
 #' # pre-data for model
-#' dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+#' dt.samples_clim <- prepare_samples_clim(dt.samples_trt, dt.clim)
 
 #' dt.m <- dt.samples_clim[ageC >1]
 

@@ -95,9 +95,9 @@ read_series <- function(fn.lst, year.span = c(1801, 2017),
 #' @export
 #' @examples
 #'
-#' \dontrun{
+#' \donttest{
 #' # loading processed data
-#' dt.samples_trt <- get_test_samples_trt()
+#' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 #' cols.meta = c("uid_tree", "uid_site", "longitude", "latitude", "species")
 
 #' dt.mapping <- dt.samples_trt$tr_all_wide[
@@ -381,6 +381,8 @@ get_boreal_mask <- function(url) {
 #' Supported values are \code{"csv"}, \code{"tif"},
 #' \code{"png"}, and \code{"gif"}.
 #'
+#' @param dir.shp Character or NULL. Path to the folder containing shapefiles for cropping data to the Canadian boreal regions. Only used for specific research purposes; if NULL (default), no cropping is applied and all data are included.
+
 #' @param dir.out
 #' Output directory used to save generated files.
 #' Required when \code{parms.out} is not empty.
@@ -401,14 +403,14 @@ get_boreal_mask <- function(url) {
 #' When \code{"gif"} is requested in \code{parms.out}, yearly
 #' PNG images are combined into animated GIFs.
 #'
-#' @return
-#' A named list containing png of each year
+#' @return A magick-image object representing an animated GIF composed of the generated frames.
+
 #'
 #' @seealso
 #' \code{\link{CFS_mapping}}
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Load processed demo data
 #' dt.samples_trt <- readRDS(
 #'   system.file("extdata", "dt.samples_trt.rds",
@@ -425,22 +427,25 @@ get_boreal_mask <- function(url) {
 #'   year.span = c(1991, 1993)
 #' )
 #'
-#' # generate plots and export png and gif to the specified folder
-#' png_list <- plot_mapping(
+#' # generate png plots
+#' img_ani <- plot_mapping(
 #' mapping_results = mapping_results,
-#' parms.out = c("png", "gif"),
-#' dir.out = "mapping_test",
+#' parms.out = NULL,
+#' dir.shp = NULL,
+#' dir.out = NULL,
 #' png.text = list(
 #'   text_top  = "Ring width measurement - ",
 #'   text_bott = "Source: demo-samples",
 #'   text_side = "ring width (mm)"
 #' )
 #' )
+#' }
 #'
-#'}
 #' @export
+
 plot_mapping <- function(mapping_results, crs.src = "EPSG:4326",
                          parms.out = c("csv", "tif", "png", "gif"),
+                         dir.shp = NULL,
                          dir.out = NULL,
                          animation_fps = 1.0,
                          ...) {
@@ -462,27 +467,50 @@ plot_mapping <- function(mapping_results, crs.src = "EPSG:4326",
   if (!is.null(parms.out) && is.null(dir.out))
     stop("Please specify an output directory (dir.out)")
 
-  if (!dir.exists(dir.out)) dir.create(dir.out, recursive = TRUE)
+  if (!is.null(dir.out)) {
+    if (!dir.exists(dir.out))
+      dir.create(dir.out, recursive = TRUE)
+  }
+  if (!is.null(dir.shp)){
 
-  # --- Load reference layers once ---
-  elevation_file <- system.file("extdata/Mapping/Canada120s.tif", package = "growthTrendR")
-  elevation <- terra::rast(elevation_file)
 
-  # using the figshare that martin provided to avoid big extdata
-  # the reference is here https://doi.org/10.6084/m9.figshare.30005473.v1 (Martin 2025-10-01) then redirect to
-  # https://figshare.com/articles/dataset/Spatially_detailed_tree-ring_analysis_throughout_Canada/30005473
-  # the true url is by right clicking download button to copy link address for the file
-  # url <- "https://figshare.com/ndownloader/files/57487996"
+    files_needed <- c("Canada120s.tif", "NABoreal_expanded.shp", "province.shp")
+    paths <- file.path(dir.shp, files_needed)
 
-  boreal_mask <- get_boreal_mask("https://figshare.com/ndownloader/files/57487996")
-  canada_mask <- sf::st_read(system.file("extdata/Mapping/province.shp", package = "growthTrendR"))
-  # Transform boreal and Canada masks to raster CRS
-  boreal_mask_proj <- terra::vect(sf::st_transform(boreal_mask, crs.src))
-  canada_mask_proj <- terra::vect(sf::st_transform(canada_mask, crs.src))
+    missing <- files_needed[!file.exists(paths)]
+
+    if (length(missing) > 0) {
+      stop(
+        "Missing required file(s): ",
+        paste(missing, collapse = ", "),
+        call. = FALSE
+      )
+    }
+
+
+    # --- Load reference layers once ---
+    elevation_file <- file.path(dir.shp, "Canada120s.tif")
+    elevation <- terra::rast(elevation_file)
+
+    # using the figshare that martin provided to avoid big extdata
+    # the reference is here https://doi.org/10.6084/m9.figshare.30005473.v1 (Martin 2025-10-01) then redirect to
+    # https://figshare.com/articles/dataset/Spatially_detailed_tree-ring_analysis_throughout_Canada/30005473
+    # the true url is by right clicking download button to copy link address for the file
+    # url <- "https://figshare.com/ndownloader/files/57487996"
+
+    # boreal_mask <- get_boreal_mask("https://figshare.com/ndownloader/files/57487996")
+    # canada_mask <- sf::st_read(system.file("extdata/Mapping/province.shp", package = "growthTrendR"))
+    # Transform boreal and Canada masks to raster CRS
+    boreal_mask <- sf::st_read(file.path(dir.shp, "NABoreal_expanded.shp"))
+    canada_mask <- sf::st_read(file.path(dir.shp, "province.shp"))
+
+    boreal_mask_proj <- terra::vect(sf::st_transform(boreal_mask, crs.src))
+    canada_mask_proj <- terra::vect(sf::st_transform(canada_mask, crs.src))
+  }else elevation <- NULL
   # --- Loop over species & years ---
   spc_lst <- names(mapping_results)
   out_list <- lapply(spc_lst, function(spc.i) {
-     spc_data <- mapping_results[[spc.i]]
+    spc_data <- mapping_results[[spc.i]]
 
     rasters <- terra::rast(
       spc_data,
@@ -499,18 +527,23 @@ plot_mapping <- function(mapping_results, crs.src = "EPSG:4326",
 
 
     # --- Mask rasters using terra ---
-    r_boreal <- terra::mask(rasters, boreal_mask_proj)
-    rasters_masked <- terra::mask(r_boreal, canada_mask_proj)
+    if (!is.null(dir.shp)){
+      r_boreal <- terra::mask(rasters, boreal_mask_proj)
+      rasters_masked <- terra::mask(r_boreal, canada_mask_proj)
+    }else rasters_masked<- rasters
     # Prepare directories once per species
-    dir_csv <- if ("csv" %in% parms.out) file.path(dir.out, "csv") else NULL
-    dir_tif <- if ("tif" %in% parms.out) file.path(dir.out, "tif") else NULL
-    dir_png <- if ("png" %in% parms.out) file.path(dir.out, "png") else NULL
-    dir_gif <- if ("gif" %in% parms.out) file.path(dir.out, "gif") else NULL
-    for (d in c(dir_csv, dir_tif, dir_png, dir_gif)) if (!is.null(d) && !dir.exists(d)) dir.create(d, recursive = TRUE)
+    if (!is.null(dir.out) & !is.null(parms.out)){
+      dir_csv <- if ("csv" %in% parms.out) file.path(dir.out, "csv") else NULL
+      dir_tif <- if ("tif" %in% parms.out) file.path(dir.out, "tif") else NULL
+      dir_png <- if ("png" %in% parms.out) file.path(dir.out, "png") else NULL
+      dir_gif <- if ("gif" %in% parms.out) file.path(dir.out, "gif") else NULL
+      for (d in c(dir_csv, dir_tif, dir_png, dir_gif)) if (!is.null(d) && !dir.exists(d)) dir.create(d, recursive = TRUE)
+    }else{
+      dir_csv <- dir_tif <- dir_png <- dir_gif <- NULL
+    }
 
-    png_list <- list()
 
-
+    gif_frames <- list()
     for (yr in names(rasters)) {
       r_masked <- rasters_masked[[yr]]
 
@@ -520,7 +553,7 @@ plot_mapping <- function(mapping_results, crs.src = "EPSG:4326",
       # r_masked <- terra::mask(r_boreal, canada_mask_proj)
 
 
-           # Save TIF
+      # Save TIF
       if (!is.null(dir_tif)) {
         terra::writeRaster(
           r_masked,
@@ -530,24 +563,28 @@ plot_mapping <- function(mapping_results, crs.src = "EPSG:4326",
       }
 
 
+
+      # 1️⃣ Generate frame in memory
+      img <- magick::image_graph(width = 2500, height = 1300, res = 300)
+
+      plot_tree_ring_map(
+        r_masked,
+        elevation_raster = NULL,
+        yr,
+        out.png = NULL,  # always NULL for in-memory plotting
+        value.lim = value.lim,
+        ...
+      )
+
+      dev.off()  # closes the in-memory device and returns the image
+      gif_frames[[as.character(yr)]] <- img
       # Save PNG
 
-        # Prepare output path if PNG is requested
-        png_file <- if (!is.null(dir_png)) file.path(dir_png, paste0(spc.i, "_tree_rings_", yr, ".png")) else NULL
+      if (!is.null(dir_png)) {
+        png_file <- file.path(dir_png, paste0(spc.i, "_tree_rings_", yr, ".png"))
+        magick::image_write(img, path = png_file, format = "png")
 
-        # Call plot_tree_ring_map once
-        p <- plot_tree_ring_map(
-          r_masked,
-          elevation,
-          yr,
-          out.png = png_file,
-          value.lim = value.lim,
-          ...
-        )
-
-        # Store in list
-          png_list[[yr]] <- p
-      # }
+      }
     }
 
     # Save CSV
@@ -556,19 +593,169 @@ plot_mapping <- function(mapping_results, crs.src = "EPSG:4326",
       write.csv(spc_data, file = file.path(dir_csv, paste0(spc.i, "_tree_rings.csv")), row.names = FALSE, na = "" )
     }
     # Save GIF
-    if (!is.null(dir_gif) && length(png_list) > 0) {
-      # gif_imgs <- magick::image_read(unlist(lapply(png_list, function(x) x$filename)))
-      gif_imgs <-magick::image_read(unlist(png_list))
-      gif_anim <- magick::image_animate(gif_imgs, fps = animation_fps)
-      magick::image_write(gif_anim, file.path(dir_gif, paste0(spc.i, "_tree_rings_animation.gif")))
+
+    # combine frames and animate
+    gif_anim <- magick::image_animate(magick::image_join(gif_frames), fps = animation_fps)
+
+    # write GIF to disk
+    if (!is.null(dir_gif)) {
+
+      # build file path
+      gif_file <- file.path(dir_gif, paste0(spc.i, "_tree_rings_animation.gif"))
+      magick::image_write(image = gif_anim, path = gif_file, format = "gif")
     }
 
-    return(png_list)
+
+    return(gif_anim)
   })
-#
+  #
   names(out_list) <- spc_lst
   return(out_list)
 }
+
+
+
+# this is a simple version without the option of dir.shp, equivalent to plot_mapping(... dir.shp = NULL)
+#' @keywords internal
+#' @noRd
+#'
+
+plot_mapping2 <- function(mapping_results, crs.src = "EPSG:4326",
+                          parms.out = c("csv", "tif", "png", "gif"),
+                          dir.out = NULL,
+                          animation_fps = 1.0,
+                          ...) {
+
+  check_optional_deps()
+  if (!is.character(crs.src) ||
+      length(crs.src) != 1L ||
+      !grepl("^EPSG:\\d+$", crs.src)) {
+    stop(
+      "crs.src must be a character string in the form 'EPSG:<ID>' (e.g. 'EPSG:4326')",
+      call. = FALSE
+    )
+  }
+
+  # oldpar <- par(no.readonly = TRUE) # code line i
+  # on.exit({
+  #   if (grDevices::dev.cur() > 1) par(oldpar)
+  # }, add = TRUE)
+
+  # --- Input validation ---
+  if (!is.list(mapping_results)) stop("mapping_results must be a list from CFS_mapping()")
+  allowed_out <- c("csv","tif","png","gif")
+  if (length(setdiff(parms.out, allowed_out)) > 0)
+    stop("parms.out only supports: ", paste(allowed_out, collapse = ", "))
+  if (!is.null(parms.out) && is.null(dir.out))
+    stop("Please specify an output directory (dir.out)")
+
+  if (!is.null(dir.out)) {
+    if (!dir.exists(dir.out))
+      dir.create(dir.out, recursive = TRUE)
+  }
+
+  # --- Loop over species & years ---
+  spc_lst <- names(mapping_results)
+  out_list <- lapply(spc_lst, function(spc.i) {
+    spc_data <- mapping_results[[spc.i]]
+
+    rasters <- terra::rast(
+      spc_data,
+      type = "xyz",
+      crs = crs.src
+    )
+    df.value.lim <- terra::global(
+      rasters,
+      fun = range,
+      na.rm = TRUE
+    )
+
+    value.lim <- c(floor(min(df.value.lim[,1]) * 10) / 10, ceiling(max(df.value.lim[,2]) * 10) / 10)
+
+
+    # --- Mask rasters using terra REMOVED---
+    #{     r_boreal <- terra::mask(rasters, boreal_mask_proj)
+    # rasters_masked <- terra::mask(r_boreal, canada_mask_proj)}
+    # Prepare directories once per species
+    if (!is.null(dir.out) & !is.null(parms.out)){
+      dir_csv <- if ("csv" %in% parms.out) file.path(dir.out, "csv") else NULL
+      dir_tif <- if ("tif" %in% parms.out) file.path(dir.out, "tif") else NULL
+      dir_png <- if ("png" %in% parms.out) file.path(dir.out, "png") else NULL
+      dir_gif <- if ("gif" %in% parms.out) file.path(dir.out, "gif") else NULL
+      for (d in c(dir_csv, dir_tif, dir_png, dir_gif)) if (!is.null(d) && !dir.exists(d)) dir.create(d, recursive = TRUE)
+    }else{
+      dir_csv <- dir_tif <- dir_png <- dir_gif <- NULL
+    }
+    png_list <- list()
+
+    gif_frames <- list()
+    for (yr in names(rasters)) {
+      r_masked <- rasters[[yr]]
+
+      # Save TIF
+      if (!is.null(dir_tif)) {
+        terra::writeRaster(
+          r_masked,
+          filename = file.path(dir_tif, paste0(spc.i, "_tree_rings_", yr, ".tif")),
+          overwrite = TRUE
+        )
+      }
+
+
+      # 1️⃣ Generate frame in memory
+      img <- magick::image_graph(width = 2500, height = 1300, res = 300)
+
+      plot_tree_ring_map(
+        r_masked,
+        elevation_raster = NULL,
+        yr,
+        out.png = NULL,  # always NULL for in-memory plotting
+        value.lim = value.lim,
+        ...
+      )
+
+      dev.off()  # closes the in-memory device and returns the image
+      gif_frames[[as.character(yr)]] <- img
+      # Save PNG
+
+      if (!is.null(dir_png)) {
+        png_file <- file.path(dir_png, paste0(spc.i, "_tree_rings_", yr, ".png"))
+        magick::image_write(img, path = png_file, format = "png")
+
+      }
+    }
+
+
+    # Save CSV
+    if (!is.null(dir_csv)) {
+
+      write.csv(spc_data, file = file.path(dir_csv, paste0(spc.i, "_tree_rings.csv")), row.names = FALSE, na = "" )
+    }
+
+    # Save gif
+
+    # combine frames and animate
+    gif_anim <- magick::image_animate(magick::image_join(gif_frames), fps = animation_fps)
+
+    # write GIF to disk
+    if (!is.null(dir_gif)) {
+
+      # build file path
+      gif_file <- file.path(dir_gif, paste0(spc.i, "_tree_rings_animation.gif"))
+
+      magick::image_write(image = gif_anim, path = gif_file, format = "gif")
+    }
+
+
+    return(gif_anim)
+  })
+  #
+  names(out_list) <- spc_lst
+  return(out_list)
+}
+
+
+
 
 #' Plot tree-ring spatial map for a given year
 #'
@@ -608,7 +795,7 @@ plot_mapping <- function(mapping_results, crs.src = "EPSG:4326",
 
 plot_tree_ring_map <- function(
     tree_ring_raster,
-    elevation_raster,
+    elevation_raster = NULL,
     year,
     out.png = NULL,
     png.text = NULL,
@@ -617,6 +804,20 @@ plot_tree_ring_map <- function(
     tick_labels = NULL,
     nbreaks = 10
 ) {
+
+  # oldpar <- par(no.readonly = TRUE) # code line i
+  # on.exit({
+  #   if (grDevices::dev.cur() > 1) par(oldpar)
+  # }, add = TRUE)
+  # oldpar <- par(no.readonly = TRUE)
+  # par(mfrow = c(1, 1))  # example change
+  #
+  # on.exit({
+  #   if (length(grDevices::dev.list()) > 0) {
+  #     try(par(oldpar), silent = TRUE)
+  #   }
+  # }, add = TRUE)
+
 
   ## ----------------------------
   ## Defaults
@@ -647,11 +848,14 @@ plot_tree_ring_map <- function(
   ## ----------------------------
   ## CRS handling
   ## ----------------------------
+
+  if(!is.null(elevation_raster)){
   if (!terra::same.crs(elevation_raster, tree_ring_raster)) {
     elevation_raster <- terra::project(elevation_raster, tree_ring_raster)
   }
 
   elevation_raster <- terra::crop(elevation_raster, tree_ring_raster)
+  }
 
   ## ----------------------------
   ## Determine value limits
@@ -698,12 +902,24 @@ plot_tree_ring_map <- function(
   ## ----------------------------
   ## Plot
   ## ----------------------------
-  png(output_file, width = 2500, height = 1300, res = 300)
+  # png(output_file, width = 2500, height = 1300, res = 300)
+  #
+  # on.exit(dev.off(), add = TRUE)
 
-  layout(matrix(c(1, 2), ncol = 2), widths = c(4, 1))
+  if (!is.null(out.png)) {
+    png(output_file, width = 2500, height = 1300, res = 300)
+    on.exit(dev.off(), add = TRUE)
+  }
+
+  oldmar <- par("mar")
   par(mar = c(4, 4, 1, 3))
 
+  layout(matrix(c(1, 2), ncol = 2), widths = c(4, 1))
+  # par(mar = c(4, 4, 1, 3))
+
   ## Elevation background
+
+  if(!is.null(elevation_raster)){
   if (terra::hasValues(elevation_raster)) {
     elevation_raster <- terra::ifel(elevation_raster < 1, NA, elevation_raster)
     terra::plot(
@@ -723,6 +939,16 @@ plot_tree_ring_map <- function(
       axes = TRUE
     )
   }
+    }else{
+      ## Create empty spatial plot using tree-ring raster
+      terra::plot(
+        r_plot,
+        col = NA,          # no values drawn
+        legend = FALSE,
+        main = paste(png.text$text_top, year),
+        axes = TRUE
+      )
+    }
 
   ## Tree-ring overlay
   terra::plot(
@@ -742,6 +968,7 @@ plot_tree_ring_map <- function(
   ## Custom legend
   ## ----------------------------
   par(mar = c(5, 0, 3, 3))
+  on.exit(par(mar = oldmar), add = TRUE)
   plot(c(0, 1), range(breaks), type = "n", axes = FALSE, xlab = "", ylab = "")
 
   for (i in seq_len(nbreaks)) {
@@ -754,7 +981,8 @@ plot_tree_ring_map <- function(
 
   mtext(png.text$text_side, side = 4, line = 1.5, cex = 1.2)
 
-  dev.off()
+  # dev.off()
+  # while (grDevices::dev.cur() > 1) grDevices::dev.off()
 
   if (is.null(out.png)) return(output_file)
 }

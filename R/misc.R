@@ -60,7 +60,7 @@
 #'
 #' @examples
 #' ## Online example (not run to avoid timeout and internet dependency)
-#' \dontrun{
+#' \donttest{
 #' dir.src <- "https://www.ncei.noaa.gov/pub/data/paleo/treering/measurements/northamerica/canada"
 #' rwl <- "cana615.rwl"
 #' dt.rwl <- read_rwl(dir.src, rwl)
@@ -97,7 +97,7 @@ read_rwl <-function (dir.src, rwl) {
   dt.lines <- data.table::data.table(lines = lines)
   # dt.lines <- data.table(lines = readLines(con <- file(file.path(dir.src, rwl))))
   # close(con)
-  print(paste0("reading ", rwl))
+  message(paste0("reading ", rwl))
   comments <- ""
   dt.lines <- dt.lines[!(trimws(lines, which = "both") == "")]
   if (nrow(dt.lines) < 5) stop(paste0("not enough lines, please check "))
@@ -398,8 +398,8 @@ calc_bai <- function(data){
 
   if (nrow(data[, .N, by = c("uid_radius", "year")][N>1]) > 0) stop (paste0("uid_radius-year is not a unique key, please verify..."))
 
-  if (med.rw > 10) print(paste0("median of rw ", med.rw, " seems too big, assure it's in mm"))
-  if (med.rw < 1) print(paste0("median of rw ", med.rw, " seems too small, assure it's in mm"))
+  if (med.rw > 10) message(paste0("median of rw ", med.rw, " seems too big, assure it's in mm"))
+  if (med.rw < 1) message(paste0("median of rw ", med.rw, " seems too small, assure it's in mm"))
 
   setorderv(data, c("uid_radius", "year"))
 
@@ -429,8 +429,32 @@ calc_bai <- function(data){
   return(data)
 }
 
-#' @keywords internal
-#' @noRd
+#' Prepare tree-ring data for downstream analysis
+#'
+#' This function prepares tree-ring data including ring-width
+#' measurements, and optionally computes basal area increment (BAI)
+#' and merges climate variables.
+#'
+#' @param dt.samples_trt A list of tree-ring data formatted by
+#' \code{CFS_format()}.
+#' @param dt.clim An optional data frame containing climate variables,
+#' joined by \code{site_id} and \code{year}. Default is \code{NULL}.
+#' @param calbai Logical. If \code{TRUE}, basal area increment (BAI) is
+#' computed. Default is \code{TRUE}.
+#'
+#' @examples
+#'
+#' # loading processed data
+#' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+#' # climate
+#' dt.clim <- data.table::fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
+#' # pre-data for model
+#' dt.samples_clim <- prepare_samples_clim(dt.samples_trt, dt.clim)
+
+#' @return A data frame or data.table containing tree-ring measurements,
+#' optionally including basal area increment and merged climate variables.
+#'
+#' @export
 prepare_samples_clim <- function(dt.samples_trt, dt.clim= NULL,calbai = TRUE) {
 
   # 1. samples_long

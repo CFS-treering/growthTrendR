@@ -66,7 +66,7 @@ Latitude--longitude values are expressed in degrees and minutes
 }
 \examples{
 ## Online example (not run to avoid timeout and internet dependency)
-\dontrun{
+\donttest{
 dir.src <- "https://www.ncei.noaa.gov/pub/data/paleo/treering/measurements/northamerica/canada"
 rwl <- "cana615.rwl"
 dt.rwl <- read_rwl(dir.src, rwl)

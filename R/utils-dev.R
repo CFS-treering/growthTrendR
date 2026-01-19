@@ -10,9 +10,9 @@ search_files_sim2 <- function(words, files = list.files("R", pattern = "\\.R$", 
     hits_idx <- which(sapply(lines, function(line) all(sapply(words, function(w) grepl(w, line)))))
 
     if (length(hits_idx) > 0) {
-      cat("\n--- Matches in file:", basename(f), "---\n")
+      message("\n--- Matches in file:", basename(f), "---")
       for (i in hits_idx) {
-        cat("Line", i, ":", lines[i], "\n")
+        message("Line", i, ":", lines[i])
       }
     }
   }
@@ -23,7 +23,7 @@ search_files_sim2 <- function(words, files = list.files("R", pattern = "\\.R$", 
 #' @noRd
 search_files_sim <- function(word, files = list.files("R", pattern = "\\.R$", full.names = TRUE)) {
   for (w in word) {
-    cat("\n--- Searching for:", w, "---\n")
+    message("\n--- Searching for:", w, "---")
     results <- lapply(files, function(f) {
       lines <- readLines(f, warn = FALSE)
       hits <- grep(w, lines, value = TRUE)
@@ -33,9 +33,9 @@ search_files_sim <- function(word, files = list.files("R", pattern = "\\.R$", fu
     })
     results <- unlist(results)
     if (length(results) == 0) {
-      cat("No matches found.\n")
+      message("No matches found.")
     } else {
-      cat(paste(results, collapse = "\n"), "\n")
+      message(paste(results, collapse = "\n"))
     }
   }
 }
@@ -74,7 +74,8 @@ search_files <- function(word, files = NULL, dirs = c("R", "inst/rmd", "vignette
   word <- as.character(word)
 
   for (w in word) {
-    cat("\n--- Searching for:", w, "---\n")
+    message("\n--- Searching for: ", w, " ---")
+
 
     results <- lapply(files, function(f) {
       lines <- readLines(f, warn = FALSE)
@@ -88,9 +89,9 @@ search_files <- function(word, files = NULL, dirs = c("R", "inst/rmd", "vignette
 
     results <- unlist(results)
     if (length(results) == 0) {
-      cat("No matches found.\n")
+      message("No matches found.")
     } else {
-      cat(paste(results, collapse = "\n"), "\n")
+      message(paste(results, collapse = "\n"))
     }
   }
 }
@@ -238,7 +239,7 @@ interactive_add_pkg <- function(paths = c("R", "inst/rmd"),
     return(invisible(res))
   }
 
-  print(res)
+  # print(res)
 
 
   # --- 2. Option to continue or just search ---
@@ -261,7 +262,7 @@ interactive_add_pkg <- function(paths = c("R", "inst/rmd"),
       fn <- file_res$fun[i]
       pkg <- strsplit(file_res$pkg[i], ";")[[1]][1]
 
-      cat("\nFile:", f_copy, "Line", ln, ":", lines[ln], "\n")
+      message("\nFile:", f_copy, "Line", ln, ":", lines[ln])
       ans <- readline(paste0("Add ", pkg, ":: to function '", fn, "'? [y/N]: "))
       if(tolower(ans) == "y") {
         pattern <- paste0("(?<![[:alnum:]_:\\$\\[\\.])", fn, "\\s*\\(")
@@ -275,23 +276,24 @@ interactive_add_pkg <- function(paths = c("R", "inst/rmd"),
     # compare original vs copy
     diff_lines <- which(lines != new_lines)
     if(length(diff_lines) > 0) {
-      cat("\nDifferences between original and _copy:\n")
+      message("\nDifferences between original and _copy:")
       for(ln in diff_lines) {
-        cat(sprintf("Line %d:\n  Original: %s\n  Copy:     %s\n",
-                    ln, lines[ln], new_lines[ln]))
+        message(sprintf("Line %d:\n  Original: %s\n  Copy:     %s\n",
+                        ln, lines[ln], new_lines[ln]))
+
       }
 
       ans2 <- readline(paste0("\nUpdate original file '", f, "' with changes from _copy? [y/N]: "))
       if(tolower(ans2) == "y") {
         writeLines(new_lines, f)
-        cat("Original file updated:", f, "\n")
+        message("Original file updated:", f)
         unlink(f_copy)
       } else {
-        cat("Original file NOT changed:", f, "\n")
+        message("Original file NOT changed:", f)
         unlink(f_copy)
       }
     } else {
-      cat("No differences detected for", f_copy, "\n")
+      message("No differences detected for", f_copy)
       unlink(f_copy)
     }
   }

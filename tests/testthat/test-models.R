@@ -5,7 +5,7 @@ test_that("gam_mod returns correct structure", {
   # loading processed data
   dt.samples_trt <- get_test_samples_trt()
   # data processing
-  dt.samples_long <- growthTrendR:::prepare_samples_clim(dt.samples_trt)
+  dt.samples_long <- prepare_samples_clim(dt.samples_trt)
   dt.samples_long$uid_site.fac <- as.factor(as.character(dt.samples_long$uid_site))
   dt.m <- dt.samples_long
   m.gam <- gam_mod(data = dt.m, resp_scale = "resp_gaussian", m.candidates = "rw_mm ~ s(year, by = uid_site.fac)")
@@ -18,7 +18,7 @@ test_that("gamm_radius returns correct structure", {
   # loading processed data
   dt.samples_trt <- get_test_samples_trt()
   # data processing
-  dt.samples_long <- growthTrendR:::prepare_samples_clim(dt.samples_trt)
+  dt.samples_long <- prepare_samples_clim(dt.samples_trt)
 dt.m <- dt.samples_long[uid_radius == 1]
 m.radius <- gamm_radius(data = dt.m, resp_scale = "resp_gaussian", m.candidates = "rw_mm ~ s(year)")
 check_cfs_model(m.radius)
@@ -34,7 +34,7 @@ test_that("gamm_site returns correct structure", {
   # climate
   dt.clim <- fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
   # pre-data for model
-  dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+  dt.samples_clim <- prepare_samples_clim(dt.samples_trt, dt.clim)
 
   dt.m <- dt.samples_clim[uid_site == 1][ageC >1]
 
@@ -55,7 +55,7 @@ test_that("gamm_spatial returns correct structure", {
   # climate
   dt.clim <- fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
   # pre-data for model
-  dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+  dt.samples_clim <- prepare_samples_clim(dt.samples_trt, dt.clim)
 
   dt.m <- dt.samples_clim[ageC >1]
 
@@ -76,7 +76,7 @@ test_that("bam_spatial returns correct structure", {
   # climate
   dt.clim <- fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
   # pre-data for model
-  dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+  dt.samples_clim <- prepare_samples_clim(dt.samples_trt, dt.clim)
 
   dt.m <- dt.samples_clim[ageC >1]
 
@@ -97,7 +97,7 @@ test_that("ci_resp returns correct structure", {
   # climate
   dt.clim <- fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
   # pre-data for model
-  dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+  dt.samples_clim <- prepare_samples_clim(dt.samples_trt, dt.clim)
 
   dt.m <- dt.samples_clim[ageC >1]
 
@@ -125,7 +125,7 @@ test_that("sterm_imp returns correct structure", {
   # climate
   dt.clim <- fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
   # pre-data for model
-  dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+  dt.samples_clim <- prepare_samples_clim(dt.samples_trt, dt.clim)
 
   dt.m <- dt.samples_clim[ageC >1]
 

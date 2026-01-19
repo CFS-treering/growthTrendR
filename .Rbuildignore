@@ -26,3 +26,5 @@
 # Optional: ignore specific vignettes if needed
 ^vignettes/vgn.*
 
+^doc$
+^Meta$

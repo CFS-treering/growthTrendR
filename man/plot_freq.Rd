@@ -11,6 +11,12 @@ plot_freq(dt.freq, out.species = "all")
 
 \item{out.species}{species list, default is 'all' to output the frequency distribution for all species}
 }
+\value{
+A list of \code{ggplot} objects corresponding to the species
+requested via \code{out.species}. Each element of the list contains
+a faceted spatial plot of tree locations, with point size proportional
+to the number of samples.
+}
 \description{
 This function plots the frequency distribution by geo-location for each species
 }

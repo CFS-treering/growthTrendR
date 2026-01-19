@@ -91,16 +91,18 @@ The function automatically determines optimal batch size based on:
 }
 }
 \examples{
-\dontrun{
+\donttest{
 # loading processed data
 dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 # data processing
-dt.samples_long <- growthTrendR:::prepare_samples_clim(dt.samples_trt, calbai == FALSE)
+dt.samples_long <- prepare_samples_clim(dt.samples_trt, calbai = FALSE)
 # rename to the reserved column name
-setnames(dt.samples_long, c("sample_id", "year", "rw_mm"), c("SampleID", "Year" ,"RawRing"))
+data.table::setnames(dt.samples_long,
+c("sample_id", "year", "rw_mm"), c("SampleID", "Year" ,"RawRing"))
 # assign treated series
 # users can decide their own treated series
-dt.samples_long[, RW_trt:= RawRing - shift(RawRing), by = SampleID]
+data.table::setorder(dt.samples_long, SampleID,Year)
+dt.samples_long[, RW_trt:= RawRing - data.table::shift(RawRing), by = SampleID]
 # quality check on radius alignment based on the treated series
 dt.qa <-CFS_qa(dt.input = dt.samples_long, qa.label_data = "demo-samples",
 qa.label_trt = "difference", qa.min_nseries = 5)

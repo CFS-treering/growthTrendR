@@ -22,19 +22,19 @@ Confidence intervals are computed using \code{ci_resp()}, supporting multiple me
 Small samples automatically trigger the "posterior" method for more robust CIs.
 }
 \examples{
-\dontrun{
+
 # loading processed data
 dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 # climate
-dt.clim <- fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
+dt.clim <- data.table::fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
 # pre-data for model
-dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+dt.samples_clim <- prepare_samples_clim(dt.samples_trt, dt.clim)
 dt.m <- dt.samples_clim[ageC >1]
 # gamm_site model
-m.spatial <-growthTrendR::gamm_spatial(
+m.spatial <-gamm_spatial(
   data = dt.m, resp_scale = "resp_log",
   m.candidates = c( "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + s(FFD)"))
 plots.lst <- plot_resp(m.spatial)
-}
+
 
 }

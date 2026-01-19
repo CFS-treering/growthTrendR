@@ -61,6 +61,7 @@ table_spc <- function(tr_6i, dt.spc_radii){
 #' This function generates the data table for data reporting at project-species-site level .
 #' @param dt.radii.spc result table from table_spc_site_radii
 #' @param rw_ref data table of reference for kNN, in wide format
+#' @param scale.max_dist_km maximum distance to search the neighbors in km
 #' @param scale.N_nbs number of neighbor to search
 
 #'
@@ -69,7 +70,7 @@ table_spc <- function(tr_6i, dt.spc_radii){
 
 #' @keywords internal
 #' @noRd
-table_spc_site <- function(dt.radii.spc, rw_ref,  scale.N_nbs){
+table_spc_site <- function(dt.radii.spc, rw_ref,  scale.N_nbs, scale.max_dist_km){
   dt.site_radii <-merge(rw_ref[,c("uid_site", "site_id", "species", "latitude", "longitude", "uid_tree", "uid_sample", "uid_radius")],
                         dt.radii.spc[, c("uid_radius", "N", "rw.mean", "rw.min", "rw.max")], by = "uid_radius")
   # dt.site.stats <- dt.site[, .(Ntrees = length(unique(uid_tree)), Nsamples = length(unique(uid_sample)), Nradius = .N), by = .(uid_site, site_id, longitude, latitude, species)]
@@ -83,13 +84,13 @@ table_spc_site <- function(dt.radii.spc, rw_ref,  scale.N_nbs){
   # setnames(dt.site.stats, c("summ_rw", "summ_len"), c("summary rw(mm)**", "summary len.series**"))
 
   # head(dt.site.stats)
-  if (length(unique(dt.site.stats$uid_site)) < scale.N_nbs + 2) {
+  if (length(unique(dt.site.stats$uid_site)) < scale.N_nbs + 1) {
     message("not sufficiant reference sites")
     dt.site.out <- dt.site.stats
   } else{
 
 
-    list.scale <- CFS_scale(target_site = dt.site.stats[ ,c("species", "site_id")], ref_sites = rw_ref, scale.N_nbs = scale.N_nbs)
+    list.scale <- CFS_scale(target_site = dt.site.stats[ ,c("species", "site_id")], ref_sites = rw_ref, scale.max_dist_km = scale.max_dist_km, scale.N_nbs = scale.N_nbs)
 
     dt.scale.all <- data.table::rbindlist(
       lapply(list.scale, `[[`, "ratio.median"),

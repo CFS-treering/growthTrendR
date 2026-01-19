@@ -24,3 +24,45 @@ test_that("read_rwl returns correct structure", {
   testthat::expect_contains(names(dt.rwl$dt.rw_long), c( "id.core", "year" ,   "rw_mm",   "fn"     ))
   testthat::expect_false(anyNA(dt.rwl$dt.rw_long[, c("id.core","year","fn")]))
 })
+
+
+test_that("prepare_samples_clim returns correct structure", {
+
+  ## load processed test data
+  dt.samples_trt <- get_test_samples_trt()
+
+  ## input class
+  expect_s3_class(dt.samples_trt, "cfs_format")
+
+  ## load climate data
+  dt.clim <- data.table::fread(
+    system.file("extdata", "dt.clim.csv", package = "growthTrendR")
+  )
+
+  ## run function
+  dt.samples_clim <- prepare_samples_clim(
+    dt.samples_trt,
+    dt.clim = dt.clim,
+    calbai = TRUE
+  )
+
+  ## output class
+  expect_true(
+    inherits(dt.samples_clim, "data.frame") ||
+      inherits(dt.samples_clim, "data.table")
+  )
+
+
+  ## required structural columns
+  expect_true(all(c("uid_radius", "year") %in% names(dt.samples_clim)))
+
+  ## BAI computed
+  testthat::expect_contains(names(dt.samples_clim), c( "ageC", "ba_cm2_t_1", "bai_cm2"))
+
+  ## climate variables merged
+  expect_true(all(names(dt.clim) %in% names(dt.samples_clim)))
+
+  ## no missing keys after merge
+  expect_false(anyNA(dt.samples_clim$uid_radius))
+  expect_false(anyNA(dt.samples_clim$year))
+})

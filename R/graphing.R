@@ -5,15 +5,23 @@
 #' @param qa.trt object "cfs_qa" from CFS_qa() function.
 #' @param qa.out_series series_id list to be plotted, default "all" for plotting the graphs for all.
 
-
+#' @return A named list of tree-ring series, where each element corresponds to
+#' a series requested via \code{qa.out_series}. Each element is itself a list
+#' containing four \code{ggplot} objects:
+#' \describe{
+#'   \item{plot.raw.series}{Raw tree-ring series vs year.}
+#'   \item{plot.trt.series}{Treated (detrended/standardized) series vs year.}
+#'   \item{plot.raw.ccf}{Cross-correlation function of the raw series.}
+#'   \item{plot.trt.ccf}{Cross-correlation function of the treated series.}
+#' }
 
 #' @export plot_qa
 #' @examples
-#' \dontrun{
+#'
 #' # loading processed data
 #' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 #' # data processing
-#' dt.samples_long <- growthTrendR:::prepare_samples_clim(
+#' dt.samples_long <- prepare_samples_clim(
 #' dt.samples_trt = dt.samples_trt, calbai = FALSE )
 
 #' # rename to the reserved column name
@@ -30,7 +38,7 @@
 #' dt.qa <-CFS_qa(dt.input = dt.samples_long, qa.label_data = "demo-samples",
 #' qa.label_trt = "difference", qa.min_nseries = 5)
 #' plots.lst <- plot_qa(dt.qa, qa.out_series = "X003_101_005")
-#' }
+#'
 #'
 plot_qa <- function(qa.trt, qa.out_series = "all" ) {
 
@@ -165,7 +173,10 @@ create_barplot <- function(icol, data) {
 #'
 #' @param dt.freq a table with class "cfs_freq", resulting from function CFS_freq()
 #' @param out.species species list, default is 'all' to output the frequency distribution for all species
-
+#' @return A list of \code{ggplot} objects corresponding to the species
+#' requested via \code{out.species}. Each element of the list contains
+#' a faceted spatial plot of tree locations, with point size proportional
+#' to the number of samples.
 
 #' @export plot_freq
 #' @examples
@@ -212,7 +223,7 @@ plot_freq <- function(dt.freq, out.species = "all" ) {
   # Get the unique spc.pct values
   spc_pcts <- unique(data.tmp$spc.pct)
 
-  # Split into chunks of 4
+  # Split into chunks
   chunks <- split(spc_pcts, ceiling(seq_along(spc_pcts) / 2))
 
 
@@ -253,6 +264,13 @@ return(plt.lst)
 #' @description
 #' This function plots the time series and the geographical distribution of the median ring-width measurements to contrast the target site with its neighbouring sites.
 #' @param dt.scale a table with class "cfs_scale", resulting from function CFS_scale()
+#' @return A named list with two \code{ggplot} objects showing the contrast
+#' between the target site and its neighboring sites:
+#' \describe{
+#'   \item{plot.year}{A time-series plot of median ring width by year.}
+#'   \item{plot.ll}{A spatial plot showing the geographic location of the sites,
+#'   with point size proportional to the magnitude of site-level ring-width measurements.}
+#' }
 
 #' @export plot_scale
 #' @examples
@@ -535,16 +553,19 @@ plot_facet <- function(data, varcols, xylabels, nrow, ncol) {
 #'   parameters vary by template type and are filtered to only include those
 #'   recognized by the selected template.
 #'
-
+#' @return Invisibly returns the file path of the generated report.
+#' The function is primarily called for its side effect of generating the report file.
+#'
 #' @export
 #' @examples
-#' \dontrun{
+#'
 #' # loading processed data
 
 #' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 #' # genereate data summary report
-#' generate_report(dt.samples_trt)
-#' }
+#' outfile_data <- tempfile(fileext = ".html")
+#' generate_report(robj = dt.samples_trt, output_file = outfile_data)
+#'
 generate_report <- function(robj, data_report.reports_sel = c(1,2,3,4), output_file = NULL, ...) {
 
   check_optional_deps()
@@ -613,7 +634,8 @@ get_template_and_params <- function(robj_class) {
 
   template_params <- list(
     model_report = c("robj", "param1", "param2"),
-    data_report  = c("robj","data_report.reports_sel", "qa.min_nseries", "qa.label_data", "qa.label_trt", "scale.N_nbs"),
+    data_report  = c("robj","data_report.reports_sel", "qa.min_nseries", "qa.label_data", "qa.label_trt",
+                     "scale.max_dist_km", "scale.N_nbs"),
     scale        = c("robj"),
     freq         = c("robj", "freq.out_species"),
     qa           = c("robj", "qa.out_series"),
@@ -642,24 +664,24 @@ get_template_and_params <- function(robj_class) {
 #' @return A list of ggplot objects, one per smooth term.
 #'
 #' @examples
-#' \dontrun{
+#'
 #' # loading processed data
 #' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 #' # climate
-#' dt.clim <- fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
+#' dt.clim <- data.table::fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
 #' # pre-data for model
-#' dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+#' dt.samples_clim <- prepare_samples_clim(dt.samples_trt, dt.clim)
 
 #' dt.m <- dt.samples_clim[ageC >1]
 
 #' # gamm_site model
-#' m.spatial <-growthTrendR::gamm_spatial(
+#' m.spatial <-gamm_spatial(
 #'   data = dt.m, resp_scale = "resp_log",
 #'   m.candidates = c( "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + s(FFD)"))
 
 
 #' plots.lst <- plot_resp(m.spatial)
-#' }
+#'
 #'
 
 #' @export

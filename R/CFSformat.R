@@ -33,8 +33,7 @@
 #'
 CFS_format <- function (data, usage, out.csv = NULL) {
   if (length(data) != 2) {
-    print(length(data))
-    stop("pls verify data is a list with 2 items, first is input data in wide format; second is a flat sequence referring to the column indices of ring measurement variables")
+    stop("pls verify data is a list with 2 elements, first is input data in wide format; second is a flat sequence referring to the column indices of ring measurement variables")
   }
   if (!(is.data.frame(data[[1]])| is.data.table(data[[1]]))) stop("the first item of data must be the complete data in wide format")
   if (is.list(data[[2]] | is.null(data[[2]]) | class(data[[2]]) != "integer" )) stop("the second item of data must be a flat sequence referring to the column indices of ring measurement variables")
@@ -53,7 +52,6 @@ CFS_format <- function (data, usage, out.csv = NULL) {
 
       cols_rw <- names.data.o[data[[2]]]
 
-    # print(cols_rw)
       # pattern <- "^[A-Za-z]+[0-9]+$"
      if (!(all(grepl("^[0-9]+$", cols_rw)) | all(grepl("^[A-Za-z]+[0-9]+$", cols_rw)))) stop("colname of rw accepts 2 formats: year in numeric(NNNN) or prefix-year (CNNNN)")
       idx.y5 <- as.numeric(str_extract(cols_rw,"\\(?[0-9,.]+\\)?")) > 9999
@@ -89,7 +87,7 @@ CFS_format <- function (data, usage, out.csv = NULL) {
   add.Vars <- setdiff(cols.musthave, names(dt.meta))
 
 if (length(add.Vars) > 0) {
-  print("step 1: checking mandatory columns: please verify the the following columns.... ")
+  message("step 1: checking mandatory columns: please verify the the following columns.... ")
   message( paste(add.Vars, collapse = ", "))
   return()
 }
@@ -98,7 +96,7 @@ if (length(add.Vars) > 0) {
     if (nrow(dt.meta[is.na(get(cols.musthave[i]))]) > 0) message (paste0(cols.musthave[i]), " not complete, please check")
   }
 
-  print("you have filled all the mandatory information")
+  message("you have filled all the mandatory information")
   dt.tr <- data.table(uid_radius.tmp = 1:nrow(data[[1]]), data[[1]][,"radius_id"], data[[1]][,data[[2]], with = FALSE])
 
   dt.rwl <- melt(dt.tr, id.vars = c("uid_radius.tmp", "radius_id"))[!is.na(value)]
@@ -110,22 +108,23 @@ if (length(add.Vars) > 0) {
   meta.all$nofill <- 0
   meta.all[Variable %in% c("year_range", "rw_ystart", "rw_yend"),nofill := 1]
 
-  if (length(setdiff(as.character(meta.all[nofill == 0 & !(table %in% c("tr_7_ring_widths", "tr_8_uids_updated"))]$Variable), colnames(dt.meta))) == 0) print("you have filled all the un-mandatory information") else{
-  cat("\n the following are unmandatory information and not found in your data\n")
+  if (length(setdiff(as.character(meta.all[nofill == 0 & !(table %in% c("tr_7_ring_widths", "tr_8_uids_updated"))]$Variable), colnames(dt.meta))) == 0) message("you have filled all the un-mandatory information") else{
+  message("\n the following are unmandatory information and not found in your data")
 
   # not required, and not reported, prompt to fill with NA
     fill.meta <- meta.all[nofill == 0 & !(table %in% c("tr_7_ring_widths", "tr_8_uids_updated")) & !(Variable %in% colnames(dt.meta))]
   # i.table <- i.table[, .(var = paste(Variable, collapse = ",")), by = table]
 
-  print (fill.meta[, .(var = paste(Variable, collapse = ",")), by = table])
+    message(capture.output(fill.meta[, .(var = paste(Variable, collapse = ",")), by = table]), sep = "\n")
+
   # for (i in 1:6){
   #   # ith table
   #   i.table <- meta.all[str_detect(table, paste0("tr_", i)) & Required != 1 & !(Variable %in% names.data.o) ]
   #   if (nrow(i.table) > 0) {
-  #     print(paste0(unique(i.table$table), ": ", paste(i.table$Variable, collapse = ", ")))
+  #     message(paste0(unique(i.table$table), ": ", paste(i.table$Variable, collapse = ", ")))
   # }
   #   }
-  # print("if you have filled all the information, go ahead to fill other variables")
+  # message("if you have filled all the information, go ahead to fill other variables")
 
 
     user_input <- readline(prompt = "do you have info of the above variables? Y to return to complete info, or N to allow the system to fill with NA  (Y/N) : ")

@@ -1,8 +1,8 @@
 Package: growthTrendR
 Type: Package
-Title: A Comprehensive Toolkit for Data Processing, Quality Assessment and Statistical Analysis of Tree-Ring Data
-Version: 0.1.1.9000
-Date: 2025-12-17
+Title: Toolkit for Data Processing, Quality, and Statistical Models
+Version: 0.2.0
+Date: 2026-01-19
 Authors@R: 
   c(person(given = "Xiao Jing", 
            family = "Guo",
@@ -18,16 +18,18 @@ Authors@R:
     person(given = "Elizabeth", family = "Campbell",
            role = "aut"))
 Maintainer: Xiao Jing Guo <xiaojing.guo@nrcan-rncan.gc.ca>
-Description: Offers tools for data formatting, identification of measurement
- anomalies, and classification of data quality using spatial comparisons and
- cross-correlation techniques. Integrates flexible 'detrending' and climate–growth
- modeling through Generalized Additive Mixed Models ('GAMMs'), enabling robust
- analyses of non-linear trends and 'autocorrelated' data. Supports standardized
- visual reporting, including data summaries, quality diagnostics,
- and model performance. Compatible with '.rwl' files and tailored for the Canadian
- Forest Service Tree-Ring Data ('CFS-TRenD') repository, providing a comprehensive
- and adaptable framework for 'dendrochronologists' working with large and complex
- datasets.
+Description: Offers tools for data formatting, anomaly detection, and classification
+ of tree-ring data using spatial comparisons and cross-correlation. 
+ Supports flexible detrending and climate–growth modeling via generalized
+ additive mixed models (Wood 2017, ISBN:978-1498728331) and the 'mgcv'
+ package (<https://CRAN.R-project.org/package=mgcv>), enabling robust
+ analysis of non-linear trends and autocorrelated data. Provides
+ standardized visual reporting, including summaries, diagnostics, and
+ model performance. Compatible with '.rwl' files and tailored for the
+ Canadian Forest Service Tree-Ring Data (CFS-TRenD) repository
+ (Girardin et al. 2021 <https://doi.org/10.1139/er-2020-0099>), offering
+ a comprehensive and adaptable framework for dendrochronologists working
+ with large and complex datasets.
 License: GPL-3 
 Encoding: UTF-8
 LazyData: true

@@ -33,7 +33,7 @@ dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package =
 # climate
 dt.clim <- data.table::fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
 # pre-data for model
-dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+dt.samples_clim <- prepare_samples_clim(dt.samples_trt, dt.clim)
 dt.m <- dt.samples_clim[ageC >1]
 # using gamm_spatial model as an example
 m.sp <-gamm_spatial(data = dt.m, resp_scale = "resp_log",

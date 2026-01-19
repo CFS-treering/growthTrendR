@@ -45,7 +45,7 @@ test_that("CFS_qa returns correct structure", {
 # loading processed data
 dt.samples_trt <- get_test_samples_trt()
 # data processing
-dt.samples_long <- growthTrendR:::prepare_samples_clim(dt.samples_trt = dt.samples_trt, calbai = FALSE )
+dt.samples_long <- prepare_samples_clim(dt.samples_trt = dt.samples_trt, calbai = FALSE )
 
 # rename to the reserved column name
 setnames(dt.samples_long, c("sample_id", "year", "rw_mm"), c("SampleID", "Year" ,"RawRing"))

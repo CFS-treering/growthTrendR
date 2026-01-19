@@ -41,7 +41,7 @@ dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package =
 # climate
 dt.clim <- data.table::fread(system.file("extdata", "dt.clim.csv", package = "growthTrendR"))
 # pre-data for model
-dt.samples_clim <- growthTrendR:::prepare_samples_clim(dt.samples_trt, dt.clim)
+dt.samples_clim <- prepare_samples_clim(dt.samples_trt, dt.clim)
 
 dt.m <- dt.samples_clim[uid_site == 1][ageC >1]
 
