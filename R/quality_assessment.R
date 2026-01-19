@@ -505,9 +505,6 @@ run_safe_ccf <- function(dt.trt_wide, qa.max_lag = 10, mem_target = 0.6) {
 
 #' # assign treated series
 #' # users can decide their own treated series
-#' data.table::setorder(dt.samples_long, SampleID,Year)
-#' # dt.samples_long[, RW_trt:= RawRing - data.table::shift(RawRing), by = SampleID]
-#'
 #' # for rhub::rhub_check() on macos VECTOR_ELT issues
 #' data.table::setorder(dt.samples_long, SampleID, Year)
 #' dt.samples_long$RW_trt <-

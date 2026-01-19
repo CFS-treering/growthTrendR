@@ -13,7 +13,7 @@
 - Updated \code{Title} to be under 65 characters:
   \emph{Toolkit for Data Processing, Quality, and Statistical Models}.
 - All regular words (e.g., detrending, modeling) are unquoted.
-  WinBuilder may give notes for words it does not recognize, but these are not
+  WinBuilder may give the list of words it does not recognize, but these are not
   package names, software names, or APIs.
 - Updated \code{Description} to include references in CRAN-compliant format:
   - Wood (2017, ISBN:978-1498728331) for generalized additive models.
@@ -43,7 +43,7 @@
 
 \strong{Example execution in documentation}
 
-- All examples previously wrapped in dontrun have been unwrapped, except for CFS_mapping, which is now marked as donttest due to its execution time exceeding 5 seconds, following CRAN guidelines.
+- All examples previously wrapped in dontrun have been reviewed and either unwrapped or rewrapped in donttest when their execution time exceeds 5 seconds, following CRAN policies.
 
 \strong{CRAN-compliant messages in source files}
 

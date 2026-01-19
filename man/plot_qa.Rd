@@ -40,7 +40,6 @@ c("sample_id", "year", "rw_mm"),
 c("SampleID", "Year" ,"RawRing"))
 # assign treated series
 # users can decide their own treated series
-# dt.samples_long[, RW_trt:= RawRing - data.table::shift(RawRing), by = SampleID]
 
 # for rhub::rhub_check() on macos VECTOR_ELT issues
 data.table::setorder(dt.samples_long, SampleID, Year)
