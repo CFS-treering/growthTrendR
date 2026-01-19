@@ -52,7 +52,18 @@ setnames(dt.samples_long, c("sample_id", "year", "rw_mm"), c("SampleID", "Year" 
 
 # assign treated series
 # users can decide their own treated series
-dt.samples_long[, RW_trt:= RawRing - shift(RawRing), by = SampleID]
+# dt.samples_long[, RW_trt:= RawRing - shift(RawRing), by = SampleID]
+
+
+# for rhub::rhub_check() on macos VECTOR_ELT issues
+data.table::setorder(dt.samples_long, SampleID, Year)
+dt.samples_long$RW_trt <-
+  ave(
+    as.numeric(dt.samples_long$RawRing),
+    dt.samples_long$SampleID,
+    FUN = function(x)
+      if (length(x) > 1L) c(NA_real_, diff(x)) else NA_real_
+  )
 
 # quality check on radius alignment based on the treated series
 dt.qa <-CFS_qa(dt.input = dt.samples_long, qa.label_data = "demo-samples", qa.label_trt = "difference", qa.min_nseries = 5)

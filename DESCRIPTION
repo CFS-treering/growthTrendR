@@ -27,7 +27,7 @@ Description: Offers tools for data formatting, anomaly detection, and classifica
  standardized visual reporting, including summaries, diagnostics, and
  model performance. Compatible with '.rwl' files and tailored for the
  Canadian Forest Service Tree-Ring Data (CFS-TRenD) repository
- (Girardin et al. 2021 <https://doi.org/10.1139/er-2020-0099>), offering
+ (Girardin et al. (2021) <doi:10.1139/er-2020-0099>), offering
  a comprehensive and adaptable framework for dendrochronologists working
  with large and complex datasets.
 License: GPL-3 

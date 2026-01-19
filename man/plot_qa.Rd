@@ -26,6 +26,7 @@ containing four \code{ggplot} objects:
 Plotting the time series and cross-correlation to contrast each radius with the chronologies, using both raw ring-width measurements and treated series.
 }
 \examples{
+\donttest{
 
 # loading processed data
 dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
@@ -39,11 +40,21 @@ c("sample_id", "year", "rw_mm"),
 c("SampleID", "Year" ,"RawRing"))
 # assign treated series
 # users can decide their own treated series
-dt.samples_long[, RW_trt:= RawRing - data.table::shift(RawRing), by = SampleID]
+# dt.samples_long[, RW_trt:= RawRing - data.table::shift(RawRing), by = SampleID]
+
+# for rhub::rhub_check() on macos VECTOR_ELT issues
+data.table::setorder(dt.samples_long, SampleID, Year)
+dt.samples_long$RW_trt <-
+  ave(
+  as.numeric(dt.samples_long$RawRing),
+  dt.samples_long$SampleID,
+  FUN = function(x)
+  if (length(x) > 1L) c(NA_real_, diff(x)) else NA_real_
+  )
 # quality check on radius alignment based on the treated series
 dt.qa <-CFS_qa(dt.input = dt.samples_long, qa.label_data = "demo-samples",
 qa.label_trt = "difference", qa.min_nseries = 5)
 plots.lst <- plot_qa(dt.qa, qa.out_series = "X003_101_005")
-
+}
 
 }

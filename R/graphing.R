@@ -17,6 +17,7 @@
 
 #' @export plot_qa
 #' @examples
+#' \donttest{
 #'
 #' # loading processed data
 #' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
@@ -32,13 +33,23 @@
 
 #' # assign treated series
 #' # users can decide their own treated series
-#' dt.samples_long[, RW_trt:= RawRing - data.table::shift(RawRing), by = SampleID]
+#' # dt.samples_long[, RW_trt:= RawRing - data.table::shift(RawRing), by = SampleID]
+#'
+#' # for rhub::rhub_check() on macos VECTOR_ELT issues
+#' data.table::setorder(dt.samples_long, SampleID, Year)
+#' dt.samples_long$RW_trt <-
+#'   ave(
+#'   as.numeric(dt.samples_long$RawRing),
+#'   dt.samples_long$SampleID,
+#'   FUN = function(x)
+#'   if (length(x) > 1L) c(NA_real_, diff(x)) else NA_real_
+#'   )
 
 #' # quality check on radius alignment based on the treated series
 #' dt.qa <-CFS_qa(dt.input = dt.samples_long, qa.label_data = "demo-samples",
 #' qa.label_trt = "difference", qa.min_nseries = 5)
 #' plots.lst <- plot_qa(dt.qa, qa.out_series = "X003_101_005")
-#'
+#'}
 #'
 plot_qa <- function(qa.trt, qa.out_series = "all" ) {
 
@@ -560,12 +571,13 @@ plot_facet <- function(data, varcols, xylabels, nrow, ncol) {
 #' @examples
 #'
 #' # loading processed data
+#' \donttest{
 
 #' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 #' # genereate data summary report
 #' outfile_data <- tempfile(fileext = ".html")
 #' generate_report(robj = dt.samples_trt, output_file = outfile_data)
-#'
+#'}
 generate_report <- function(robj, data_report.reports_sel = c(1,2,3,4), output_file = NULL, ...) {
 
   check_optional_deps()
