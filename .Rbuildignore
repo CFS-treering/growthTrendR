@@ -25,6 +25,9 @@
 
 # Optional: ignore specific vignettes if needed
 ^vignettes/vgn.*
+^vignettes/images$
+
+^inst/doc/.*\.html$
 
 # history of comments
 ^cran-comments\.md$
