@@ -68,5 +68,15 @@
 - Affected R script: \code{R/mapping.R}.
 - Ensures user graphics settings are restored, following CRAN best practices.
 
+
+\strong{Fix for VECTOR\_ELT warnings in grouped data.table assignments}
+
+- Fixed a potential \code{VECTOR\_ELT} issue in grouped
+  \code{data.table} assignments by replacing length-dependent right-hand
+  side expressions in \code{:=} + \code{by} operations with a safer,
+  group-invariant approach.
+- This change improves robustness and ensures consistent behavior
+  across platforms.
+
 }
 

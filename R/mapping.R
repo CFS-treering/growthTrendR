@@ -912,6 +912,8 @@ plot_tree_ring_map <- function(
   }
 
   oldmar <- par("mar")
+  on.exit(par(mar = oldmar), add = TRUE)
+
   par(mar = c(4, 4, 1, 3))
 
   layout(matrix(c(1, 2), ncol = 2), widths = c(4, 1))
@@ -968,7 +970,7 @@ plot_tree_ring_map <- function(
   ## Custom legend
   ## ----------------------------
   par(mar = c(5, 0, 3, 3))
-  on.exit(par(mar = oldmar), add = TRUE)
+
   plot(c(0, 1), range(breaks), type = "n", axes = FALSE, xlab = "", ylab = "")
 
   for (i in seq_len(nbreaks)) {
