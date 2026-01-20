@@ -8,7 +8,6 @@
 # Documentation folders
 ^doc/
 ^docs/
-^Meta/
 ^inst/publication$
 
 # Vignettes - remove all .R, .html, cache and figure folders, keep only .Rmd
@@ -25,9 +24,9 @@
 
 # Optional: ignore specific vignettes if needed
 ^vignettes/vgn.*
-^vignettes/images$
 
-^inst/doc/.*\.html$
+
+
 
 # history of comments
 ^cran-comments\.md$

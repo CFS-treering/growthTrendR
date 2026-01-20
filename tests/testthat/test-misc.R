@@ -15,8 +15,14 @@ test_that("calc_bai returns correct structure", {
 
 test_that("read_rwl returns correct structure", {
   # read data from ITRDB
-  dir.src <- "https://www.ncei.noaa.gov/pub/data/paleo/treering/measurements/northamerica/canada"
-  rwl <- "cana615.rwl"
+  # not test the online version, due to timeout issue occasionally
+  # dir.src <- "https://www.ncei.noaa.gov/pub/data/paleo/treering/measurements/northamerica/canada"
+  # rwl <- "cana615.rwl"
+
+  file <- system.file("extdata", "cana615.rwl", package = "growthTrendR")
+  stopifnot(file != "")
+  dir.src <- dirname(file)
+  rwl <- basename(file)
   dt.rwl <- read_rwl(dir.src, rwl)
   testthat::expect_true(is.list(dt.rwl))
   # Check for required columns
