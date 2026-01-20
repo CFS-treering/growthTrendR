@@ -26,5 +26,5 @@
 # Optional: ignore specific vignettes if needed
 ^vignettes/vgn.*
 
-^doc$
-^Meta$
+# history of comments
+^cran-comments\.md$
