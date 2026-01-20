@@ -13,7 +13,7 @@
 - Updated \code{Title} to be under 65 characters:
   \emph{Toolkit for Data Processing, Quality, and Statistical Models}.
 - All regular words (e.g., detrending, modeling) are unquoted.
-  WinBuilder may give the list of words it does not recognize, but these are not
+  win-builder may give the list of words it does not recognize, but these are not
   package names, software names, or APIs.
 - Updated \code{Description} to include references in CRAN-compliant format:
   - Wood (2017, ISBN:978-1498728331) for generalized additive models.
@@ -69,9 +69,9 @@
 - Ensures user graphics settings are restored, following CRAN best practices.
 
 
-\strong{Fix for VECTOR\_ELT warnings in grouped data.table assignments}
+\strong{Fix for VECTOR_ELT warnings in grouped data.table assignments}
 
-- Fixed a potential \code{VECTOR\_ELT} issue in grouped
+- Fixed a potential \code{VECTOR_ELT} issue in grouped
   \code{data.table} assignments by replacing length-dependent right-hand
   side expressions in \code{:=} + \code{by} operations with a safer,
   group-invariant approach.
