@@ -409,11 +409,18 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
         # r1 <- start_value_rho(m0, plot=TRUE)
         # print (paste0(Sys.time(), "          ar1"))
         # m.tmp <- bam(formul, data=data, rho=start_value_rho(m0.tmp, plot=FALSE), AR.start=data$start.event, method = "ML")
-        # setorder(data, uid_site, uid_radius, ageC)
+        setorder(data, uid_site, uid_radius, ageC)
         rho.start <- acf(resid(m0.tmp), plot = FALSE)$acf[2]
         rho.start <- max(min(rho.start, 0.9), -0.9)  # safety clamp
 
-        data[, start.event := c(TRUE, rep(FALSE, .N - 1)), by = .(uid_site, uid_radius)]
+        # data[, start.event := c(TRUE, rep(FALSE, .N - 1)), by = .(uid_site, uid_radius)]
+        data$start.event <- ave(
+          seq_len(nrow(data)),
+          data$uid_site,
+          data$uid_radius,
+          FUN = function(x) seq_along(x) == 1L
+        )
+
         m.tmp <- tryCatch({
 
           bam(formul, data=data, rho=rho.start, AR.start=data$start.event, method = "ML")
@@ -594,8 +601,15 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
 
 
 
-      # setorder(data, uid_site, uid_radius, ageC)
-      data[, start.event := c(TRUE, rep(FALSE, .N - 1)), by = .(uid_site, uid_radius)]
+      setorder(data, uid_site, uid_radius, ageC)
+      # data[, start.event := c(TRUE, rep(FALSE, .N - 1)), by = .(uid_site, uid_radius)]
+      # avoid VECTOR_ELT (on macos)
+      data$start.event <- ave(
+        seq_len(nrow(data)),
+        data$uid_site,
+        data$uid_radius,
+        FUN = function(x) seq_along(x) == 1L
+      )
 
       # Step 3: Add rho and AR1 structure
       # rho.start <- start_value_rho(m0.sel, plot = FALSE)
