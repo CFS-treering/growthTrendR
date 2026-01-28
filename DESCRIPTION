@@ -1,7 +1,7 @@
 Package: growthTrendR
 Type: Package
 Title: Toolkit for Data Processing, Quality, and Statistical Models
-Version: 0.2.0
+Version: 0.2.1
 Date: 2026-01-19
 Authors@R: 
   c(person(given = "Xiao Jing", 

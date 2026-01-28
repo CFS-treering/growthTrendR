@@ -106,30 +106,22 @@ Note that the response variable is kept on its original scale in all cases, even
 
 <br>
 
-### **generate report**
+### **model summary and diagnostic**
 
 
-```{r mod_report_demo, eval=FALSE, message = FALSE, warning = FALSE, results = 'hide'}
-generate_report(robj = m.sp)
+```{r mod_report_demo, message = FALSE, warning = FALSE}
+# generate_report(robj = m.sp)
+gam_model <- m.sp$model$gam
+
+# summary of the model
+  summary(gam_model)
+# smooth term importance
+ term_important <- sterm_imp( gam_model)
+ print(term_important)
+# 
+
 ```
 
 
-```{r mod_report, include=FALSE, message = FALSE, warning = FALSE, results = 'hide'}
-
-outfile_mod <- tempfile(fileext = ".html")
-generate_report(robj = m.sp, output_file = outfile_mod)
-```
-
-```{r mod_inclu, echo = FALSE, results = 'asis'}
-
-cat('
-<div style="margin: 20px 0; padding: 10px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
-            border-radius: 8px;">
-')
-
-htmltools::includeHTML(outfile_mod)  # embed in vignette
-cat('</div>')
-```
 ------------------------------------------------------------------------
 

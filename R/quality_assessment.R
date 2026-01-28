@@ -342,7 +342,7 @@ run_safe_ccf <- function(dt.trt_wide, qa.max_lag = 10, mem_target = 0.6) {
   col_pairs <- combn(names(dt.trt_wide), 2, simplify = FALSE)
   n_pairs <- length(col_pairs)
 
-  message(sprintf("Computing CCF for %d pairs across %d columns", n_pairs, ncol(dt.trt_wide)))
+  # message(sprintf("Computing CCF for %d pairs across %d columns", n_pairs, ncol(dt.trt_wide)))
 
   # Detect available cores
   available_cores <- parallel::detectCores(logical = FALSE)
@@ -403,13 +403,13 @@ run_safe_ccf <- function(dt.trt_wide, qa.max_lag = 10, mem_target = 0.6) {
   est_batch_size <- floor(usable_mem / (mem_per_pair * available_cores * 1.5))
   batch_size <- max(50, min(est_batch_size, 10000))  # clamp between 50-10000
 
-  message(sprintf("Memory: %.1f GB total, %.1f GB used, %.1f GB usable (%.0f%% target)",
-                  total_mem/1e9, used_mem/1e9, usable_mem/1e9, mem_target * 100))
-  message(sprintf("Using %d cores with batch size %d", available_cores, batch_size))
+  # message(sprintf("Memory: %.1f GB total, %.1f GB used, %.1f GB usable (%.0f%% target)",
+  #                 total_mem/1e9, used_mem/1e9, usable_mem/1e9, mem_target * 100))
+  # message(sprintf("Using %d cores with batch size %d", available_cores, batch_size))
 
   # Split pairs into batches
   pair_batches <- split(col_pairs, ceiling(seq_along(col_pairs) / batch_size))
-  message(sprintf("Processing %d batches...", length(pair_batches)))
+  # message(sprintf("Processing %d batches...", length(pair_batches)))
 
   # Run with progress
   message("Progress pair-wise ccf...")
@@ -546,11 +546,11 @@ CFS_qa <- function(dt.input, qa.label_data = "", qa.label_trt = "",
   if (nrow(dt.input[, .N, by = .(SampleID, Year)][N > 1]) > 0) {
     stop("SampleID-Year is not unique key, please check...")
   }
-  range <- detect_isolated_year_ranges(dt.input)
-  if (nrow(range[isolated == TRUE])) stop(paste(
-    "please check the year range of samples: ",
-    paste(range[isolated == TRUE]$SampleID, collapse = ", ")
-    ))
+  # range <- detect_isolated_year_ranges(dt.input)
+  # if (nrow(range[isolated == TRUE])) stop(paste(
+  #   "please check the year range of samples: ",
+  #   paste(range[isolated == TRUE]$SampleID, collapse = ", ")
+  #   ))
   # Prepare data
   dt.rw_long <- dt.input[, c("SampleID", "Year","RawRing", "RW_trt")]
   setorder(dt.rw_long, SampleID, Year)
@@ -580,7 +580,8 @@ CFS_qa <- function(dt.input, qa.label_data = "", qa.label_trt = "",
   ts.sel <- ts.sel[, .N, by = .(ts.sel)]
   id.candi <- unique(ts.sel$ts.sel)
 
-  message(sprintf("Step 1 complete: %d initial candidate samples identified", length(id.candi)))
+  message(sprintf("Step 1 complete: %d out of %d initial candidate samples identified",
+                  length(id.candi), ncol(dt.trt_wide)))
 
   # STEP 2: Iterative refinement
   message("\n", strrep("=", 60))
@@ -702,6 +703,7 @@ CFS_qa <- function(dt.input, qa.label_data = "", qa.label_trt = "",
   )
 
   result <- list(
+    ts.sel.step1 = ts.sel,
     dt.ccf = dt.s2.ccf,
     dt.chron = dt.s2.avg,
     dt.stats = stats_radii,
