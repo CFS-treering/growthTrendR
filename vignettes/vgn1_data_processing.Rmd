@@ -100,11 +100,16 @@ if user wants to export the processed tables in csv format, specify the folder h
 The data report provides an overview of the tree ring data’s quality and characteristics at four levels: project, project-species, project-species-site, and project-species-radii, including the quality assessment at site and radii levels with the default parameters.
 More details on quality assessment will be presented next section.
 
-```{r data_report, message = FALSE, warning = FALSE, results = 'hide'}
+```{r data_report_present, eval=FALSE, message = FALSE, warning = FALSE, results = 'hide'}
+
+generate_report(robj = dt.samples_trt, qa.label_data = "demo-samples ", data_report.reports_sel = c(1,2,3,4), qa.min_nseries = 5, scale.max_dist_km = 200)
+
+```
+
+```{r data_report_eval, include=FALSE, message = FALSE, warning = FALSE, results = 'hide'}
 
 outfile_data <- tempfile(fileext = ".html")
-generate_report(robj = dt.samples_trt, qa.label_data = "demo-samples ", data_report.reports_sel = c(1,2,3,4), qa.min_nseries = 5, scale.max_dist_km = 200,
-  scale.N_nbs = 2, output_file = outfile_data)
+generate_report(robj = dt.samples_trt, qa.label_data = "demo-samples ", data_report.reports_sel = c(1,2,3,4), qa.min_nseries = 5, scale.max_dist_km = 200, output_file = outfile_data)
 
 ```
 

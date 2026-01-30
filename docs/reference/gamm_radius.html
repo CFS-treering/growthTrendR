@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">growthTrendR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.1.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.1</span>
       </span>
     </div>
 
@@ -107,7 +107,7 @@ it will be refitted using the restricted maximum likelihood (REML) method and ou
 <span class="r-in"><span><span class="co"># loading processed data</span></span></span>
 <span class="r-in"><span><span class="va">dt.samples_trt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"dt.samples_trt.rds"</span>, package <span class="op">=</span> <span class="st">"growthTrendR"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># pre-data for model</span></span></span>
-<span class="r-in"><span><span class="va">dt.samples_long</span> <span class="op">&lt;-</span> <span class="fu">growthTrendR</span><span class="fu">:::</span><span class="fu">prepare_samples_clim</span><span class="op">(</span><span class="va">dt.samples_trt</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">dt.samples_long</span> <span class="op">&lt;-</span> <span class="fu"><a href="prepare_samples_clim.html">prepare_samples_clim</a></span><span class="op">(</span><span class="va">dt.samples_trt</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">dt.m</span> <span class="op">&lt;-</span> <span class="va">dt.samples_long</span><span class="op">[</span><span class="va">uid_site</span> <span class="op">==</span> <span class="fl">1</span><span class="op">]</span><span class="op">[</span><span class="va">ageC</span> <span class="op">&gt;</span><span class="fl">1</span><span class="op">]</span></span></span>
 <span class="r-in"><span></span></span>

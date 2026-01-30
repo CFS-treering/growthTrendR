@@ -21,7 +21,7 @@ Small samples automatically trigger the "posterior" method for more robust CIs.'
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">growthTrendR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.1.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.1</span>
       </span>
     </div>
 
@@ -93,20 +93,21 @@ Small samples automatically trigger the "posterior" method for more robust CIs.<
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># loading processed data</span></span></span>
 <span class="r-in"><span><span class="va">dt.samples_trt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"dt.samples_trt.rds"</span>, package <span class="op">=</span> <span class="st">"growthTrendR"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># climate</span></span></span>
-<span class="r-in"><span><span class="va">dt.clim</span> <span class="op">&lt;-</span> <span class="fu">fread</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"dt.clim.csv"</span>, package <span class="op">=</span> <span class="st">"growthTrendR"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">dt.clim</span> <span class="op">&lt;-</span> <span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html" class="external-link">fread</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"dt.clim.csv"</span>, package <span class="op">=</span> <span class="st">"growthTrendR"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># pre-data for model</span></span></span>
-<span class="r-in"><span><span class="va">dt.samples_clim</span> <span class="op">&lt;-</span> <span class="fu">growthTrendR</span><span class="fu">:::</span><span class="fu">prepare_samples_clim</span><span class="op">(</span><span class="va">dt.samples_trt</span>, <span class="va">dt.clim</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">dt.samples_clim</span> <span class="op">&lt;-</span> <span class="fu"><a href="prepare_samples_clim.html">prepare_samples_clim</a></span><span class="op">(</span><span class="va">dt.samples_trt</span>, <span class="va">dt.clim</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">dt.m</span> <span class="op">&lt;-</span> <span class="va">dt.samples_clim</span><span class="op">[</span><span class="va">ageC</span> <span class="op">&gt;</span><span class="fl">1</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="co"># gamm_site model</span></span></span>
-<span class="r-in"><span><span class="va">m.spatial</span> <span class="op">&lt;-</span><span class="fu">growthTrendR</span><span class="fu">::</span><span class="fu"><a href="gamm_spatial.html">gamm_spatial</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span><span class="va">m.spatial</span> <span class="op">&lt;-</span><span class="fu"><a href="gamm_spatial.html">gamm_spatial</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  data <span class="op">=</span> <span class="va">dt.m</span>, resp_scale <span class="op">=</span> <span class="st">"resp_log"</span>,</span></span>
 <span class="r-in"><span>  m.candidates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span> <span class="st">"bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + s(FFD)"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">plots.lst</span> <span class="op">&lt;-</span> <span class="fu">plot_resp</span><span class="op">(</span><span class="va">m.spatial</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Small sample detected (n &lt; 30). Switching CI method to 'posterior' for robustness.</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

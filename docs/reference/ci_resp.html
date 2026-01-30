@@ -25,7 +25,7 @@ Five methods are supported:
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">growthTrendR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.1.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.1</span>
       </span>
     </div>
 
@@ -131,7 +131,7 @@ Five methods are supported:
 <span class="r-in"><span><span class="co"># climate</span></span></span>
 <span class="r-in"><span><span class="va">dt.clim</span> <span class="op">&lt;-</span> <span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html" class="external-link">fread</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"dt.clim.csv"</span>, package <span class="op">=</span> <span class="st">"growthTrendR"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># pre-data for model</span></span></span>
-<span class="r-in"><span><span class="va">dt.samples_clim</span> <span class="op">&lt;-</span> <span class="fu">growthTrendR</span><span class="fu">:::</span><span class="fu">prepare_samples_clim</span><span class="op">(</span><span class="va">dt.samples_trt</span>, <span class="va">dt.clim</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">dt.samples_clim</span> <span class="op">&lt;-</span> <span class="fu"><a href="prepare_samples_clim.html">prepare_samples_clim</a></span><span class="op">(</span><span class="va">dt.samples_trt</span>, <span class="va">dt.clim</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">dt.m</span> <span class="op">&lt;-</span> <span class="va">dt.samples_clim</span><span class="op">[</span><span class="va">ageC</span> <span class="op">&gt;</span><span class="fl">1</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="co"># using gamm_spatial model as an example</span></span></span>
 <span class="r-in"><span><span class="va">m.sp</span> <span class="op">&lt;-</span><span class="fu"><a href="gamm_spatial.html">gamm_spatial</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">dt.m</span>, resp_scale <span class="op">=</span> <span class="st">"resp_log"</span>,</span></span>

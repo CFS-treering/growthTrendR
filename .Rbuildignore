@@ -23,10 +23,12 @@
 ^inst/rmd/_files/
 
 # Optional: ignore specific vignettes if needed
-^vignettes/vgn.*
+^vignettes/vvgn.*
 
 
 
 
 # history of comments
 ^cran-comments\.md$
+^doc$
+^Meta$
