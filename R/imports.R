@@ -6,9 +6,9 @@
 
 #' @importFrom future plan multicore multisession sequential
 #' @importFrom furrr future_map
-#' @importFrom pryr mem_used object_size
 
-#' @importFrom utils combn write.csv head capture.output
+
+#' @importFrom utils combn write.csv head capture.output object.size
 
 
 #' @import data.table

@@ -23,7 +23,7 @@
 ^inst/rmd/_files/
 
 # Optional: ignore specific vignettes if needed
-^vignettes/vvgn.*
+^vignettes/vgn.*
 
 
 

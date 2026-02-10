@@ -373,7 +373,11 @@ run_safe_ccf <- function(dt.trt_wide, qa.max_lag = 10, mem_target = 0.6) {
     16e9
   })
 
-  used_mem <- as.numeric(pryr::mem_used())
+  # used_mem <- as.numeric(pryr::mem_used())
+  # Get used memory using gc() instead of pryr::mem_used()
+  gc_info <- gc(reset = TRUE, full = TRUE)
+  used_mem <- sum(gc_info[, "(Mb)"]) * 1024^2  # Convert MB to bytes
+
   free_mem <- max(0, total_mem - used_mem)
   usable_mem <- free_mem * mem_target
 
@@ -389,7 +393,9 @@ run_safe_ccf <- function(dt.trt_wide, qa.max_lag = 10, mem_target = 0.6) {
       error = function(e) NULL
     )
     if (!is.null(test_ccf)) {
-      mem_estimates[i] <- as.numeric(pryr::object_size(test_ccf))
+      # mem_estimates[i] <- as.numeric(pryr::object_size(test_ccf))
+      # Use object.size() instead of pryr::object_size()
+      mem_estimates[i] <- as.numeric(utils::object.size(test_ccf))
     }
   }
 
