@@ -570,7 +570,7 @@ plot_facet <- function(data, varcols, xylabels, nrow, ncol) {
 #' @examples
 #'
 #' # loading processed data
-#' \donttest{
+#' \dontrun{
 
 #' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 #' # genereate data summary report
