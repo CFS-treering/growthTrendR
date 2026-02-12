@@ -42,10 +42,10 @@ visualizations and analysis results.
 \examples{
 
 # loading processed data
-\dontrun{
+\donttest{
 dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
-# genereate data summary report
+# genereate data summary report at project level
 outfile_data <- tempfile(fileext = ".html")
-generate_report(robj = dt.samples_trt, output_file = outfile_data)
+generate_report(robj = dt.samples_trt, data_report.reports_sel = c(1), output_file = outfile_data)
 }
 }
