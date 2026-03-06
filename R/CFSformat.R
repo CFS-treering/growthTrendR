@@ -188,14 +188,14 @@ if (all(c("latitude", "longitutde") %in% names(dt.new))){
   # if (length(chk.spc2)  > 0) stop(paste0("species: ", paste(chk.spc2, collapse = ", "), " not recognized, please verify..."))
 
   # dt.new[, uid_tree := .GRP, by = .(uid_project, uid_site, tree_id)]
-  dt.new <- merge(dt.new, dt.new[, .(uid_tree= .N), by = .(uid_project, uid_site, tree_id)], by = c("uid_project", "uid_site", "tree_id"))
+  # dt.new <- merge(dt.new, dt.new[, .(uid_tree= .N), by = .(uid_project, uid_site, tree_id)], by = c("uid_project", "uid_site", "tree_id"))
 #
-#   dt.new$uid_tree <- as.integer(factor(interaction(
-#      dt.new$uid_project,
-#      dt.new$uid_site,
-#      dt.new$tree_id,
-#     drop = TRUE
-#   )))
+  dt.new$uid_tree <- as.integer(factor(interaction(
+     dt.new$uid_project,
+     dt.new$uid_site,
+     dt.new$tree_id,
+    drop = TRUE
+  )))
 
   # dt.new[, uid_meas := .GRP, by = .(uid_tree, meas_no)]
   dt.new[, meas_no2:= ifelse(is.na(meas_no), -999, meas_no)]

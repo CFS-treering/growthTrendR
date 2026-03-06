@@ -68,6 +68,7 @@ Suggests:
   magick(>= 2.8.6),
   gt(>= 1.2.0),
   kableExtra(>= 1.4.0),
-  httr(>= 1.4.7)
+  httr(>= 1.4.7),
+  gridExtra(>= 2.3)
 Depends: R (>= 4.3.0) 
 VignetteBuilder: knitr

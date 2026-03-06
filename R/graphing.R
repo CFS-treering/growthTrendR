@@ -426,28 +426,31 @@ plot_ds <- function(data){
   #   geom_point(color = "lightgrey") +
   #   labs(title = "ring width(mm) ", y = "ring width (mm)", x = "year") +
   #   theme_classic()
+#
+#   # Compute equal-width breaks
+#   breaks_lat <- seq(min(dt.tr$latitude), max(dt.tr$latitude), length.out = 4)
+#
+#   # Midpoints of the intervals
+#   mids_lat <- utils::head(breaks_lat, -1) + diff(breaks_lat)/2
+#
+#   # Assign each value the midpoint of its class
+#   dt.tr[, lat := mids_lat[cut(latitude, breaks = breaks_lat, include.lowest = TRUE, labels = FALSE)]]
+#
+#
+#   # Compute equal-width breaks
+#   breaks_lon <- seq(min(dt.tr$longitude), max(dt.tr$longitude), length.out = 4)
+#
+#   # Midpoints of the intervals
+#   mids_lon <- utils::head(breaks_lon, -1) + diff(breaks_lon)/2
+#
+#   # Assign each value the midpoint of its class
+#   dt.tr[, lon := mids_lon[cut(longitude, breaks = breaks_lon, include.lowest = TRUE, labels = FALSE)]]
 
-  # Compute equal-width breaks
-  breaks_lat <- seq(min(dt.tr$latitude), max(dt.tr$latitude), length.out = 4)
 
-  # Midpoints of the intervals
-  mids_lat <- utils::head(breaks_lat, -1) + diff(breaks_lat)/2
+  # dist.uids <- dt.tr[, .(nuids = .N), by = .(lat, lon)]
+  dist.uids <- dt.tr[, .(nuids = .N), by = .(latitude, longitude)]
+  setnames(dist.uids, c("latitude", "longitude"), c("lat", "lon"))
 
-  # Assign each value the midpoint of its class
-  dt.tr[, lat := mids_lat[cut(latitude, breaks = breaks_lat, include.lowest = TRUE, labels = FALSE)]]
-
-
-  # Compute equal-width breaks
-  breaks_lon <- seq(min(dt.tr$longitude), max(dt.tr$longitude), length.out = 4)
-
-  # Midpoints of the intervals
-  mids_lon <- utils::head(breaks_lon, -1) + diff(breaks_lon)/2
-
-  # Assign each value the midpoint of its class
-  dt.tr[, lon := mids_lon[cut(longitude, breaks = breaks_lon, include.lowest = TRUE, labels = FALSE)]]
-
-
-  dist.uids <- dt.tr[, .(nuids = .N), by = .(lat, lon)]
   # dist.uids[, ord:= 1]
   # setorder(dist.uids, ord, lon, lat)
   setorder(dist.uids, lon, lat)

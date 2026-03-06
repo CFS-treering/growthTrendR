@@ -335,7 +335,7 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
         m.tmp <- tryCatch({
 
           gamm(formul,
-               correlation = corCAR1(value = 0.5),
+               correlation = corCAR1(~year | uid_radius.fac),
                method = "ML",family = famil, data = data)
 
         }, warning = function(w) {
@@ -351,13 +351,13 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
       }
       if (m.option %in% c(2,3)){
         # m.tmp <- gamm(formul,
-        #               random = list(uid_radius.fac=~1), correlation = corCAR1(value = 0.5),
+        #               random = list(uid_radius.fac=~1), correlation = corCAR1(~year | uid_radius.fac),
         #               method = "ML",family = famil, data = data)
 
         m.tmp <- tryCatch({
 
           gamm(formul,
-               random = list(uid_radius.fac=~1), correlation = corCAR1(value = 0.5),
+               random = list(uid_radius.fac=~1), correlation = corCAR1(~year | uid_radius.fac),
                method = "ML",family = famil, data = data)
 
         }, warning = function(w) {
@@ -514,13 +514,13 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
 
   if (m.option == 1) {
     # m.sel <- gamm(form.sel,
-    #               correlation = corCAR1(value = 0.5),
+    #               correlation = corCAR1(~year | uid_radius.fac),
     #               method = "REML",family = famil, data = data)
 
     m.sel <- tryCatch({
 
       gamm(form.sel,
-           correlation = corCAR1(value = 0.5),
+           correlation = corCAR1(~year | uid_radius.fac),
            method = "REML",family = famil, data = data)
 
     }, warning = function(w) {
@@ -537,14 +537,14 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
   }
    if (m.option %in% c(2,3)) {
      # m.sel <- gamm(form.sel,
-     #              random = list(uid_radius.fac=~1), correlation = corCAR1(value = 0.5),
+     #              random = list(uid_radius.fac=~1), correlation = corCAR1(~year | uid_radius.fac),
      #              method = "REML",family = famil, data = data)
      #
 
      m.sel <- tryCatch({
 
        gamm(form.sel,
-            random = list(uid_radius.fac=~1), correlation = corCAR1(value = 0.5),
+            random = list(uid_radius.fac=~1), correlation = corCAR1(~year | uid_radius.fac),
             method = "REML",family = famil, data = data)
 
      }, warning = function(w) {
@@ -681,7 +681,7 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
       if (m.option == 3)  {
         form.sel <- update(m.sel$gam$formula, . ~ . + s(latitude, longitude, bs = "tp"))
         m.sel <- gamm(form.sel,  data = data,
-                      random = list(uid_radius.fac= ~1),correlation =  corCAR1(value = 0.5),
+                      random = list(uid_radius.fac= ~1),correlation =  corCAR1(~year | uid_radius.fac),
                       family = famil)
         data[, res.normalized.LL:=residuals(m.sel$lme, type = "normalized")]
       }
