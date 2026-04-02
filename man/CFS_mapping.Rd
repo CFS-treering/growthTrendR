@@ -44,7 +44,7 @@ dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package =
 cols.meta = c("uid_tree", "uid_site", "longitude", "latitude", "species")
 dt.mapping <- dt.samples_trt$tr_all_wide[
   , c(..cols.meta, as.character(1991:1995)), with = FALSE]
-results_mapping <- CFS_mapping(dt.mapping, year.span = c(1991:1993))
+results_mapping <- CFS_mapping(dt.mapping, year.span = c(1991,1993))
 }
 
 }

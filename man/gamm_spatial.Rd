@@ -4,7 +4,7 @@
 \alias{gamm_spatial}
 \title{spatial growth model at regional-level (multiple sites)}
 \usage{
-gamm_spatial(data, resp_scale = "resp_gamma", m.candidates)
+gamm_spatial(data, resp_scale = "resp_gamma", m.candidates, sp.option = "AICc")
 }
 \arguments{
 \item{data}{data containing all necessary columns to run the model}
@@ -17,6 +17,12 @@ gamm_spatial(data, resp_scale = "resp_gamma", m.candidates)
 }}
 
 \item{m.candidates}{the list of candidate equations.}
+
+\item{sp.option}{Character. Spatial autocorrelation selection method.
+\itemize{
+  \item \strong{"AICc"}: selects spatial structure using AICc comparison.
+  \item \strong{"Moran"}: selects spatial structure based on Moran's I diagnostics.
+}}
 }
 \value{
 list including model, fitting statistics, ptable, stable, prediction table and spatial effect(moranI)

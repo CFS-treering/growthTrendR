@@ -320,11 +320,13 @@ if (all(c("latitude", "longitutde") %in% names(dt.new))){
 
 #' frequency distributions by geo-location per species
 #'
-#' @param tr_meta   meta table from function CFS_format()
-#' @param freq.label_data description of tr_meta
+#' @param data   meta table from function CFS_format()
+#' @param freq.label_data description of data
 #' @param freq.uid_level which uid level to count(uid_project, uid_site, uid_tree, uid_meas, uid_sample, uid_radius)
 #' @param freq.cutoff_year cut-off year for a subset which series were recorded on or after
-#' @param freq.geo_resolution resolution of longitude and latitude in degree, default: c(5,5)
+#' @param freq.geo_resolution Numeric vector (lon, lat) giving spatial
+#' resolution in degrees (e.g., c(5, 3)). If NULL, each value defaults
+#' to one quarter of the corresponding coordinate range.
 
 #' @return a data table of counts of uid by latitude-longitude per species
 #' @export CFS_freq
@@ -344,15 +346,23 @@ if (all(c("latitude", "longitutde") %in% names(dt.new))){
 
 
 
-CFS_freq <- function(tr_meta, freq.label_data = "", freq.uid_level = "uid_radius", freq.cutoff_year = -999,freq.geo_resolution = NULL){
+CFS_freq <- function(data, freq.label_data = "", freq.uid_level = "uid_radius", freq.cutoff_year = -999,freq.geo_resolution = NULL){
   if (!(freq.uid_level %in% c("uid_project", "uid_site", "uid_tree", "uid_meas", "uid_sample", "uid_radius"))) stop("freq.uid_level should be in c('uid_project', 'uid_site', 'uid_tree', 'uid_meas', 'uid_sample', 'uid_radius')")
 
 
-  dt.meta.sel <- tr_meta[rw_yend >= freq.cutoff_year, c(unique(c("uid_radius", freq.uid_level)), "longitude", "latitude",  "species"), with = FALSE]
+  dt.meta.sel <- data[rw_yend >= freq.cutoff_year, c(unique(c("uid_radius", freq.uid_level)), "longitude", "latitude",  "species"), with = FALSE]
 
   if (is.null(freq.geo_resolution) ) {
-    freq.geo_resolution[1] <- (max(tr_meta$longitude) - min(tr_meta$longitude))/4
-    freq.geo_resolution[2] <- (max(tr_meta$latitude) - min(tr_meta$latitude))/4
+    freq.geo_resolution[1] <- (max(data$longitude) - min(data$longitude))/4
+    freq.geo_resolution[2] <- (max(data$latitude) - min(data$latitude))/4
+  }else{
+    if (!is.numeric(freq.geo_resolution) ||
+        length(freq.geo_resolution) != 2 ||
+        any(is.na(freq.geo_resolution)) ||
+        any(freq.geo_resolution <= 0)) {
+      stop("freq.geo_resolution must be a numeric vector of length 2 with positive values.")
+    }
+
   }
   dt.meta.sel[,lon:=round(longitude/freq.geo_resolution[1], 0)*freq.geo_resolution[1]]
   dt.meta.sel[, lat:= round(latitude/freq.geo_resolution[2], 0)*freq.geo_resolution[2]]

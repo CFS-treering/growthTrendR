@@ -3,14 +3,12 @@
 #' @description
 #' generalized additive model that captures non-linear relationships between a response variable and predictors using smooth functions, while allowing inclusion of random effects or complex structures.
 
-#' @param data data containing all necessary columns to run the model
-#' @param resp_scale Character. Specifies how the response variable is treated in the model.
+#' @inheritParams gamm_radius
+#' @param sp.option Character. Spatial autocorrelation selection method.
 #'   \itemize{
-#'     \item \strong{"resp_gaussian"}: Uses the response on its original scale, assuming a Gaussian distribution with an identity link (no transformation applied).
-#'     \item \strong{"resp_log"}: Log-transforms the response before modelling. The transformed response is then assumed to follow a Gaussian distribution with an identity link.
-#'     \item \strong{"resp_gamma"}: Keeps the response on its original scale, fitted under a Gamma distribution with a log link. Suitable for strictly positive and right-skewed data.
+#'     \item \strong{"AICc"}: selects spatial structure using AICc comparison.
+#'     \item \strong{"Moran"}: selects spatial structure based on Moran's I diagnostics.
 #'   }
-#' @param m.candidates the list of candidate equations.
 #'
 #'
 #' @return list including model, fitting statistics, ptable, stable and prediction table
@@ -39,9 +37,9 @@
 #'                                        m.candidates = c( "rw_mm ~ s(year, by = uid_site.fac)",
 #'                                                          "rw_mm ~ year:uid_site.fac"))
 
-gam_mod <- function(data, resp_scale = "", m.candidates){
+gam_mod <- function(data, resp_scale = "", m.candidates, sp.option = "AICc"){
 
-  main_model(data , resp_scale , m.option = 0, m.candidates)
+  main_model(data , resp_scale , m.option = 0, m.candidates, sp.option)
 
 }
 
@@ -105,14 +103,7 @@ gamm_radius <- function(data, resp_scale = "resp_gamma", m.candidates){
 #' @description
 #' models the growth trend or climate-growth relationship per site.
 #'
-#' @param data data containing all necessary columns to run the model
-#' @param resp_scale Character. Specifies how the response variable is treated in the model.
-#'   \itemize{
-#'     \item \strong{"resp_gaussian"}: Uses the response on its original scale, assuming a Gaussian distribution with an identity link (no transformation applied).
-#'     \item \strong{"resp_log"}: Log-transforms the response before modelling. The transformed response is then assumed to follow a Gaussian distribution with an identity link.
-#'     \item \strong{"resp_gamma"}: Keeps the response on its original scale, fitted under a Gamma distribution with a log link. Suitable for strictly positive and right-skewed data.
-#'   }
-#' @param m.candidates the list of candidate equations.
+#' @inheritParams gamm_radius
 #'
 #'
 #'
@@ -163,14 +154,12 @@ gamm_site <- function(data, resp_scale = "resp_gamma", m.candidates){
 #' @description
 #' models the growth trend or climate-growth relationship at regional-level with multiple sites
 #'
-#' @param data data containing all necessary columns to run the model
-#' @param resp_scale Character. Specifies how the response variable is treated in the model.
+#' @inheritParams gamm_radius
+#' @param sp.option Character. Spatial autocorrelation selection method.
 #'   \itemize{
-#'     \item \strong{"resp_gaussian"}: Uses the response on its original scale, assuming a Gaussian distribution with an identity link (no transformation applied).
-#'     \item \strong{"resp_log"}: Log-transforms the response before modelling. The transformed response is then assumed to follow a Gaussian distribution with an identity link.
-#'     \item \strong{"resp_gamma"}: Keeps the response on its original scale, fitted under a Gamma distribution with a log link. Suitable for strictly positive and right-skewed data.
+#'     \item \strong{"AICc"}: selects spatial structure using AICc comparison.
+#'     \item \strong{"Moran"}: selects spatial structure based on Moran's I diagnostics.
 #'   }
-#' @param m.candidates the list of candidate equations.
 #'
 #'
 #'
@@ -208,11 +197,11 @@ gamm_site <- function(data, resp_scale = "resp_gamma", m.candidates){
 #'}
 #'
 
-gamm_spatial <- function(data, resp_scale = "resp_gamma", m.candidates){
+gamm_spatial <- function(data, resp_scale = "resp_gamma", m.candidates, sp.option = "AICc"){
   data$uid_radius.fac <- as.factor(as.character(data$uid_radius))
   data$uid_site.fac <- as.factor(as.character(data$uid_site))
   m.candidates <- paste0(m.candidates, " + s(uid_site.fac, bs = 're')")
-  main_model(data , resp_scale , m.option = 3, m.candidates)
+  main_model(data , resp_scale , m.option = 3, m.candidates, sp.option)
 
 }
 
@@ -222,14 +211,12 @@ gamm_spatial <- function(data, resp_scale = "resp_gamma", m.candidates){
 #' To address the computational limitations of GAMMs for large datasets, this function offers a hybrid solution combining the efficiency of the mgcv::bam() function
 #'
 
-#' @param data data containing all necessary columns to run the model
-#' @param resp_scale Character. Specifies how the response variable is treated in the model.
+#' @inheritParams gamm_radius
+#' @param sp.option Character. Spatial autocorrelation selection method.
 #'   \itemize{
-#'     \item \strong{"resp_gaussian"}: Uses the response on its original scale, assuming a Gaussian distribution with an identity link (no transformation applied).
-#'     \item \strong{"resp_log"}: Log-transforms the response before modelling. The transformed response is then assumed to follow a Gaussian distribution with an identity link.
-#'     \item \strong{"resp_gamma"}: Keeps the response on its original scale, fitted under a Gamma distribution with a log link. Suitable for strictly positive and right-skewed data.
+#'     \item \strong{"AICc"}: selects spatial structure using AICc comparison.
+#'     \item \strong{"Moran"}: selects spatial structure based on Moran's I diagnostics.
 #'   }
-#' @param m.candidates the list of candidate equations.
 #'
 # #' @import furrr
 
@@ -275,11 +262,11 @@ gamm_spatial <- function(data, resp_scale = "resp_gamma", m.candidates){
 #'
 #'
 
-bam_spatial <- function(data, resp_scale = "resp_gamma", m.candidates){
+bam_spatial <- function(data, resp_scale = "resp_gamma", m.candidates, sp.option = "AICc"){
   data$uid_radius.fac <- as.factor(as.character(data$uid_radius))
   data$uid_site.fac <- as.factor(as.character(data$uid_site))
   m.candidates <- paste0(m.candidates, " + s(uid_site.fac, bs = 're')")
-  main_model(data , resp_scale , m.option = 4, m.candidates)
+  main_model(data , resp_scale , m.option = 4, m.candidates, sp.option)
 
 }
 
@@ -287,13 +274,46 @@ bam_spatial <- function(data, resp_scale = "resp_gamma", m.candidates){
 #' @keywords internal
 #' @noRd
 # main function
-main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidates){
+main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidates, sp.option = "AICc"){
 
   check_optional_deps()
 
   if (length(m.candidates) == 0) stop("must assign the equation(s) to m.candidates")
-  if ( !(resp_scale %in% c("resp_log", "resp_gamma", "resp_gaussian"))) stop(paste0( "please check resp_scale, it allows 3 options: resp_log, on log-scale of resp; resp_gaussian, on response scale assuming gaussian distribution; resp_gamma, on response scale with family Gamma(log)"))
+  # if ( !(resp_scale %in% c("resp_log", "resp_gamma", "resp_gaussian"))) stop(paste0( "please check resp_scale, it allows 3 options: resp_log, on log-scale of resp; resp_gaussian, on response scale assuming gaussian distribution; resp_gamma, on response scale with family Gamma(log)"))
 
+  # ---- allowed values ----
+  allowed_spatial <- c("AICc", "Moran")
+  allowed_scale   <- c("resp_gaussian", "resp_log", "resp_gamma")
+
+  # ---- validate sp.option ----
+  if (!all(sp.option %in% allowed_spatial)) {
+    stop(
+      "Invalid sp.option Allowed values: ",
+      paste(allowed_spatial, collapse = ", ")
+    )
+  }
+
+  # ---- validate resp_scale ----
+  if (!resp_scale %in% allowed_scale) {
+    stop(
+      "Invalid resp_scale. Allowed values: ",
+      paste(allowed_scale, collapse = ", ")
+    )
+  }
+
+  # update m.candidates for spatial model with sp.option == "AICc"
+  if (m.option > 1 & sp.option == "AICc") {
+
+    if (length(unique(data$uid_site)) > 5){
+
+    m.candidates.sp <- paste0(
+      m.candidates,
+      " + s(latitude, longitude, bs = 'tp')"
+    )
+
+    m.candidates <- c(m.candidates, m.candidates.sp)
+    }
+  }
 
   if (resp_scale == "resp_log") famil = gaussian("identity")
   if (resp_scale == "resp_gaussian") famil = gaussian("identity")
@@ -311,19 +331,17 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
 
       if (m.option == 0){
 
-        # m.tmp <- gam(formul,
-        #               method = "ML",family = famil, data = data)
 
         m.tmp <- tryCatch({
 
           gam(formul, method = "ML",family = famil, data = data)
 
         }, warning = function(w) {
-          # warning_message.c <<- conditionMessage(w)  # Store the warning message
+
           message("Warning captured : ", conditionMessage(w))
           return(NULL)  # Return NULL if a warning occurs
         }, error = function(e) {
-          # error_message.c <<- conditionMessage(e)  # Store error message
+
           message("error captured : ", conditionMessage(e))
           return(NULL)  # Return NULL to prevent stopping execution
         })
@@ -335,7 +353,7 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
         m.tmp <- tryCatch({
 
           gamm(formul,
-               correlation = corCAR1(~year | uid_radius.fac),
+               correlation = corCAR1(value = 0.5, form = ~year | uid_radius.fac),
                method = "ML",family = famil, data = data)
 
         }, warning = function(w) {
@@ -350,14 +368,11 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
 
       }
       if (m.option %in% c(2,3)){
-        # m.tmp <- gamm(formul,
-        #               random = list(uid_radius.fac=~1), correlation = corCAR1(~year | uid_radius.fac),
-        #               method = "ML",family = famil, data = data)
 
         m.tmp <- tryCatch({
 
           gamm(formul,
-               random = list(uid_radius.fac=~1), correlation = corCAR1(~year | uid_radius.fac),
+               random = list(uid_radius.fac=~1), correlation = corCAR1(value = 0.5, form = ~year | uid_radius.fac),
                method = "ML",family = famil, data = data)
 
         }, warning = function(w) {
@@ -449,28 +464,14 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
         if (m.option %in% c(1,2,3)) aic.tmp <- data.table(aic.tmp, R2 = summary(m.tmp$gam)$r.sq) else aic.tmp <- data.table(aic.tmp, R2 = summary(m.tmp)$r.sq)
 
         aic.all <- rbind(aic.all, aic.tmp)
-    # }
 
-      # if (i == 1) {
-      #   # aicc.mn <- aic.tmp$aicc
-      #   # m.sel <- m.tmp
-      #   # i.sel <- i
-      #   aic.all <- aic.tmp
-      # } else{
-      #   aic.all <- rbind(aic.all, aic.tmp)
-      #   # if (aicc.mn > aic.tmp$aicc){
-      #   #   aic.mn <- aic.tmp$aicc
-      #   #   m.sel <- m.tmp
-      #   #   i.sel <- i
-      #   # }
-      # }
       rm(aic.tmp, m.tmp)
     }
     if (nrow(aic.all) > 0) {
       aic.all[aicc == min(aicc), selected := "*"]
       form.sel <- as.formula(aic.all[selected == "*"]$form)
     }else form.sel <- character(0)
-    # rm(m.sel)
+
 
 
 
@@ -492,8 +493,6 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
 ))
 
   if (m.option == 0) {
-    # m.sel <- gam(form.sel,
-    #             method = "REML",family = famil, data = data)
 
     m.sel <- tryCatch({
 
@@ -513,14 +512,11 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
   }
 
   if (m.option == 1) {
-    # m.sel <- gamm(form.sel,
-    #               correlation = corCAR1(~year | uid_radius.fac),
-    #               method = "REML",family = famil, data = data)
 
     m.sel <- tryCatch({
 
       gamm(form.sel,
-           correlation = corCAR1(~year | uid_radius.fac),
+           correlation = corCAR1(value = 0.5, form = ~year | uid_radius.fac),
            method = "REML",family = famil, data = data)
 
     }, warning = function(w) {
@@ -536,15 +532,11 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
 
   }
    if (m.option %in% c(2,3)) {
-     # m.sel <- gamm(form.sel,
-     #              random = list(uid_radius.fac=~1), correlation = corCAR1(~year | uid_radius.fac),
-     #              method = "REML",family = famil, data = data)
-     #
 
      m.sel <- tryCatch({
 
        gamm(form.sel,
-            random = list(uid_radius.fac=~1), correlation = corCAR1(~year | uid_radius.fac),
+            random = list(uid_radius.fac=~1), correlation = corCAR1(value = 0.5, form = ~year | uid_radius.fac),
             method = "REML",family = famil, data = data)
 
      }, warning = function(w) {
@@ -654,7 +646,7 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
 
 
   }
-
+    if (sp.option == "Moran"){
     # further for spatial effect
     if (m.option >= 3 & all(c("latitude", "longitude") %in% names(data))){
 
@@ -681,7 +673,7 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
       if (m.option == 3)  {
         form.sel <- update(m.sel$gam$formula, . ~ . + s(latitude, longitude, bs = "tp"))
         m.sel <- gamm(form.sel,  data = data,
-                      random = list(uid_radius.fac= ~1),correlation =  corCAR1(~year | uid_radius.fac),
+                      random = list(uid_radius.fac= ~1),correlation =  corCAR1(value = 0.5, form = ~year | uid_radius.fac),
                       family = famil)
         data[, res.normalized.LL:=residuals(m.sel$lme, type = "normalized")]
       }
@@ -728,10 +720,11 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
       }
     }
     } # m.option >= 3, for testing spatial effect, and adding s(lat, lon) if necessary
-  # }
+
+   }
 
 
-
+# OUTPUT
   if (m.option < 4){
     if (m.option == 0) msel.gam <- m.sel else msel.gam <- m.sel$gam
   pred.terms  <-as.data.frame( predict(msel.gam, type="terms",se.fit=TRUE))

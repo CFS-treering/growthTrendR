@@ -4,7 +4,7 @@
 \alias{bam_spatial}
 \title{spatial growth model for large dataset or vast geographical coverage}
 \usage{
-bam_spatial(data, resp_scale = "resp_gamma", m.candidates)
+bam_spatial(data, resp_scale = "resp_gamma", m.candidates, sp.option = "AICc")
 }
 \arguments{
 \item{data}{data containing all necessary columns to run the model}
@@ -17,6 +17,12 @@ bam_spatial(data, resp_scale = "resp_gamma", m.candidates)
 }}
 
 \item{m.candidates}{the list of candidate equations.}
+
+\item{sp.option}{Character. Spatial autocorrelation selection method.
+\itemize{
+  \item \strong{"AICc"}: selects spatial structure using AICc comparison.
+  \item \strong{"Moran"}: selects spatial structure based on Moran's I diagnostics.
+}}
 }
 \value{
 list including model, fitting statistics, ptable, stable and prediction table

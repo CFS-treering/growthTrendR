@@ -102,7 +102,7 @@ read_series <- function(fn.lst, year.span = c(1801, 2017),
 
 #' dt.mapping <- dt.samples_trt$tr_all_wide[
 #'   , c(..cols.meta, as.character(1991:1995)), with = FALSE]
-#' results_mapping <- CFS_mapping(dt.mapping, year.span = c(1991:1993))
+#' results_mapping <- CFS_mapping(dt.mapping, year.span = c(1991,1993))
 #' }
 #'
 
@@ -149,7 +149,10 @@ CFS_mapping <- function(data, year.span = c(1801, 2017),
   # data.yr <- data[, sort(c(non_year_idx, year_idx)), with = FALSE]
   data.yr <- data[, c(non_year_idx, year_idx_select), with = FALSE]
   year_idx.new <- (length(non_year_idx) + 1):ncol(data.yr)
-  if (length(grep("^\\d+$", names(data))) > 0) names(data.yr)[year_idx.new] <- paste0("X", names(data.yr)[year_idx.new])
+  # if (length(grep("^\\d+$", names(data))) > 0) names(data.yr)[year_idx.new] <- paste0("X", names(data.yr)[year_idx.new])
+
+  idx <- grepl("^\\d+$", names(data.yr)[year_idx.new])
+  names(data.yr)[year_idx.new][idx] <- paste0("X", names(data.yr)[year_idx.new][idx])
 
   #----------------------------
   # Create grid (Canada extent or user-defined)

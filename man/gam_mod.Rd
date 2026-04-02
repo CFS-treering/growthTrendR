@@ -4,7 +4,7 @@
 \alias{gam_mod}
 \title{generalized additive model}
 \usage{
-gam_mod(data, resp_scale = "", m.candidates)
+gam_mod(data, resp_scale = "", m.candidates, sp.option = "AICc")
 }
 \arguments{
 \item{data}{data containing all necessary columns to run the model}
@@ -17,6 +17,12 @@ gam_mod(data, resp_scale = "", m.candidates)
 }}
 
 \item{m.candidates}{the list of candidate equations.}
+
+\item{sp.option}{Character. Spatial autocorrelation selection method.
+\itemize{
+  \item \strong{"AICc"}: selects spatial structure using AICc comparison.
+  \item \strong{"Moran"}: selects spatial structure based on Moran's I diagnostics.
+}}
 }
 \value{
 list including model, fitting statistics, ptable, stable and prediction table

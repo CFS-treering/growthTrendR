@@ -653,7 +653,7 @@ get_template_and_params <- function(robj_class) {
     scale        = c("robj"),
     freq         = c("robj", "freq.out_species"),
     qa           = c("robj", "qa.out_series"),
-    gif          = c("robj", "animation_fps", "data.crs", "png.text", "rmd_output")
+    map          = c("robj", "animation_fps", "data.crs", "png.text")
   )
 
   template_name <- class_to_template[[robj_class]]

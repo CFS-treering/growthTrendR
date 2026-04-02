@@ -165,7 +165,7 @@ if (any(c(2,4) %in% reports.sel)) {
   
   
 
-if (rep_site %in% reports.sel) dt.site.out <- growthTrendR:::table_spc_site(dt.radii.spc, rw_ref, scale.max_dist_km, N.nbs.qa) else dt.site.out <- data.table()
+if (rep_site %in% reports.sel) dt.site.out <- growthTrendR:::table_spc_site(dt.radii.spc, rw_ref, N.nbs.qa, scale.max_dist_km) else dt.site.out <- data.table()
 if (rep_species %in% reports.sel)summary_spc <- growthTrendR:::table_spc(tr_6i,dt.radii.spc) else summary_spc <- data.table()
 
 return(list(dt.spc_radii=dt.radii.spc, dt.spc_site = dt.site.out, dt.spc = summary_spc, qa_code = qa_code) )
@@ -353,13 +353,16 @@ plots_per_page <- 2
 for (page in seq(1, n_plots, by = plots_per_page)) {
   # Select plots for this page (1 or 2)
   plots_this_page <- plot_list.rw[page:min(page + 1, n_plots)]
-  
+  plots_with_margin <- lapply(plots_this_page, function(p) {
+    p + theme(plot.margin = margin(5, 5, 5, 5))
+  })
   # Combine and print
-  print(
-    wrap_plots(plots_this_page, ncol = length(plots_this_page)) +
-      plot_annotation() &
-      theme(plot.margin = margin(5, 5, 5, 5))
-  )
+  # print(
+  #   wrap_plots(plots_this_page, ncol = length(plots_this_page)) +
+  #     plot_annotation() &
+  #     theme(plot.margin = margin(5, 5, 5, 5))
+  # )
+   gridExtra::grid.arrange(grobs = plots_with_margin, ncol = length(plots_with_margin))
 }
 
 

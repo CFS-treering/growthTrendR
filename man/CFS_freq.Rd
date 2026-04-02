@@ -5,7 +5,7 @@
 \title{frequency distributions by geo-location per species}
 \usage{
 CFS_freq(
-  tr_meta,
+  data,
   freq.label_data = "",
   freq.uid_level = "uid_radius",
   freq.cutoff_year = -999,
@@ -13,15 +13,17 @@ CFS_freq(
 )
 }
 \arguments{
-\item{tr_meta}{meta table from function CFS_format()}
+\item{data}{meta table from function CFS_format()}
 
-\item{freq.label_data}{description of tr_meta}
+\item{freq.label_data}{description of data}
 
 \item{freq.uid_level}{which uid level to count(uid_project, uid_site, uid_tree, uid_meas, uid_sample, uid_radius)}
 
 \item{freq.cutoff_year}{cut-off year for a subset which series were recorded on or after}
 
-\item{freq.geo_resolution}{resolution of longitude and latitude in degree, default: c(5,5)}
+\item{freq.geo_resolution}{Numeric vector (lon, lat) giving spatial
+resolution in degrees (e.g., c(5, 3)). If NULL, each value defaults
+to one quarter of the corresponding coordinate range.}
 }
 \value{
 a data table of counts of uid by latitude-longitude per species
