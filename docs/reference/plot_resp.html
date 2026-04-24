@@ -21,7 +21,7 @@ Small samples automatically trigger the "posterior" method for more robust CIs.'
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">growthTrendR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3</span>
       </span>
     </div>
 
@@ -36,6 +36,9 @@ Small samples automatically trigger the "posterior" method for more robust CIs.'
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
+      <a href="../articles/demo_vgn3_models.html">Generalized Additive Models</a>
+    </li>
+    <li>
       <a href="../articles/vgn0_Introduction.html">Introduction</a>
     </li>
     <li>
@@ -46,6 +49,9 @@ Small samples automatically trigger the "posterior" method for more robust CIs.'
     </li>
     <li>
       <a href="../articles/vgn3_models.html">Generalized Additive Models</a>
+    </li>
+    <li>
+      <a href="../articles/vgn4_others.html">Data Exploration and Dynamics</a>
     </li>
   </ul></li>
       </ul><ul class="nav navbar-nav navbar-right"></ul></div><!--/.nav-collapse -->
@@ -71,7 +77,7 @@ Small samples automatically trigger the "posterior" method for more robust CIs.<
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_resp</span><span class="op">(</span><span class="va">robj</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_resp</span><span class="op">(</span><span class="va">robj</span>, model.ci_method <span class="op">=</span> <span class="st">"posterior"</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -80,6 +86,10 @@ Small samples automatically trigger the "posterior" method for more robust CIs.<
 
 <dl><dt id="arg-robj">robj<a class="anchor" aria-label="anchor" href="#arg-robj"></a></dt>
 <dd><p>R object from the modelling functions.</p></dd>
+
+
+<dt id="arg-model-ci-method">model.ci_method<a class="anchor" aria-label="anchor" href="#arg-model-ci-method"></a></dt>
+<dd><p>Character. One of <code>"delta_link"</code>, <code>"delta_resp"</code>, <code>"bootstrap_link"</code>, <code>"bootstrap_resp"</code>, <code>"posterior"</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -105,7 +115,7 @@ Small samples automatically trigger the "posterior" method for more robust CIs.<
 <span class="r-in"><span><span class="va">m.spatial</span> <span class="op">&lt;-</span><span class="fu"><a href="gamm_spatial.html">gamm_spatial</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  data <span class="op">=</span> <span class="va">dt.m</span>, resp_scale <span class="op">=</span> <span class="st">"resp_log"</span>,</span></span>
 <span class="r-in"><span>  m.candidates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span> <span class="st">"bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + s(FFD)"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">plots.lst</span> <span class="op">&lt;-</span> <span class="fu">plot_resp</span><span class="op">(</span><span class="va">m.spatial</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">plots.lst</span> <span class="op">&lt;-</span> <span class="fu">plot_resp</span><span class="op">(</span><span class="va">m.spatial</span>, model.ci_resp <span class="op">=</span> <span class="st">"posterior"</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Small sample detected (n &lt; 30). Switching CI method to 'posterior' for robustness.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>

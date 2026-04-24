@@ -25,7 +25,7 @@ Five methods are supported:
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">growthTrendR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3</span>
       </span>
     </div>
 
@@ -40,6 +40,9 @@ Five methods are supported:
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
+      <a href="../articles/demo_vgn3_models.html">Generalized Additive Models</a>
+    </li>
+    <li>
       <a href="../articles/vgn0_Introduction.html">Introduction</a>
     </li>
     <li>
@@ -50,6 +53,9 @@ Five methods are supported:
     </li>
     <li>
       <a href="../articles/vgn3_models.html">Generalized Additive Models</a>
+    </li>
+    <li>
+      <a href="../articles/vgn4_others.html">Data Exploration and Dynamics</a>
     </li>
   </ul></li>
       </ul><ul class="nav navbar-nav navbar-right"></ul></div><!--/.nav-collapse -->
@@ -83,7 +89,8 @@ Five methods are supported:
 <span>  <span class="va">model</span>,</span>
 <span>  <span class="va">newdata</span>,</span>
 <span>  nboot <span class="op">=</span> <span class="fl">100</span>,</span>
-<span>  method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"posterior"</span>, <span class="st">"delta_link"</span>, <span class="st">"delta_resp"</span>, <span class="st">"bootstrap_link"</span>, <span class="st">"bootstrap_resp"</span><span class="op">)</span>,</span>
+<span>  model.ci_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"posterior"</span>, <span class="st">"delta_link"</span>, <span class="st">"delta_resp"</span>, <span class="st">"bootstrap_link"</span>,</span>
+<span>    <span class="st">"bootstrap_resp"</span><span class="op">)</span>,</span>
 <span>  level <span class="op">=</span> <span class="fl">0.95</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -104,7 +111,7 @@ Five methods are supported:
 <dd><p>Integer. Number of bootstrap or posterior samples. Default 1000.</p></dd>
 
 
-<dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
+<dt id="arg-model-ci-method">model.ci_method<a class="anchor" aria-label="anchor" href="#arg-model-ci-method"></a></dt>
 <dd><p>Character. One of <code>"delta_link"</code>, <code>"delta_resp"</code>, <code>"bootstrap_link"</code>, <code>"bootstrap_resp"</code>, <code>"posterior"</code>.</p></dd>
 
 

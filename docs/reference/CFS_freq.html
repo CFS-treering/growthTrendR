@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">growthTrendR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3</span>
       </span>
     </div>
 
@@ -32,6 +32,9 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
+      <a href="../articles/demo_vgn3_models.html">Generalized Additive Models</a>
+    </li>
+    <li>
       <a href="../articles/vgn0_Introduction.html">Introduction</a>
     </li>
     <li>
@@ -42,6 +45,9 @@
     </li>
     <li>
       <a href="../articles/vgn3_models.html">Generalized Additive Models</a>
+    </li>
+    <li>
+      <a href="../articles/vgn4_others.html">Data Exploration and Dynamics</a>
     </li>
   </ul></li>
       </ul><ul class="nav navbar-nav navbar-right"></ul></div><!--/.nav-collapse -->
@@ -64,7 +70,7 @@
 
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">CFS_freq</span><span class="op">(</span></span>
-<span>  <span class="va">tr_meta</span>,</span>
+<span>  <span class="va">data</span>,</span>
 <span>  freq.label_data <span class="op">=</span> <span class="st">""</span>,</span>
 <span>  freq.uid_level <span class="op">=</span> <span class="st">"uid_radius"</span>,</span>
 <span>  freq.cutoff_year <span class="op">=</span> <span class="op">-</span><span class="fl">999</span>,</span>
@@ -76,12 +82,12 @@
     <h2>Arguments</h2>
 
 
-<dl><dt id="arg-tr-meta">tr_meta<a class="anchor" aria-label="anchor" href="#arg-tr-meta"></a></dt>
+<dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>meta table from function CFS_format()</p></dd>
 
 
 <dt id="arg-freq-label-data">freq.label_data<a class="anchor" aria-label="anchor" href="#arg-freq-label-data"></a></dt>
-<dd><p>description of tr_meta</p></dd>
+<dd><p>description of data</p></dd>
 
 
 <dt id="arg-freq-uid-level">freq.uid_level<a class="anchor" aria-label="anchor" href="#arg-freq-uid-level"></a></dt>
@@ -93,7 +99,9 @@
 
 
 <dt id="arg-freq-geo-resolution">freq.geo_resolution<a class="anchor" aria-label="anchor" href="#arg-freq-geo-resolution"></a></dt>
-<dd><p>resolution of longitude and latitude in degree, default: c(5,5)</p></dd>
+<dd><p>Numeric vector (lon, lat) giving spatial
+resolution in degrees (e.g., c(5, 3)). If NULL, each value defaults
+to one quarter of the corresponding coordinate range.</p></dd>
 
 </dl></div>
     <div id="value">

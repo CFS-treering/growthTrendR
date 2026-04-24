@@ -1,10 +1,12 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>/404.html</loc></url>
+<url><loc>/articles/demo_vgn3_models.html</loc></url>
 <url><loc>/articles/index.html</loc></url>
 <url><loc>/articles/vgn0_Introduction.html</loc></url>
 <url><loc>/articles/vgn1_data_processing.html</loc></url>
 <url><loc>/articles/vgn2_data_quality.html</loc></url>
 <url><loc>/articles/vgn3_models.html</loc></url>
+<url><loc>/articles/vgn4_others.html</loc></url>
 <url><loc>/authors.html</loc></url>
 <url><loc>/index.html</loc></url>
 <url><loc>/reference/bam_spatial.html</loc></url>
