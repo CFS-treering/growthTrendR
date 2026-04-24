@@ -137,9 +137,6 @@ This argument allows users to export the HTML-formatted report to a specified lo
 
 
 ```{r data_report_inclu, echo = FALSE, results = 'asis'}
-# cat('<div style="border: 5px solid #4682B4; border-radius: 8px; padding: 10px; 
-#           margin: 15px 0; background-color: #f9f9f9; 
-#           max-height: 400px; overflow-y: scroll;">')
 cat('
 <div style="margin: 20px 0; padding: 10px; 
             box-shadow: 0 2px 8px rgba(0,0,0,0.1); 

@@ -40,7 +40,7 @@ This report presents an analysis of the distribution of samples across geographi
 <br>
   <br>
 
-```{r  results='asis', warning=FALSE, message=FALSE, fig.width=10, fig.height=5, fig.align='left'}
+```{r  results='asis', warning=FALSE, message=FALSE, fig.width=10, fig.height=5,out.width='100%',fig.align='left', dpi=200}
 
 
 plt.lst <- plot_freq(dt.freq = robj, out.species = params$freq.out_species)

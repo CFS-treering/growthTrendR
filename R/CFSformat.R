@@ -353,8 +353,8 @@ CFS_freq <- function(data, freq.label_data = "", freq.uid_level = "uid_radius", 
   dt.meta.sel <- data[rw_yend >= freq.cutoff_year, c(unique(c("uid_radius", freq.uid_level)), "longitude", "latitude",  "species"), with = FALSE]
 
   if (is.null(freq.geo_resolution) ) {
-    freq.geo_resolution[1] <- (max(data$longitude) - min(data$longitude))/4
-    freq.geo_resolution[2] <- (max(data$latitude) - min(data$latitude))/4
+    freq.geo_resolution[1] <- max(round((max(data$longitude) - min(data$longitude))/4), 1)
+    freq.geo_resolution[2] <- max(round((max(data$latitude) - min(data$latitude))/4), 1)
   }else{
     if (!is.numeric(freq.geo_resolution) ||
         length(freq.geo_resolution) != 2 ||

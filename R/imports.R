@@ -21,12 +21,14 @@
 
 #' @importFrom terra rast crs mask vect xyFromCell values
 #' @importFrom terra crop writeRaster ncell project
+#' @importFrom sf st_as_sf st_cast st_read st_transform
 
 #' @importFrom raster extent crs crs<- raster xyFromCell
 #' @importFrom raster crop clamp plot crs crs<-
 #' @importFrom grDevices png dev.off colorRampPalette gray.colors dev.cur
 #' @importFrom graphics par rect axis layout mtext grid
 #' @importFrom curl curl
+# #' @importFrom rnaturalearth ne_countries
 
 
 

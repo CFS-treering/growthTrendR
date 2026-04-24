@@ -128,6 +128,7 @@ cor_avg <- function(data){
 #'
 
 #' @examples
+#'
 #' # loading formatted
 #' dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 #' all.sites <- dt.samples_trt$tr_all_wide[,.N, by = c("species", "uid_site", "site_id")][, N:=NULL]
@@ -143,6 +144,8 @@ cor_avg <- function(data){
 
 #' dt.scale <- CFS_scale( target_site = target_site, ref_sites = ref.sites,
 #' scale.label_data_ref = "demo-samples", scale.max_dist_km = 200, scale.N_nbs = 2)
+#'
+#'
 
 #'
 
@@ -240,23 +243,46 @@ CFS_scale <- function(target_site, ref_sites,
                         by = "uid_site")
 
     # compute median stats
-    med.site <- rw.closest[
-      , .(N = .N, rw.median = median(rw_mm), yr.mn = min(year), yr.max = max(year)),
-      by = .(ord, species, uid_site, longitude, latitude, uid_radius)
-    ][
-      , .(Ncores = .N, rw.median = round(median(rw.median), 2),
-          yr.mn = min(yr.mn), yr.max = max(yr.max)),
-      by = .(ord, species, uid_site, longitude, latitude)
-    ]
+    # med.site <- rw.closest[
+    #   , .(N = .N, rw.median = median(rw_mm), yr.mn = min(year), yr.max = max(year)),
+    #   by = .(ord, species, uid_site, longitude, latitude, uid_radius)
+    # ][
+    #   , .(Ncores = .N, rw.median = round(median(rw.median), 2),
+    #       yr.mn = min(yr.mn), yr.max = max(yr.max)),
+    #   by = .(ord, species, uid_site, longitude, latitude)
+    # ]
+    #
+    # med.site.yr <- rw.closest[
+    #   , .(N = .N, rw.median = median(rw_mm)),
+    #   by = .(ord, species, uid_site, uid_radius, year)
+    # ][
+    #   , .(Ncores = .N, rw.median = median(rw.median)),
+    #   by = .(ord, species, uid_site, year)
+    # ]
 
-    med.site.yr <- rw.closest[
-      , .(N = .N, rw.median = median(rw_mm)),
-      by = .(ord, species, uid_site, uid_radius, year)
-    ][
-      , .(Ncores = .N, rw.median = median(rw.median)),
-      by = .(ord, species, uid_site, year)
-    ]
 
+        Ncores <- rw.closest[
+          , .N,
+          by = .(ord, species, uid_site,uid_radius)
+        ][, .(Ncores = .N), by = .(ord, species, uid_site)]
+        med.site <- rw.closest[
+          , .(rw.median = round(median(rw_mm), 2),
+              yr.mn = min(year), yr.max = max(year)),
+          by = .(ord, species, uid_site, longitude, latitude)
+        ]
+        med.site <- merge(Ncores, med.site, by = c("ord", "species", "uid_site"))
+        med.site.yr <- rw.closest[
+          , .(Ncores = .N, rw.median = median(rw_mm)),
+          by = .(ord, species, uid_site, year)
+        ]
+
+    # med.site.yr1 <- rw.closest[
+    #   , .(N = .N, rw.median = median(rw_mm)),
+    #   by = .(ord, species, uid_site, uid_radius, year)
+    # ][
+    #   , .(Ncores = .N, rw.median = median(rw.median)),
+    #   by = .(ord, species, uid_site, year)
+    # ]
     setorder(med.site.yr, ord, uid_site, year)
 
     # ratio to target site (ord == 0)
@@ -272,13 +298,39 @@ CFS_scale <- function(target_site, ref_sites,
       warning("Some values in rw.ratio are outside the defined breaks.")
     }
 
+
+    # rw.median <- data.table(
+    #   med.site[ord == 0, .(uid_site, species, rw.median)],
+    #   med.site[ord > 0, .(scale.N_nbs = .N,
+    #                       rw.min.nbs = min(rw.median),
+    #                       rw.max.nbs = max(rw.median),
+    #                       rw.median.nbs = median(rw.median))]
+    # )[, ratio_median := round(rw.median / rw.median.nbs, 2)]
+
+
+    # adding more stats as reviewer required
+    rw.stats <- rw.closest[
+      , .(rw.median = round(median(rw_mm), 2),
+          rw.sd = round(sd(rw_mm), 2),
+          rw.min = round(min(rw_mm), 2),
+          rw.p25 = round(quantile(rw_mm, 0.25),2),
+          rw.p75 = round(quantile(rw_mm, 0.75),2),
+          rw.max = round(max(rw_mm), 2),
+          yr.mn = min(year), yr.max = max(year)),
+      by = .(ord==0, species)
+    ]
+    rw.stats[, var:= ifelse(ord == TRUE, "tgt", "nbs")]
+    # all value columns
+    valcols <- grep("^rw.", names(rw.stats), value = TRUE)
+
+    # keep id == 1 and reshape wide
+    out <- dcast(
+      rw.stats,      species  ~ var,
+      value.var = valcols
+    )
     rw.median <- data.table(
-      med.site[ord == 0, .(uid_site, species, rw.median)],
-      med.site[ord > 0, .(scale.N_nbs = .N,
-                          rw.min.nbs = min(rw.median),
-                          rw.max.nbs = max(rw.median),
-                          rw.median.nbs = median(rw.median))]
-    )[, ratio_median := round(rw.median / rw.median.nbs, 2)]
+      med.site[ord == 0, .(uid_site)], N_nbs = nrow(med.site[ord > 0]), out)[, ratio_median := round(rw.median_tgt / rw.median_nbs, 2)]
+
     dt.plots <-list(med.site.yr = med.site.yr, med.site = med.site)
     }
     result <- list(

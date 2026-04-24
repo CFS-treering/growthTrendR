@@ -9,6 +9,7 @@ highlight: tango
 
 params:
   robj: NULL
+  model.ci_method: !R "posterior"
 ---
 
 ```{r setup_model, include=FALSE}
@@ -102,7 +103,7 @@ if ("bam" %in% class(robj$model)) {
   cat("<br>")
   plot.gam(robj$model, pages = 1)
 }else{
-plot_list <- plot_resp(robj = robj)
+plot_list <- plot_resp(robj = robj, model.ci_method = params$model.ci_method)
 
 # combined <- plot_grid(
 #   plotlist = plot_list,

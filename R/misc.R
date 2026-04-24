@@ -355,7 +355,21 @@ read_rwl <-function (dir.src, rwl) {
 # print(paste0(rwl, " ", comments.rw))
 # if (nchar(comments.rw) < 7) comments.rw <- ""
 dt.header$comments.rw <- comments.rw
-  return(list(dt.header = dt.header, dt.rw_long = dt.rwl.long))
+
+
+cols.header <- c("fn",  "site_ID", "site_name", "spc_code", "Stat_con", "species", "elev", "lat", "lon",
+                 "investigators",  "comments.header", "comments.rw" )
+rwl.header <- dt.header[, cols.header, with = FALSE]
+rwl.long <- merge(rwl.header, dt.rwl.long, by = "fn")
+setorder(rwl.long, fn, id.core, year)
+rwl.wide <- dcast(
+  dt.rwl.long,
+  fn + id.core ~ year,
+  value.var = "rw_mm"
+)
+
+rwl.wide <- merge(rwl.header, rwl.wide, by = "fn")
+  return(list(rwl.wide = rwl.wide, rwl.long = rwl.long))
 }
 
 

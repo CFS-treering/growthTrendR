@@ -646,7 +646,7 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
 
 
   }
-    if (sp.option == "Moran"){
+    # if (sp.option == "Moran"){
     # further for spatial effect
     if (m.option >= 3 & all(c("latitude", "longitude") %in% names(data))){
 
@@ -669,7 +669,9 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
       names(moran.I.r) <- paste0(names(moran.I.r), ".res")
       moranI <- cbind(moran.I.o, moran.I.r)
       rm(nb, knea, moran.I.o, moran.I.r)
-      if (moranI$p.value.obs < 0.1 & moranI$p.value.res < 0.1 ) {
+
+
+      if (sp.option == "Moran" & moranI$p.value.obs < 0.1 & moranI$p.value.res < 0.1 ) {
       if (m.option == 3)  {
         form.sel <- update(m.sel$gam$formula, . ~ . + s(latitude, longitude, bs = "tp"))
         m.sel <- gamm(form.sel,  data = data,
@@ -717,11 +719,11 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
         names(moran.I.r_LL) <- paste0(names(moran.I.r_LL), ".res_LL")
         moranI <- cbind(moranI, moran.I.r_LL)
 
-      }
-    }
+      } # sp.option == "Moran" & moranI$p.value.obs < 0.1 & moranI$p.value.res < 0.1
+    } #nrow(y.site) > 5
     } # m.option >= 3, for testing spatial effect, and adding s(lat, lon) if necessary
 
-   }
+   # }#moran
 
 
 # OUTPUT
@@ -975,7 +977,7 @@ sterm_imp <- function(gam_model, method = c("ssq", "var", "meanabs")) {
 #' @param model A fitted GAM object from \code{mgcv::gam}.
 #' @param newdata A data.frame containing values at which to predict.
 #' @param nboot Integer. Number of bootstrap or posterior samples. Default 1000.
-#' @param method Character. One of \code{"delta_link"}, \code{"delta_resp"}, \code{"bootstrap_link"}, \code{"bootstrap_resp"}, \code{"posterior"}.
+#' @param model.ci_method Character. One of \code{"delta_link"}, \code{"delta_resp"}, \code{"bootstrap_link"}, \code{"bootstrap_resp"}, \code{"posterior"}.
 #' @param level Numeric. Confidence level, default 0.95.
 #'
 #' @return A \code{data.table} with columns: \code{fit}, \code{lwr}, \code{upr}.
@@ -1002,7 +1004,7 @@ sterm_imp <- function(gam_model, method = c("ssq", "var", "meanabs")) {
 #' dt.ci <- ci_resp(m.sp$model$gam, newdata = dt.m)
 #'
 ci_resp <- function(model, newdata, nboot = 100,
-                    method = c("posterior", "delta_link", "delta_resp", "bootstrap_link", "bootstrap_resp"),
+                    model.ci_method = c("posterior", "delta_link", "delta_resp", "bootstrap_link", "bootstrap_resp"),
                     level = 0.95) {
 
   check_optional_deps()
@@ -1010,9 +1012,9 @@ ci_resp <- function(model, newdata, nboot = 100,
   if (nrow(newdata) < 30) {
     message("Small sample detected (n < ", "30",
             "). Switching CI method to 'posterior' for robustness.")
-    method <- "posterior"
+    model.ci_method <- "posterior"
   } else {
-    method <- match.arg(method)
+    model.ci_method <- match.arg(model.ci_method)
   }
 
   alpha <- (1 - level)/2
@@ -1034,7 +1036,7 @@ ci_resp <- function(model, newdata, nboot = 100,
     q_high <- pred$fit + qnorm(1 - alpha) * pred$se.fit
     out [, c("fit", "lwr", "upr"):= .(pred$fit, q_low, q_high)]
   }else{
-  if (method == "delta_link") {
+  if (model.ci_method == "delta_link") {
     pred <- predict(model, newdata, type = "link", se.fit = TRUE)
     q_low  <- pred$fit - qnorm(1 - alpha) * pred$se.fit
     q_high <- pred$fit + qnorm(1 - alpha) * pred$se.fit
@@ -1042,17 +1044,17 @@ ci_resp <- function(model, newdata, nboot = 100,
 
 
 
-  } else if (method == "delta_resp") {
+  } else if (model.ci_method == "delta_resp") {
     pred <- predict(model, newdata, type = "link", se.fit = TRUE)
     var_resp <- (exp(pred$fit))^2 * (pred$se.fit)^2
     se_resp <- sqrt(var_resp)
     out [, c("fit", "lwr", "upr"):= .(exp(pred$fit), fit_resp - qnorm(1 - alpha) * se_resp, fit_resp + qnorm(1 - alpha) * se_resp )]
 
-  } else if (method %in% c("bootstrap_link", "bootstrap_resp")) {
+  } else if (model.ci_method %in% c("bootstrap_link", "bootstrap_resp")) {
     beta_star <- MASS::mvrnorm(nboot, coefs, Vb)
     eta_star <- X %*% t(beta_star)
 
-    if (method == "bootstrap_link") {
+    if (model.ci_method == "bootstrap_link") {
       q_low  <- apply(eta_star, 1, quantile, probs = alpha)
       q_high <- apply(eta_star, 1, quantile, probs = 1 - alpha)
       out [, c("fit", "lwr", "upr"):= .(fit_resp, exp(q_low), exp(q_high) )]
@@ -1069,7 +1071,7 @@ ci_resp <- function(model, newdata, nboot = 100,
       out [, c("fit", "lwr", "upr"):= .(fit_resp, q_low, q_high )]
     }
 
-  } else if (method == "posterior") {
+  } else if (model.ci_method == "posterior") {
     beta_star <- mgcv::rmvn(nboot, coefs, Vb)
     eta_star <- X %*% t(beta_star)
     y_star <- exp(eta_star)
@@ -1078,6 +1080,6 @@ ci_resp <- function(model, newdata, nboot = 100,
     out [, c("fit", "lwr", "upr"):= .(fit_resp, q_low, q_high )]
   }
     }
-  out$ci_method <- method
+  out$ci_method <- model.ci_method
   return(out)
 }

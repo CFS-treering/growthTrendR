@@ -9,6 +9,7 @@
 ^doc/
 ^docs/
 ^inst/publication$
+^dev$
 
 # Vignettes - remove all .R, .html, cache and figure folders, keep only .Rmd
 ^vignettes/.*\.R$
@@ -23,7 +24,7 @@
 ^inst/rmd/_files/
 
 # Optional: ignore specific vignettes if needed
-^vignettes/vgn.*
+^vignettes/demo_vgn.*
 
 
 

@@ -129,12 +129,6 @@ generate_report(robj = dt.scale, output_file = outfile_scale)
 ```
 
 ```{r scale_inclu, echo = FALSE, results = 'asis'}
-# cat('<div style="border: 5px solid #4682B4; border-radius: 8px; padding: 10px; 
-#           margin: 15px 0; background-color: #f9f9f9;">')
-# cat('<div style="border: 5px solid #4682B4; border-radius: 8px; padding: 10px; 
-#           margin: 15px 0; background-color: #f9f9f9; 
-#           max-height: 400px; overflow-y: scroll;">')
-
 
 cat('
 <div style="margin: 20px 0; padding: 10px; 
@@ -223,9 +217,6 @@ generate_report(robj = dt.qa,  qa.out_series = chk.lst, output_file = outfile_qa
 ```
 
 ```{r qa_inclu, echo = FALSE, results = 'asis'}
-# cat('<div style="border: 5px solid #4682B4; border-radius: 8px; padding: 10px; 
-#           margin: 15px 0; background-color: #f9f9f9; 
-#           max-height: 400px; overflow-y: scroll;">')
 
 cat('
 <div style="margin: 20px 0; padding: 10px; 

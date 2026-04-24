@@ -204,6 +204,17 @@ create_barplot <- function(icol, data) {
 #'
 
 plot_freq <- function(dt.freq, out.species = "all" ) {
+  check_optional_deps()
+  if (!requireNamespace( "rnaturalearth", quietly = TRUE)) {
+    stop("Package 'rnaturalearth' is required for this feature.")
+  }
+  if (!requireNamespace( "sf", quietly = TRUE)) {
+    stop("Package 'sf' is required for this feature.")
+  }
+  world <- rnaturalearth::ne_countries(
+    scale = "medium",
+    returnclass = "sf"
+  )
   if (!inherits(dt.freq, "cfs_freq")) stop("please check the input of dt.freq, make sure it's the result of CFS_freq() function")
   uid_label <- str_split(unique(dt.freq$dist_uids$uid_label), "_yr",2)[[1]]
   # if (!is.na(uid_label[2])) title.tmp <- paste0( str_sub(uid_label[1], 5), " distribution by year ",uid_label[2]) else
@@ -236,30 +247,71 @@ plot_freq <- function(dt.freq, out.species = "all" ) {
   # Split into chunks
   chunks <- split(spc_pcts, ceiling(seq_along(spc_pcts) / 2))
 
-
+  if ( dt.freq$freq.parms$freq.cutoff_year > 0) titlea <- paste0(str_sub(dt.freq$freq.parms$freq.uid_level, 5),
+                 " distribution by year ", dt.freq$freq.parms$freq.cutoff_year) else
+                   titlea <- paste0(str_sub(dt.freq$freq.parms$freq.uid_level, 5),  " distribution")
 plt.lst <- list()
   for (i in seq_along(chunks)) {
     # Subset data for the current chunk
     data.i <- data.tmp[data.tmp$spc.pct %in% chunks[[i]], ]
 
-    p1 <- ggplot(data.i, aes(x = lon, y = lat, size = nuids)) + facet_wrap(~spc.pct, ncol = 1, nrow = 2) +
-      geom_point(alpha = 0.6, color = "darkblue") +
-      scale_size_continuous(range = c(1, 10)) + # Adjust size range as needed
-      scale_x_continuous(breaks = sort(unique(data.tmp$lon))) + # Set x-axis ticks to unique values of 'lat'
+    # p1 <- ggplot(data.i, aes(x = lon, y = lat, size = nuids)) + facet_wrap(~spc.pct, ncol = 1, nrow = 2) +
+    #   geom_point(alpha = 0.6, color = "darkblue") +
+    #   scale_size_continuous(range = c(1, 10)) + # Adjust size range as needed
+    #   scale_x_continuous(breaks = sort(unique(data.tmp$lon))) + # Set x-axis ticks to unique values of 'lat'
+    #
+    #   theme_minimal() +
+    #   theme(strip.text = element_text(size = 16),# Increase the size of facet labels
+    #         panel.grid.minor = element_blank() , # Remove minor grid lines
+    #         plot.title = element_text(size = 25), # Set title size
+    #         plot.margin = margin(t = 10, r = 10, b = 30, l = 30, unit = "pt"), # Adjust plot margins
+    #         plot.caption = element_text(hjust = 0, face = "italic")) + # Customize caption appearance
+    #
+    #   labs(
+    #     # title = title.tmp,
+    #        x = "Longitude",
+    #        y = "Latitude",
+    #        caption = paste0("Data source: ", dt.freq$freq.parms$label_data) , # Add the data source caption
+    #        size = paste0("n.", str_sub(uid_label[1], 5), "s"))
 
+
+
+    # zoom based on points
+    xlim <- range(data.i$lon, na.rm = TRUE) + c(-5, 5)
+    ylim <- range(data.i$lat, na.rm = TRUE) + c(-3, 3)
+    pts <- sf::st_as_sf(data.i, coords = c("lon", "lat"), crs = 4326)
+    p1 <-
+      ggplot() +
+      geom_sf(
+        data = world,
+        fill = "grey95",
+        color = "grey50",
+        linewidth = 0.2
+      ) +
+      geom_sf(
+        data = pts,
+        aes(size = nuids),
+        alpha = 0.6,
+        color = "darkblue"
+      ) +
+      facet_wrap(~spc.pct, ncol = 2, nrow = 1) +  # side by side instead of stacked
+      scale_size_continuous(range = c(1, 10)) +
+      coord_sf(xlim = xlim, ylim = ylim, expand = FALSE) +  # only once
       theme_minimal() +
-      theme(strip.text = element_text(size = 16),# Increase the size of facet labels
-            panel.grid.minor = element_blank() , # Remove minor grid lines
-            plot.title = element_text(size = 25), # Set title size
-            plot.margin = margin(t = 10, r = 10, b = 30, l = 30, unit = "pt"), # Adjust plot margins
-            plot.caption = element_text(hjust = 0, face = "italic")) + # Customize caption appearance
-
+      theme(
+        strip.text = element_text(size = 16),
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(size = 25),
+        plot.margin = margin(t = 10, r = 10, b = 30, l = 30, unit = "pt"),
+        plot.caption = element_text(hjust = 0, face = "italic")
+      ) +
       labs(
-        # title = title.tmp,
-           x = "Longitude",
-           y = "Latitude",
-           caption = paste0("Data source: ", dt.freq$freq.parms$label_data) , # Add the data source caption
-           size = paste0("n.", str_sub(uid_label[1], 5), "s"))
+        title = titlea,
+        x = "Longitude",
+        y = "Latitude",
+        caption = paste0("Data source: ", dt.freq$freq.parms$freq.label_data),
+        size = paste0("n.", stringr::str_sub(uid_label[1], 5))
+      )
 
     plt.lst[[i]] <- p1
 
@@ -673,6 +725,7 @@ get_template_and_params <- function(robj_class) {
 #' Small samples automatically trigger the "posterior" method for more robust CIs.
 #'
 #' @param robj R object from the modelling functions.
+#' @param model.ci_method Character. One of \code{"delta_link"}, \code{"delta_resp"}, \code{"bootstrap_link"}, \code{"bootstrap_resp"}, \code{"posterior"}.
 #' @param ... Additional arguments passed to \code{ci_resp()}.
 #'
 #' @return A list of ggplot objects, one per smooth term.
@@ -694,12 +747,12 @@ get_template_and_params <- function(robj_class) {
 #'   m.candidates = c( "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + s(FFD)"))
 
 
-#' plots.lst <- plot_resp(m.spatial)
+#' plots.lst <- plot_resp(m.spatial, model.ci_resp = "posterior")
 #'
 #'
 
 #' @export
-plot_resp <- function(robj, ...) {
+plot_resp <- function(robj,  model.ci_method = "posterior", ...) {
   check_optional_deps()
   if (is.list(robj$model) && ("gamm" %in% class(robj$model))) model <- robj$model$gam else model <- robj$model
 
@@ -776,7 +829,7 @@ plot_resp <- function(robj, ...) {
 
 
     # Compute CI using ci_resp()
-    dt.pred <- ci_resp(model, newdata = nd)
+    dt.pred <- ci_resp(model, newdata = nd, model.ci_method = model.ci_method)
 
     # Combine predictions and CI
     # dt.pred <- cbind(nd, ci_dt)
