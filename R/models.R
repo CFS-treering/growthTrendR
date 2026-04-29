@@ -424,7 +424,7 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
         # r1 <- start_value_rho(m0, plot=TRUE)
         # print (paste0(Sys.time(), "          ar1"))
         # m.tmp <- bam(formul, data=data, rho=start_value_rho(m0.tmp, plot=FALSE), AR.start=data$start.event, method = "ML")
-        setorder(data, uid_site, uid_radius, ageC)
+        setorder(data, uid_site, uid_radius, year)
         rho.start <- acf(resid(m0.tmp), plot = FALSE)$acf[2]
         rho.start <- max(min(rho.start, 0.9), -0.9)  # safety clamp
 
@@ -593,7 +593,7 @@ main_model <- function(data, resp_scale = "resp_gaussian", m.option, m.candidate
 
 
 
-      setorder(data, uid_site, uid_radius, ageC)
+      setorder(data, uid_site, uid_radius, year)
       # data[, start.event := c(TRUE, rep(FALSE, .N - 1)), by = .(uid_site, uid_radius)]
       # avoid VECTOR_ELT (on macos)
       data$start.event <- ave(
