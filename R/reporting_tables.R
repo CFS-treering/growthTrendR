@@ -98,7 +98,7 @@ table_spc_site <- function(dt.radii.spc, rw_ref,  scale.N_nbs, scale.max_dist_km
     )
     # summary table of spc
 
-    dt.site.out <- merge(dt.site.stats, dt.scale.all[, c("uid_site", "rw.median", "rw.median.nbs", "ratio_median")], all.x = TRUE,  by = "uid_site")
+    dt.site.out <- merge(dt.site.stats, dt.scale.all[, c("uid_site", "rw.median_tgt", "rw.median_nbs", "ratio_median")], all.x = TRUE,  by = "uid_site")
   }
   return(dt.site.out)
 }
