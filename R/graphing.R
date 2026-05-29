@@ -669,6 +669,16 @@ generate_report <- function(robj, data_report.reports_sel = c(1,2,3,4), output_f
     stop(paste0("Template not found! Ensure ", paste0("template_", tpl_info$template, ".Rmd"),  "is in inst/rmd/ directory."))
   }
 
+# check output_file
+  outfile_good <- validate_pathfile(output_file,
+                           required_ext = "html",
+                           create_dir = FALSE,
+                           allow_overwrite = TRUE,
+                           verbose = TRUE)
+
+  if (is.null(outfile_good)) {
+    stop("Invalid 'output_file'.", call. = FALSE)
+  }
 
   result <- rmarkdown::render(
     input = rmd_file,
@@ -873,5 +883,99 @@ plot_resp <- function(robj,  model.ci_method = "posterior", ...) {
   })
 
   return(p_list)
+}
+
+
+
+#' Validate File Path
+#'
+#' Internal utility to validate a file path.
+#' If `path` is NULL, it is considered valid and returned as NULL.
+#'
+#' @param path Character string or NULL. File path to validate.
+#' @param required_ext Character. Required file extension. Default is "html".
+#' @param create_dir Logical. Whether to create missing directories. Default is FALSE.
+#' @param allow_overwrite Logical. Whether to allow overwriting existing files. Default is TRUE.
+#' @param verbose Logical. If TRUE, prints a confirmation message. Default is FALSE.
+#'
+#' @return Character string or NULL.
+#'
+#' @keywords internal
+#' @noRd
+validate_pathfile <- function(path,
+                              required_ext = "html",
+                              create_dir = FALSE,
+                              allow_overwrite = TRUE,
+                              verbose = FALSE) {
+
+  invalid <- function(x) {
+    if (isTRUE(verbose)) {
+      message(x, " is not valid")
+    }
+    return(NULL)
+  }
+
+  # NULL input = browser mode
+  if (is.null(path)) {
+    if (isTRUE(verbose)) {
+      message("No file path provided: rendering in browser")
+    }
+    return("browser")
+  }
+
+  # Empty input
+  if (!nzchar(trimws(path))) {
+    return(invalid("File path"))
+  }
+
+  # Reject malformed Windows drive-relative paths
+  # catches: c:., c:abc, d:test/file.html
+  if (.Platform$OS.type == "windows") {
+    if (grepl("^[A-Za-z]:(?![/\\\\])", path, perl = TRUE)) {
+      return(invalid("File path"))
+    }
+  }
+
+  file <- basename(path)
+  dir  <- dirname(path)
+
+  if (dir %in% c(".", "")) {
+    dir <- getwd()
+  }
+
+  path <- file.path(dir, file)
+
+  # Filename checks
+  if (!nzchar(file)) return(invalid("Filename"))
+
+  if (grepl('[<>:"/\\\\|?*]', file)) {
+    return(invalid("Filename"))
+  }
+
+  # Extension check
+  ext <- tools::file_ext(file)
+  if (tolower(ext) != tolower(required_ext)) {
+    return(invalid("File extension"))
+  }
+
+  # Directory handling
+  if (!dir.exists(dir)) {
+    if (!create_dir) {
+      return(invalid("Directory"))
+    }
+    dir.create(dir, recursive = TRUE, showWarnings = FALSE)
+  }
+
+  if (file.access(dir, 2) != 0) {
+    return(invalid("Directory"))
+  }
+
+  final_path <- normalizePath(path, winslash = "/", mustWork = FALSE)
+
+  if (isTRUE(verbose)) {
+    message("File location: ", final_path)
+  }
+
+  return(final_path)
 }
 

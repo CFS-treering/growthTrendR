@@ -64,9 +64,16 @@ Ensuring the quality of data measurements is critical to the success of any data
 Ring-width measurements from certain sites may occasionally appear unusually high or low, often due to transformation errors, as tree-ring data is usually stored as integers with an associated scale factor.  The CFS_scale() function addresses this by applying a k-nearest neighbors (k-NN) approach, using geodesic distances on the WGS84 ellipsoid (via the distGeo function from the geosphere package), to identify geographically close sites. It then compares the median tree-ring measurements of the target site to those of its nearest neighbors. This procedure is conducted within the same species.
 
 ```{r scale}
+
+# ring measurement
+# loading data
+dt.samples <- fread(system.file("extdata", "dt.samples.csv", package = "growthTrendR"))
+
+# formatting the users' data conformed to CFS-TRenD data structure
+dt.samples_trt <- CFS_format(data = list(dt.samples, 39:68), usage = 1, out.csv = NULL)
 # loading processed data
 # otherwise need to run CFS_format() first as done in data report
-dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+# dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 # , message = FALSE, warning = FALSE, results = 'hide'
 all.sites <- dt.samples_trt$tr_all_wide[,.N, by = c("species", "uid_site", "site_id")][, N:=NULL]
 if (nrow(all.sites[, .N, by = .(species, site_id)][N>1]) > 0) stop("species-site_id is not unique...")
@@ -106,6 +113,11 @@ This specifies the maximum distance (in kilometers) for searching neighbors of t
 ### **generate report:**
 
 ```{r scale_report_demo, eval= FALSE}
+# default is NULL
+generate_report(robj = dt.scale, output_file = NULL)
+
+# user may also specify the directory and filename, for example
+outfile_scale <- "scale_report.html"
 generate_report(robj = dt.scale, output_file = outfile_scale)
 ```
 
@@ -148,8 +160,13 @@ Tree-ring measurements often exhibit long-term growth trends and interannual var
 
 ```{r qaa, message = FALSE, warning = FALSE, results = 'hide'}
 
+# ring measurement
+dt.samples <- fread(system.file("extdata", "dt.samples.csv", package = "growthTrendR"))
+
+# formatting the users' data conformed to CFS-TRenD data structure
+dt.samples_trt <- CFS_format(data = list(dt.samples, 39:68), usage = 1, out.csv = NULL)
 # loading processed data
-dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
+# dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 
 
 # data processing

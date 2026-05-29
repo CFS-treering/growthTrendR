@@ -42,7 +42,7 @@ Imports:
   ggplot2 (>= 3.0.0), 
   nlme(>= 3.0.0), 
   patchwork(>= 1.0.0), 
-  terra (>= 1.7-71), 
+  terra (>= 1.7), 
   sf(>= 1.0-15), 
   raster(>= 3.6-26), 
   furrr(>= 0.3.1),
