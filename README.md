@@ -1,2 +1,2 @@
-This package can be installed using the remotes package: 
-remotes::install_github("CFS-treering/growthTrendR")
+This package can be installed using the pak package: 
+pak::pkg_install("CFS-treering/growthTrendR")
