@@ -108,10 +108,69 @@ the measurements.</p></li>
 <p>As illustrated in the following diagram, visual inspection is
 provided at each step to facilitate assessment of data quality and
 validation of results.</p>
-<div class="section level3">
-<h3 id="section">
+</div>
+<div class="section level2">
+<h2 id="section">
 <img src="images/workflow_clean.png" class="r-plt" width="80%" height="auto"><a class="anchor" aria-label="anchor" href="#section"></a>
+</h2>
+</div>
+<div class="section level2">
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h2>
+<p>The stable release of <strong>growthTrendR</strong> is available from
+CRAN, while the latest development version is available from the GitHub
+repository. The recommended GitHub installation method uses the
+<code>pak</code> package to automatically resolve and install package
+dependencies. An alternative manual installation approach is provided
+for users who encounter dependency or network-related issues.</p>
+<div class="section level3">
+<h3 id="install-the-cran-release">Install the CRAN release<a class="anchor" aria-label="anchor" href="#install-the-cran-release"></a>
 </h3>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"growthTrendR"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="method-1-recommended-install-the-latest-github-version-using-pak">Method 1 (recommended): Install the latest GitHub version using
+<code>pak</code><a class="anchor" aria-label="anchor" href="#method-1-recommended-install-the-latest-github-version-using-pak"></a>
+</h3>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Install pak if needed</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"pak"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Recommended settings for slower network connections</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span></span>
+<span>  download.file.method <span class="op">=</span> <span class="st">"libcurl"</span>,</span>
+<span>  url.method <span class="op">=</span> <span class="st">"libcurl"</span>,</span>
+<span>  timeout <span class="op">=</span> <span class="fl">3000</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pak/man/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span></span>
+<span>  <span class="st">"CFS-treering/growthTrendR"</span>,</span>
+<span>  dependencies <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Imports"</span>, <span class="st">"Suggests"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="method-2-alternative-manually-install-dependencies">Method 2 (alternative): Manually install dependencies<a class="anchor" aria-label="anchor" href="#method-2-alternative-manually-install-dependencies"></a>
+</h3>
+<p>If some dependencies are not installed automatically, they can be
+installed manually before installing the GitHub version of
+<strong>growthTrendR</strong>.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pkg.imports</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"data.table"</span>, <span class="st">"stringr"</span>, <span class="st">"stats"</span>, <span class="st">"mgcv"</span>, <span class="st">"ggplot2"</span>, <span class="st">"nlme"</span>,</span>
+<span>  <span class="st">"patchwork"</span>, <span class="st">"terra"</span>, <span class="st">"sf"</span>, <span class="st">"raster"</span>, <span class="st">"furrr"</span>, <span class="st">"future"</span>,</span>
+<span>  <span class="st">"htmltools"</span>, <span class="st">"curl"</span>, <span class="st">"dplyr"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">pkg.suggests</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"knitr"</span>, <span class="st">"geosphere"</span>, <span class="st">"ggeffects"</span>, <span class="st">"ggforce"</span>, <span class="st">"gstat"</span>, <span class="st">"scales"</span>,</span>
+<span>  <span class="st">"purrr"</span>, <span class="st">"parallel"</span>, <span class="st">"MuMIn"</span>, <span class="st">"rmarkdown"</span>, <span class="st">"rstudioapi"</span>, <span class="st">"MASS"</span>,</span>
+<span>  <span class="st">"sp"</span>, <span class="st">"spdep"</span>, <span class="st">"magick"</span>, <span class="st">"gt"</span>, <span class="st">"kableExtra"</span>, <span class="st">"httr"</span>,</span>
+<span>  <span class="st">"gridExtra"</span>, <span class="st">"rnaturalearth"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">pkg.imports</span>, <span class="va">pkg.suggests</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Install growthTrendR from GitHub (latest version)</span></span>
+<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pak/man/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"CFS-treering/growthTrendR"</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
   </div>

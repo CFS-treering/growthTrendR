@@ -4,10 +4,12 @@
 \alias{plot_resp}
 \title{Plot smooth terms prediction with confidence intervals}
 \usage{
-plot_resp(robj, ...)
+plot_resp(robj, model.ci_method = "posterior", ...)
 }
 \arguments{
 \item{robj}{R object from the modelling functions.}
+
+\item{model.ci_method}{Character. One of \code{"delta_link"}, \code{"delta_resp"}, \code{"bootstrap_link"}, \code{"bootstrap_resp"}, \code{"posterior"}.}
 
 \item{...}{Additional arguments passed to \code{ci_resp()}.}
 }
@@ -34,7 +36,7 @@ dt.m <- dt.samples_clim[ageC >1]
 m.spatial <-gamm_spatial(
   data = dt.m, resp_scale = "resp_log",
   m.candidates = c( "bai_cm2 ~ log(ba_cm2_t_1) + s(ageC) + s(FFD)"))
-plots.lst <- plot_resp(m.spatial)
+plots.lst <- plot_resp(m.spatial, model.ci_resp = "posterior")
 
 
 }

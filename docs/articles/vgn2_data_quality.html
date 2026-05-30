@@ -108,9 +108,16 @@ geographically close sites. It then compares the median tree-ring
 measurements of the target site to those of its nearest neighbors. This
 procedure is conducted within the same species.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># loading processed data</span></span>
+<code class="sourceCode R"><span></span>
+<span><span class="co"># ring measurement</span></span>
+<span><span class="co"># loading data</span></span>
+<span><span class="va">dt.samples</span> <span class="op">&lt;-</span> <span class="fu">fread</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"dt.samples.csv"</span>, package <span class="op">=</span> <span class="st">"growthTrendR"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># formatting the users' data conformed to CFS-TRenD data structure</span></span>
+<span><span class="va">dt.samples_trt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CFS_format.html">CFS_format</a></span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">dt.samples</span>, <span class="fl">39</span><span class="op">:</span><span class="fl">68</span><span class="op">)</span>, usage <span class="op">=</span> <span class="fl">1</span>, out.csv <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span><span class="co"># loading processed data</span></span>
 <span><span class="co"># otherwise need to run CFS_format() first as done in data report</span></span>
-<span><span class="va">dt.samples_trt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"dt.samples_trt.rds"</span>, package <span class="op">=</span> <span class="st">"growthTrendR"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># dt.samples_trt &lt;- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))</span></span>
 <span><span class="co"># , message = FALSE, warning = FALSE, results = 'hide'</span></span>
 <span><span class="va">all.sites</span> <span class="op">&lt;-</span> <span class="va">dt.samples_trt</span><span class="op">$</span><span class="va">tr_all_wide</span><span class="op">[</span>,<span class="va">.N</span>, by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"species"</span>, <span class="st">"uid_site"</span>, <span class="st">"site_id"</span><span class="op">)</span><span class="op">]</span><span class="op">[</span>, <span class="va">N</span><span class="op">:=</span><span class="cn">NULL</span><span class="op">]</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">all.sites</span><span class="op">[</span>, <span class="va">.N</span>, by <span class="op">=</span> <span class="fu">.</span><span class="op">(</span><span class="va">species</span>, <span class="va">site_id</span><span class="op">)</span><span class="op">]</span><span class="op">[</span><span class="va">N</span><span class="op">&gt;</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"species-site_id is not unique..."</span><span class="op">)</span></span>
@@ -147,7 +154,12 @@ neighbors of the target site.</p>
 <strong>generate report:</strong><a class="anchor" aria-label="anchor" href="#generate-report"></a>
 </h4>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/generate_report.html">generate_report</a></span><span class="op">(</span>robj <span class="op">=</span> <span class="va">dt.scale</span>, output_file <span class="op">=</span> <span class="va">outfile_scale</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># default is NULL</span></span>
+<span><span class="fu"><a href="../reference/generate_report.html">generate_report</a></span><span class="op">(</span>robj <span class="op">=</span> <span class="va">dt.scale</span>, output_file <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># user may also specify the directory and filename, for example</span></span>
+<span><span class="va">outfile_scale</span> <span class="op">&lt;-</span> <span class="st">"scale_report.html"</span></span>
+<span><span class="fu"><a href="../reference/generate_report.html">generate_report</a></span><span class="op">(</span>robj <span class="op">=</span> <span class="va">dt.scale</span>, output_file <span class="op">=</span> <span class="va">outfile_scale</span><span class="op">)</span></span></code></pre></div>
 <p><br></p>
 <div class="section level5">
 <h5 id="arguments-of-the-generate_report-function">
@@ -173,7 +185,7 @@ automatically in the browser.</p>
 <meta charset="utf-8">
 <meta name="generator" content="pandoc">
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE">
-<meta name="date" content="2026-05-12">
+<meta name="date" content="2026-05-30">
 <title>Quality Report: ring width measurement</title>
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -475,7 +487,7 @@ display: none;
 
 
 <h2 class="title toc-ignore">Quality Report: ring width measurement</h2>
-<h5 class="date">2026-05-12</h5>
+<h5 class="date">2026-05-30</h5>
 
 </div>
 
@@ -540,8 +552,13 @@ cross-correlation function (CCF) applied to a treated series
 (consecutive differences).</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
+<span><span class="co"># ring measurement</span></span>
+<span><span class="va">dt.samples</span> <span class="op">&lt;-</span> <span class="fu">fread</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"dt.samples.csv"</span>, package <span class="op">=</span> <span class="st">"growthTrendR"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># formatting the users' data conformed to CFS-TRenD data structure</span></span>
+<span><span class="va">dt.samples_trt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CFS_format.html">CFS_format</a></span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">dt.samples</span>, <span class="fl">39</span><span class="op">:</span><span class="fl">68</span><span class="op">)</span>, usage <span class="op">=</span> <span class="fl">1</span>, out.csv <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span><span class="co"># loading processed data</span></span>
-<span><span class="va">dt.samples_trt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"dt.samples_trt.rds"</span>, package <span class="op">=</span> <span class="st">"growthTrendR"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># dt.samples_trt &lt;- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))</span></span>
 <span></span>
 <span></span>
 <span><span class="co"># data processing</span></span>
@@ -617,7 +634,7 @@ unnecessarily long processing times.</p>
 <meta charset="utf-8">
 <meta name="generator" content="pandoc">
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE">
-<meta name="date" content="2026-05-12">
+<meta name="date" content="2026-05-30">
 <title>Quality Report: cross-dating</title>
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -919,7 +936,7 @@ display: none;
 
 
 <h2 class="title toc-ignore">Quality Report: cross-dating</h2>
-<h5 class="date">2026-05-12</h5>
+<h5 class="date">2026-05-30</h5>
 
 </div>
 

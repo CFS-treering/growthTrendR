@@ -31,6 +31,7 @@ Apply a k-nearest neighbors (k-NN) method based on geographic location for the s
 It compares the median tree-ring measurements of a specific site to those of nearby sites
 }
 \examples{
+
 # loading formatted
 dt.samples_trt <- readRDS(system.file("extdata", "dt.samples_trt.rds", package = "growthTrendR"))
 all.sites <- dt.samples_trt$tr_all_wide[,.N, by = c("species", "uid_site", "site_id")][, N:=NULL]
@@ -43,5 +44,7 @@ dt.samples_trt$tr_all_wide[,c("species", "uid_site", "site_id",
 dt.samples_trt$tr_all_long$tr_7_ring_widths, by = c("uid_radius"))
 dt.scale <- CFS_scale( target_site = target_site, ref_sites = ref.sites,
 scale.label_data_ref = "demo-samples", scale.max_dist_km = 200, scale.N_nbs = 2)
+
+
 
 }

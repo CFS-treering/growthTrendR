@@ -8,7 +8,8 @@ ci_resp(
   model,
   newdata,
   nboot = 100,
-  method = c("posterior", "delta_link", "delta_resp", "bootstrap_link", "bootstrap_resp"),
+  model.ci_method = c("posterior", "delta_link", "delta_resp", "bootstrap_link",
+    "bootstrap_resp"),
   level = 0.95
 )
 }
@@ -19,7 +20,7 @@ ci_resp(
 
 \item{nboot}{Integer. Number of bootstrap or posterior samples. Default 1000.}
 
-\item{method}{Character. One of \code{"delta_link"}, \code{"delta_resp"}, \code{"bootstrap_link"}, \code{"bootstrap_resp"}, \code{"posterior"}.}
+\item{model.ci_method}{Character. One of \code{"delta_link"}, \code{"delta_resp"}, \code{"bootstrap_link"}, \code{"bootstrap_resp"}, \code{"posterior"}.}
 
 \item{level}{Numeric. Confidence level, default 0.95.}
 }
